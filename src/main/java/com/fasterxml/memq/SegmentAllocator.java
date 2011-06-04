@@ -82,8 +82,30 @@ public class SegmentAllocator
     /**********************************************************************
      */
 
+    /**
+     * Method that will try to allocate a single segment and return it;
+     * or if no allocation can be done (due to limits) return null.
+     */
     public synchronized Segment allocateSegment() {
-        return null;
+        return _canAllocate(1) ? _allocateSegment() : null;
+    }
+    
+    /**
+     * @param count Number of segments to allocate
+     *   
+     * @return Either List containing specified number of Segments; or null if allocation
+     *   can not be done.
+     */
+    public synchronized List<Segment> allocateSegments(int count)
+    {
+        if (!_canAllocate(count)) {
+            return null;
+        }
+        ArrayList<Segment> result = new ArrayList<Segment>(count);
+        for (int i = 0; i < count; ++i) {
+            result.add(_allocateSegment());
+        }
+        return result;
     }
 
     /**
@@ -104,57 +126,31 @@ public class SegmentAllocator
             _firstReusableSegment = segToRelease.relink(_firstReusableSegment);
         }
     }
-
-    public synchronized Segment allocateSegments(boolean errorOnFail)
-    {
-        if (!_canAllocate(1, errorOnFail)) {
-            return null;
-        }
-        Segment segment = _allocateSegment();
-        ++_bufferOwnedSegmentCount; 
-        return segment;
-    }
     
-    /**
-     * @param count Number of segments to allocate
-     * @param errorOnFail Whether to throw {@link IllegalStateException} if allocation
-     *   can be done (true); or just return null (false)
-     *   
-     * @return Either List containing specified number of Segments; or null if allocation
-     *   can not be done.
-     */
-    public synchronized List<Segment> allocateSegments(int count, boolean errorOnFail)
-    {
-        if (!_canAllocate(count, errorOnFail)) {
-            return null;
-        }
-        ArrayList<Segment> result = new ArrayList<Segment>(count);
-        for (int i = 0; i < count; ++i) {
-            result.add(_allocateSegment());
-        }
-        _bufferOwnedSegmentCount += count;        
-        return result;
-    }
-
     /*
     /**********************************************************************
     /* Internal methods
     /**********************************************************************
      */
 
-    protected Segment _allocateSegment() {
-        return new Segment(_segmentSize);
+    protected Segment _allocateSegment()
+    {
+        // can reuse a segment returned earlier?
+        if (_reusableSegmentCount > 0) {
+            Segment segment = _firstReusableSegment;
+            _firstReusableSegment = segment.getNext();
+            --_reusableSegmentCount;
+            segment.relink(null); // just as safety measure
+            return segment;
+        }
+        Segment segment = new Segment(_segmentSize);
+        ++_bufferOwnedSegmentCount; 
+        return segment;
     }
     
-    protected boolean _canAllocate(int count, boolean errorOnFail)
+    protected boolean _canAllocate(int count)
     {
         int available = _reusableSegmentCount + (_maxSegmentsToAllocate - _bufferOwnedSegmentCount);
-        if (available < count) {
-            if (errorOnFail) {
-                throw new IllegalStateException("Request to allocate "+count+" segments; can allocate at most "+available);
-            }
-            return false;
-        }
-        return true;
+        return (available >= count);
     }
 }
