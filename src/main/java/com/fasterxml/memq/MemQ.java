@@ -3,7 +3,7 @@ package com.fasterxml.memq;
 /**
  * Copyright Tatu Saloranta, 2011-
  * 
- * Actual memory queue implementation, which uses set of {@link MemQSegment}s as
+ * Actual memory queue implementation, which uses set of {@link Segment}s as
  * virtual ring buffer. Number of segments used is bound by minimum and maximum
  * amounts, which defines minimim and maximum memory usage.
  * Memory usage is relatively easy to estimate since data is stored as
