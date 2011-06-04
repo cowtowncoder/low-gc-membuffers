@@ -24,22 +24,12 @@ public class Segment
      * Next segment in the segment chain
      */
     protected Segment _nextSegment;
-
-    /**
-     * Number of segments reachable via {@link #_nextSegment}
-     */
-    protected int _tailCount;
     
     /*
     /**********************************************************************
     /* Storage
     /**********************************************************************
      */
-
-    /**
-     * Size of the underlying buffer in bytes
-     */
-    protected final int _bufferSize;
     
     /**
      * Underlying low-level buffer in which raw entry data is queued
@@ -66,7 +56,6 @@ public class Segment
 
     public Segment(int size)
     {
-        _bufferSize = size;
         _buffer = ByteBuffer.allocateDirect(size);
     }
     
@@ -75,5 +64,14 @@ public class Segment
     /* API
     /**********************************************************************
      */
-    
+
+    public Segment relink(Segment next)
+    {
+        _nextSegment = next;
+        return this;
+    }
+
+    public Segment getNext() {
+        return _nextSegment;
+    }
 }

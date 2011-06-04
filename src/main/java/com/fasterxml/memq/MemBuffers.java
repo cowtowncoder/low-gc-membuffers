@@ -25,6 +25,12 @@ public class MemBuffers
      * Queues that belong to this group
      */
     protected final ArrayList<MemBuffer> _queues;
+
+    /*
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
+     */
     
     public MemBuffers(int segmentSize, int minSegments, int maxSegments)
     {
@@ -35,4 +41,10 @@ public class MemBuffers
         _segmentAllocator = allocator;
         _queues = new ArrayList<MemBuffer>();
     }
+
+    /*
+    /**********************************************************************
+    /* API
+    /**********************************************************************
+     */
 }
