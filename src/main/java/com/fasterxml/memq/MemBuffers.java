@@ -7,14 +7,14 @@ import java.util.*;
  */
 
 /**
- * Container for set of {@link MemQ}s. Used for constructing
- * {@link MemQ} instances, which all share a single
+ * Container for a set of {@link MemBuffer}s. Used for constructing
+ * {@link MemBuffer} instances that all share a single
  * {@link SegmentAllocator} instance, and global memory 
  * allocation limits (enforced by allocator).
  * 
  * @author Tatu Saloranta
  */
-public class MemQGroup
+public class MemBuffers
 {
     /**
      * Allocated used by 
@@ -24,15 +24,15 @@ public class MemQGroup
     /**
      * Queues that belong to this group
      */
-    protected final ArrayList<MemQ> _queues;
+    protected final ArrayList<MemBuffer> _queues;
     
-    public MemQGroup(int segmentSize, int minSegments, int maxSegments)
+    public MemBuffers(int segmentSize, int minSegments, int maxSegments)
     {
         this(new SegmentAllocator(segmentSize, minSegments, maxSegments));
     }
 
-    public MemQGroup(SegmentAllocator allocator) {
+    public MemBuffers(SegmentAllocator allocator) {
         _segmentAllocator = allocator;
-        _queues = new ArrayList<MemQ>();
+        _queues = new ArrayList<MemBuffer>();
     }
 }

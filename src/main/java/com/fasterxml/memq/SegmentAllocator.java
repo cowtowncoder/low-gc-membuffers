@@ -5,8 +5,8 @@ package com.fasterxml.memq;
  */
 
 /**
- * Shared allocator object, used by all {@link MemQ} instances
- * that are part of a {@link MemQGroup}. It handles allocation
+ * Shared allocator object, used by all {@link MemBuffer} instances
+ * that are part of a {@link MemBuffers}. It handles allocation
  * of new {@link Segment} instances, as well as sharing of
  * shared segments (above and beyond simple reuse that individual
  * queues can do).

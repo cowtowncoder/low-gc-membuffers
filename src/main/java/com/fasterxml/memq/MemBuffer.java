@@ -19,7 +19,7 @@ package com.fasterxml.memq;
  * 
  * @author Tatu Saloranta
  */
-public class MemQ
+public class MemBuffer
 {
     /*
     /**********************************************************************
@@ -54,7 +54,7 @@ public class MemQ
     /**********************************************************************
      */
 
-    public MemQ(int segmentSize, int minSegments, int maxSegments)
+    public MemBuffer(int segmentSize, int minSegments, int maxSegments)
     {
         _segmentSize = segmentSize;
         _minSegments = minSegments;
