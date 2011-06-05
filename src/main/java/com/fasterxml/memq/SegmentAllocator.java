@@ -1,7 +1,5 @@
 package com.fasterxml.memq;
 
-import java.util.*;
-
 /*
  * Copyright Tatu Saloranta, 2011-
  */
@@ -82,6 +80,8 @@ public class SegmentAllocator
     /**********************************************************************
      */
 
+    public int getSegmentSize() { return _segmentSize; }
+    
     /**
      * Method that will try to allocate a single segment and return it;
      * or if no allocation can be done (due to limits) return null.
@@ -91,23 +91,28 @@ public class SegmentAllocator
     }
     
     /**
+     * Method that will try to allocate specified number of segments
+     * (and exactly that number; no less).
+     * If this can be done, segments are allocated and prepended into
+     * given segment list; otherwise nothing is allocated and
+     * null is returned.
+     * 
      * @param count Number of segments to allocate
      *   
-     * @return Either List containing specified number of Segments; or null if allocation
-     *   can not be done.
+     * @return Head of segment list (with newly allocated entries as first
+     *    entries) if allocation succeeded; null if not
      */
-    public synchronized List<Segment> allocateSegments(int count)
+    public synchronized Segment allocateSegments(int count, Segment segmentList)
     {
         if (!_canAllocate(count)) {
             return null;
         }
-        ArrayList<Segment> result = new ArrayList<Segment>(count);
         for (int i = 0; i < count; ++i) {
-            result.add(_allocateSegment());
+            segmentList = _allocateSegment().relink(segmentList);
         }
-        return result;
+        return segmentList;
     }
-
+    
     /**
      * Method called by {@link MemBuffer} instances when they have consumed
      * contents of a segment and do not want to hold on to it for local
@@ -140,7 +145,7 @@ public class SegmentAllocator
             Segment segment = _firstReusableSegment;
             _firstReusableSegment = segment.getNext();
             --_reusableSegmentCount;
-            segment.relink(null); // just as safety measure
+            segment.resetForReuse(null);
             return segment;
         }
         Segment segment = new Segment(_segmentSize);
