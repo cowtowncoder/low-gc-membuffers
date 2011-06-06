@@ -14,6 +14,42 @@ import java.nio.ByteBuffer;
  */
 public class Segment
 {
+    protected enum State {
+        /**
+         * Initial state, as well as state when stored in various free segment
+         * chains.
+         */
+        FREE,
+    
+        /**
+         * State when content is being appended and segment is the currently
+         * active write segment for a buffer instance, but it is not yet
+         * being read from.
+         */
+        WRITING,
+
+        /**
+         * State when content is both still being written, and already being
+         * read.
+         */
+        READING_AND_WRITING,
+        
+        /**
+         * State after segment has been completely written but is still being
+         * read from.
+         */
+        READING
+        ;
+    }
+    
+    /*
+    /**********************************************************************
+    /* State
+    /**********************************************************************
+     */
+
+    protected State _state;
+
     /*
     /**********************************************************************
     /* Linking
@@ -37,38 +73,86 @@ public class Segment
     protected final ByteBuffer _buffer;
 
     /**
-     * Pointer within buffer to the first byte available to be read;
-     * has to be less than or equal to <code>_writeOffset</code>.
+     * Wrapper buffer used for reading previously written content; wrapper
+     * used to allow separate pointers for reading and writing content.
      */
-    protected int _readOffset;
-
-    /**
-     * Pointer within buffer to location where new data can be appended;
-     * less than equal to <code>_bufferSize</code>.
-     */
-    protected int _writeOffset;
+    protected ByteBuffer _readBuffer;
     
     /*
     /**********************************************************************
-    /* Life-cycle
+    /* Life-cycle, including state changes
     /**********************************************************************
      */
 
     public Segment(int size)
     {
         _buffer = ByteBuffer.allocateDirect(size);
+        _state = State.FREE;
     }
 
     /**
-     * Method called to indicate that the buffer is going to be reused,
-     * meaning that any content currently stored can be discarded; and
-     * that it should be added as head of segment chain indicated
-     * by current head of the chain (which may be null)
+     * Method called when the segment becomes the active write segment.
+     *<p>
+     * This state transition must occur from {@link State#FREE}.
      */
-    public Segment resetForReuse(Segment head)
+    protected Segment initForWriting(Segment prevWriteSegment)
     {
+        if (_state != State.FREE) {
+            throw new IllegalStateException("Trying to initForWriting segment, state "+_state);
+        }
+        _state = State.WRITING;
+        _nextSegment = prevWriteSegment;
+        return this;
+    }
+
+    /**
+     * Method called when writes to this segment have been completed,
+     * which occurs when segment is full, more content is to be written,
+     * and another segment is becoming the active write-segment.
+     */
+    protected Segment finishWriting()
+    {
+        if (_state != State.WRITING && _state != State.READING_AND_WRITING) {
+            throw new IllegalStateException("Trying to finishWriting segment, state "+_state);
+        }
+        _state = State.READING;
+        // Let's not yet create wrapper buffer for reading until it is actually needed
+        return this;
+    }
+    
+    /**
+     * Method called when the segment becomes the active read segment.
+     * Its state may or may not change, but we do need to create the
+     * reader-wrapper for ByteBuffer
+     */
+    protected Segment initForReading()
+    {
+        if (_state == State.WRITING) {
+            _state = State.READING_AND_WRITING;
+        } else if (_state == State.READING) { // writing already completed
+            ; // state is fine as is
+        } else {
+            throw new IllegalStateException("Trying to initForReading segment, state "+_state);
+        }
+        _readBuffer = _buffer.asReadOnlyBuffer();
+        _readBuffer.clear();
+        return this;
+    }
+
+    /**
+     * Method called when all contents has been read from this segment,
+     * and read position moves to a new segment.
+     */
+    protected Segment finishReading(Segment freeSegmentChain)
+    {
+        if (_state != State.READING) {
+            throw new IllegalStateException("Trying to finishReading, state "+_state);
+        }
+        _state = State.FREE;
+        _nextSegment = freeSegmentChain;
+        // clear write pointer for further reuse
         _buffer.clear();
-        _nextSegment = head;
+        _readBuffer = null;
         return this;
     }
     
@@ -97,7 +181,7 @@ public class Segment
     /**
      * How many bytes can still fit within this segment?
      */
-    public int available() {
+    public int availableForAppend() {
         return _buffer.remaining();
     }
 
@@ -123,7 +207,7 @@ public class Segment
      */
     public int tryAppend(byte[] src, int offset, int length)
     {
-        int actualLen = Math.min(length, available());
+        int actualLen = Math.min(length, availableForAppend());
         if (actualLen > 0) {
             _buffer.put(src, offset, actualLen);
         }

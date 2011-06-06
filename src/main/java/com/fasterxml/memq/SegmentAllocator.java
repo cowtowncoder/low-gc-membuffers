@@ -83,14 +83,6 @@ public class SegmentAllocator
     public int getSegmentSize() { return _segmentSize; }
     
     /**
-     * Method that will try to allocate a single segment and return it;
-     * or if no allocation can be done (due to limits) return null.
-     */
-    public synchronized Segment allocateSegment() {
-        return _canAllocate(1) ? _allocateSegment() : null;
-    }
-    
-    /**
      * Method that will try to allocate specified number of segments
      * (and exactly that number; no less).
      * If this can be done, segments are allocated and prepended into
@@ -104,6 +96,9 @@ public class SegmentAllocator
      */
     public synchronized Segment allocateSegments(int count, Segment segmentList)
     {
+        if (count < 1) {
+            throw new IllegalArgumentException("Must allocate at least one segment (count = "+count+")");
+        }
         if (!_canAllocate(count)) {
             return null;
         }
@@ -145,7 +140,6 @@ public class SegmentAllocator
             Segment segment = _firstReusableSegment;
             _firstReusableSegment = segment.getNext();
             --_reusableSegmentCount;
-            segment.resetForReuse(null);
             return segment;
         }
         Segment segment = new Segment(_segmentSize);

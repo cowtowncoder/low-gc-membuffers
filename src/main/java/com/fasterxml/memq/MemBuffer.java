@@ -25,6 +25,7 @@ import java.util.*;
  */
 public class MemBuffer
 {
+    
     /*
     /**********************************************************************
     /* Basic configuration
@@ -57,7 +58,7 @@ public class MemBuffer
      * This defines maximum physical size of the queue.
      */
     protected final int _maxSegments;
-
+    
     /*
     /**********************************************************************
     /* Storage
@@ -163,10 +164,10 @@ public class MemBuffer
         }
         _entryCount = 0;
     }
-
+    
     /*
     /**********************************************************************
-    /* Public API, simple accessors
+    /* Public API, simple statistics (not data) accessors
     /**********************************************************************
      */
 
@@ -178,6 +179,10 @@ public class MemBuffer
         return _entryCount;
     }
 
+    public synchronized boolean isEmpty() {
+        return _entryCount > 0;
+    }
+    
     /**
      * Method for checking how many segments are currently used for
      * storing data (not including segments that may be retained
@@ -227,7 +232,7 @@ public class MemBuffer
     {
         // first, calculate total size (length prefix + payload)
         int prefixLength = _calcLengthPrefix(_lengthPrefixBuffer, dataLength);
-        int freeInCurrent = _head.available();
+        int freeInCurrent = _head.availableForAppend();
         int totalLength = (dataLength + prefixLength);
         // First, simple case: can fit it in the current buffer?
         if (freeInCurrent >= totalLength) {
@@ -280,13 +285,17 @@ public class MemBuffer
             if (length == 0) { // complete, can leave
                 return;
             }
-            // otherwise, need another segment, rinse, repeat
-            seg = _reuseFree();
+            // otherwise, need another segment, so complete current write
+            seg.finishWriting();
+            // and allocate, init-for-writing new one:
+            _head = seg = _reuseFree().initForWriting(seg);
         }
     }
 
     /**
-     * Helper method for 
+     * Helper method for reusing a segment from free-segments list.
+     * Caller must guarantee there is such a segment available; this is
+     * done in advance to achieve atomicity of multi-segment-allocation.
      */
     protected final Segment _reuseFree()
     {
@@ -295,7 +304,6 @@ public class MemBuffer
             throw new IllegalStateException("Internal error: no free segments available");
         }
         _firstFreeSegment = freeSeg.getNext();
-        freeSeg.resetForReuse(_head);
         --_freeSegmentCount;
         _head = freeSeg;
         ++_usedSegmentsCount;
@@ -304,10 +312,24 @@ public class MemBuffer
     
     /*
     /**********************************************************************
-    /* Public API, read
+    /* Public API, reading
     /**********************************************************************
      */
 
+    /**
+     * Method that will check size of the next entry, if buffer has entries;
+     * returns size in bytes if there is at least one entry, or -1 if buffer
+     * is empty.
+     */
+    public synchronized int getNextEntryLength()
+    {
+        if (_entryCount == 0) {
+            return -1;
+        }
+        // first simple case: length prefix must be wit
+        return 0;
+    }
+    
     /**
      * Method for reading and removing next available entry from buffer.
      * If no ent
