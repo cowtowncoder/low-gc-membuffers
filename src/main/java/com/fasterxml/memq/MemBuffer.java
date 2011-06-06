@@ -94,16 +94,14 @@ public class MemBuffer
     
     /*
     /**********************************************************************
-    /* Read location
-    /* (note: write location handled by segment via its ByteBuffer)
+    /* Read handling
     /**********************************************************************
      */
 
     /**
-     * Offset within {@link _tail} where the next entry is located, if any
-     * are available; otherwise same as {@link #_writeOffset}.
+     * Length of the next entry, if known; -1 if not yet known.
      */
-    protected int _readOffset;
+    protected int _nextEntryLength = -1;
     
     /*
     /**********************************************************************
@@ -323,11 +321,14 @@ public class MemBuffer
      */
     public synchronized int getNextEntryLength()
     {
-        if (_entryCount == 0) {
-            return -1;
+        int len = _nextEntryLength;
+        if (len < 0) { // need to read it?
+            if (_entryCount == 0) { // but can only read if something is actually available
+                return -1;
+            }
+            _nextEntryLength = len = _readEntryLength();
         }
-        // first simple case: length prefix must be wit
-        return 0;
+        return len;
     }
     
     /**
@@ -343,7 +344,32 @@ public class MemBuffer
         // !!! TBI
         return null;
     }
-    
+
+    private int _readEntryLength()
+    {
+        // see how much of length prefix we can read
+        int len = _tail.readLength();
+        if (len >= 0) { // all!
+            return len;
+        }
+
+        // otherwise we got negated version of partial length, so find what we got:
+        len = -len - 1;
+
+        // and move to read the next segment;
+        Segment old = _tail;
+        Segment next = old.getNext();
+        old.finishReading();
+        --_usedSegmentsCount;
+        _tail = next.initForReading();
+        // how about freed segment? reuse?
+        if ((_usedSegmentsCount + _freeSegmentCount) < _minSegments) {
+            _firstFreeSegment = _firstFreeSegment.relink(old);
+            ++_freeSegmentCount;
+        }
+        // and then read enough data to figure out length:
+        return _tail.readSplitLength(len);
+    }
 
     /*
     /**********************************************************************
