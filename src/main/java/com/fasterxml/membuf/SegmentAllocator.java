@@ -1,4 +1,4 @@
-package com.fasterxml.memq;
+package com.fasterxml.membuf;
 
 /*
  * Copyright Tatu Saloranta, 2011-

@@ -1,4 +1,4 @@
-package com.fasterxml.memq;
+package com.fasterxml.membuf;
 
 import java.nio.ByteBuffer;
 
