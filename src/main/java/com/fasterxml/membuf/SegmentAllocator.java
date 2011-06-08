@@ -62,11 +62,28 @@ public class SegmentAllocator
     /**********************************************************************
      */
 
-    public SegmentAllocator(int segmentSize, int minSegments, int maxSegments)
+    /**
+     * Constructor for creating simple allocator instances.
+     * Basic configuration is used to limit amount of memory that will
+     * be used (by {@link maxSegments}), as well as degree to which
+     * allocator can reuse released segments (to reduce churn by freeing
+     * and reallocating segments, as segments typically use native
+     * {@link java.nio.ByteBuffer}s that may be costly to allocate.
+     * 
+     * @param Length (in bytes) of segments to allocate
+     * @param minSegmentsToRetain Number of segments that we will retain after
+     *   being released, for reuse; if 0, will not reuse any segments (although
+     *   individual buffers may still do local reuse)
+     * @param maxSegment Maximum number of allocated (and not released) segments
+     *   allowed at any given point;
+     *   strictly limits maximum memory usage by all {@link MemBuffer}s that
+     *   use this allocator.
+     */
+    public SegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
     {
         _segmentSize = segmentSize;
         // should we pre-allocated segments?
-        _maxReusableSegments = minSegments;
+        _maxReusableSegments = minSegmentsToRetain;
         _maxSegmentsToAllocate = maxSegments;
 
         _bufferOwnedSegmentCount = 0;

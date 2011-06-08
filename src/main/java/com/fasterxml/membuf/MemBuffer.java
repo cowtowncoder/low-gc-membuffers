@@ -1,7 +1,5 @@
 package com.fasterxml.membuf;
 
-import java.util.*;
-
 /*
  * Copyright Tatu Saloranta, 2011-
  */
@@ -52,13 +50,13 @@ public class MemBuffer
      * Lowest allowed minimum size is 2, since head and tail of the queue
      * must reside on different segments (to allow expansion)
      */
-    protected final int _minSegments;
+    protected final int _maxSegmentsForReuse;
 
     /**
      * Maximum number of segments to allocate.
      * This defines maximum physical size of the queue.
      */
-    protected final int _maxSegments;
+    protected final int _maxSegmentsToAllocate;
     
     /*
     /**********************************************************************
@@ -112,7 +110,7 @@ public class MemBuffer
 
     /**
      * Most recently released segment that we hold on to for possible reuse.
-     * Only up to {@link #_minSegments} may be stored for reuse; others
+     * Only up to {@link #_maxSegmentsForReuse} may be stored for reuse; others
      * will be handed back to the allocator.
      */
     protected Segment _firstFreeSegment;
@@ -142,25 +140,34 @@ public class MemBuffer
     /**********************************************************************
      */
 
+    /**
+     * @param allocator Allocator used for allocating underlying segments
+     * @param maxSegmentsToRetain Maximum number of segments to hold on to
+     *   (for reuse) after being released. Increases minimum memory usage
+     *   but can improve performance by avoiding unnecessary re-allocation;
+     *   and also guarantees that buffer always has at least this much
+     *   storage capacity.
+     * @param maxSegmentsToAllocate Maximum number of segments that can be
+     *   allocated for this buffer: limits maximum capacity and memory usage
+     * @param initialSegments Chain of pre-allocated segments, containing
+     *   <code>maxSegmentsToRetain</code> segments that are allocated to ensure
+     *   that there is always specified minimum capacity available
+     */
     public MemBuffer(SegmentAllocator allocator,
-            int minSegments, int maxSegments,
-            List<Segment> segments)
+            int minSegmentsToAllocate, int maxSegmentsToAllocate,
+            Segment initialSegments)
     {
         _segmentAllocator = allocator;
         _segmentSize = allocator.getSegmentSize();
-        _minSegments = minSegments;
-        _maxSegments = maxSegments;
-        Iterator<Segment> it = segments.iterator();
-        // need one of the segments to use
-        _head = _tail = it.next();
+        _maxSegmentsForReuse = minSegmentsToAllocate;
+        _maxSegmentsToAllocate = maxSegmentsToAllocate;
+        // all but one of segments goes to the free list
+        _firstFreeSegment = initialSegments.getNext();
+        // and first one is used as both head and tail
+        initialSegments.relink(null);
+        _head = _tail = initialSegments;
         _usedSegmentsCount = 1;
-        // and rest are stashed to be used
-        _freeSegmentCount = 0;
-        while (it.hasNext()) {
-            Segment seg = it.next();
-            _firstFreeSegment = seg.relink(_firstFreeSegment);
-            ++_freeSegmentCount;
-        }
+        _freeSegmentCount = minSegmentsToAllocate-1; // should we verify this?
         _entryCount = 0;
     }
     
@@ -245,7 +252,7 @@ public class MemBuffer
             int segmentsToAlloc = neededSegments - _freeSegmentCount;
             if (segmentsToAlloc > 0) { // nope: need more
                 // ok, but are allowed to grow that big?
-                if ((_usedSegmentsCount + _freeSegmentCount + segmentsToAlloc) > _maxSegments) {
+                if ((_usedSegmentsCount + _freeSegmentCount + segmentsToAlloc) > _maxSegmentsToAllocate) {
                     return false;
                 }
                 // if we are, let's try allocate
@@ -381,7 +388,7 @@ public class MemBuffer
         --_usedSegmentsCount;
         _tail = next.initForReading();
         // how about freed segment? reuse?
-        if ((_usedSegmentsCount + _freeSegmentCount) < _minSegments) {
+        if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
             _firstFreeSegment = _firstFreeSegment.relink(old);
             ++_freeSegmentCount;
         }

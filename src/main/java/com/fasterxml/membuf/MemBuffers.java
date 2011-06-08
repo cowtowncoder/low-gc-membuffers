@@ -31,12 +31,31 @@ public class MemBuffers
     /* Life-cycle
     /**********************************************************************
      */
-    
-    public MemBuffers(int segmentSize, int minSegments, int maxSegments)
+
+    /**
+     * Constructor that will create a default {@link SegmentAllocator}
+     * instance with given arguments, and use that allocator for creating
+     * {@link MemBuffer} instances.
+     * 
+     * @param segmentSize Size of segments allocated for buffers
+     * @param segmentsToRetain Maximum number of segments allocator
+     *   may reuse
+     *   (see {@link SegmentAllocator} for details)
+     * @param maxSegment Maximum number of allocated (and not released) segments
+     *   allowed at any given point
+     *   (see {@link SegmentAllocator} for details)
+     */
+    public MemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
     {
-        this(new SegmentAllocator(segmentSize, minSegments, maxSegments));
+        this(new SegmentAllocator(segmentSize, segmentsToRetain, maxSegments));
     }
 
+    /**
+     * Constructor that will pass specified {@link SegmentAllocator}
+     * for {@link MemBuffer} instances it creates.
+     * 
+     * @param allocator Allocator to use for instantiated {@link MemBuffer}s.
+     */
     public MemBuffers(SegmentAllocator allocator) {
         _segmentAllocator = allocator;
         _queues = new ArrayList<MemBuffer>();
@@ -47,4 +66,37 @@ public class MemBuffers
     /* API
     /**********************************************************************
      */
+
+    /**
+     * Method that will try to create a {@link MemBuffer} with configured allocator,
+     * using specified arguments.
+     * If construction fails (due to allocation limits),
+     * a {@link IllegalStateException} will be thrown.
+     */
+    public MemBuffer createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    {
+        MemBuffer buf = tryCreateBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
+        if (buf == null) {
+            throw new IllegalStateException("Failed to create a MemBuffer due to segment allocation limits");
+        }
+        return buf;
+    }
+
+    /**
+     * Method that will try to create a {@link MemBuffer} with configured allocator,
+     * using specified arguments.
+     * If construction fails (due to allocation limits),
+     * null will be returned.
+     */
+    public MemBuffer tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+            
+    {
+        Segment initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
+        // may not be able to allocate segments; if so, need to fail
+        if (initialSegments == null) {
+            return null;
+        }
+        return new MemBuffer(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+                initialSegments);
+    }
 }
