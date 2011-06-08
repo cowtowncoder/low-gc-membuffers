@@ -197,7 +197,7 @@ public class Segment
     }
 
     public int availableForReading() {
-        return _buffer.remaining();
+        return _readBuffer.remaining();
     }
     
     /*
@@ -219,6 +219,8 @@ public class Segment
     /**
      * Append operation that tries to append as much of input data as
      * possible, and returns number of bytes that were copied
+     * 
+     * @return Number of bytes actually appended
      */
     protected int tryAppend(byte[] src, int offset, int length)
     {
@@ -308,5 +310,23 @@ public class Segment
             }
             partial += b;
         }
+    }
+
+    protected void read(byte[] buffer, int offset, int length)
+    {
+        _readBuffer.get(buffer, offset, length);
+    }
+
+    /**
+     * 
+     * @return Number of bytes actually read
+     */
+    protected int tryRead(byte[] buffer, int offset, int length)
+    {
+        int actualLen = Math.min(availableForReading(), length);
+        if (actualLen > 0) {
+            _readBuffer.get(buffer, offset, length);
+        }
+        return actualLen;
     }
 }

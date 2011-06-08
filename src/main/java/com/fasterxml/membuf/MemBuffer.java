@@ -25,6 +25,7 @@ import java.util.*;
  */
 public class MemBuffer
 {
+    private final static byte[] EMPTY_PAYLOAD = new byte[0];
     
     /*
     /**********************************************************************
@@ -236,33 +237,34 @@ public class MemBuffer
         if (freeInCurrent >= totalLength) {
             _head.append(_lengthPrefixBuffer, 0, prefixLength);
             _head.append(data, dataOffset, dataLength);
-            ++_entryCount;
-            return true;
-        }
-        // if not, must check whether we could allocate enough segments to fit in
-        int neededSegments = ((totalLength - freeInCurrent) + (_segmentSize-1)) / _segmentSize;
-
-        // Which may need reusing local segments, or allocating new ones via allocates
-        int segmentsToAlloc = neededSegments - _freeSegmentCount;
-        if (segmentsToAlloc > 0) { // nope: need more
-            // ok, but are allowed to grow that big?
-            if ((_usedSegmentsCount + _freeSegmentCount + segmentsToAlloc) > _maxSegments) {
-                return false;
+        } else {
+            // if not, must check whether we could allocate enough segments to fit in
+            int neededSegments = ((totalLength - freeInCurrent) + (_segmentSize-1)) / _segmentSize;
+    
+            // Which may need reusing local segments, or allocating new ones via allocates
+            int segmentsToAlloc = neededSegments - _freeSegmentCount;
+            if (segmentsToAlloc > 0) { // nope: need more
+                // ok, but are allowed to grow that big?
+                if ((_usedSegmentsCount + _freeSegmentCount + segmentsToAlloc) > _maxSegments) {
+                    return false;
+                }
+                // if we are, let's try allocate
+                Segment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
+                if (newFree == null) {
+                    return false;
+                }
+                _freeSegmentCount += segmentsToAlloc;
+                _firstFreeSegment = newFree;
             }
-            // if we are, let's try allocate
-            Segment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
-            if (newFree == null) {
-                return false;
-            }
-            _freeSegmentCount += segmentsToAlloc;
-            _firstFreeSegment = newFree;
+    
+            // and if we got this far, it's just simple matter of writing pieces into segments
+            // first length prefix
+            _doAppendChunked(_lengthPrefixBuffer, 0, prefixLength);
+            _doAppendChunked(data, dataOffset, dataLength);
         }
-
-        // and if we got this far, it's just simple matter of writing pieces into segments
-        // first length prefix
-        _doAppendChunked(_lengthPrefixBuffer, 0, prefixLength);
-        _doAppendChunked(data, dataOffset, dataLength);
-        ++_entryCount;
+        if (++_entryCount == 1) {
+            this.notifyAll();
+        }
         return true;
     }
 
@@ -341,10 +343,26 @@ public class MemBuffer
         if (_entryCount == 0) {
             return null;
         }
-        // !!! TBI
-        return null;
-    }
+        int segLen = getNextEntryLength();
+        // a trivial case; marker entry (no payload)
+        if (segLen == 0) {
+            return EMPTY_PAYLOAD;
+        }
+        
+        byte[] result = new byte[segLen];
 
+        // ok: simple case; all data available from within current segment
+        int avail = _tail.availableForReading();
+        if (avail >= segLen) {
+            _tail.read(result, 0, segLen);
+        } else {
+            // but if not we'll just do the segment read...
+            _doReadChunked(result, 0, segLen);
+        }
+        --_entryCount;
+        return result;
+    }
+    
     private int _readEntryLength()
     {
         // see how much of length prefix we can read
@@ -371,6 +389,27 @@ public class MemBuffer
         return _tail.readSplitLength(len);
     }
 
+    /**
+     * Helper method that handles append when contents may need to be split
+     * across multiple segments.
+     */
+    protected void _doReadChunked(byte[] buffer, int offset, int length)
+    {
+        Segment seg = _tail;
+        while (true) {
+            int actual = seg.tryRead(buffer, offset, length);
+            offset += actual;
+            length -= actual;
+            if (length == 0) { // complete, can leave
+                return;
+            }
+            // otherwise, need another segment, so complete current read
+            seg.finishReading();
+            // and allocate, init-for-writing new one:
+            _tail = seg = _tail.getNext().initForReading();
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Internal methods
