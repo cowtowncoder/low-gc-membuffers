@@ -6,6 +6,16 @@ GC overhead minimization is achieved by use of direct ByteBuffers; and bounded n
 
 Conceptually memory buffers are just simple circular buffers (ring buffers); library supports efficient reusing and sharing of underlying segments for sets of buffers, although for many use cases single buffer suffices.
 
+# Fancier stuff: multiple buffers
+
+Although having individual buffers is useful as is, this library does bit better: it actually defines "buffer groups" (com.fasterxml.membuf.MemBuffers) that consist of zero or more actual buffers (com.fasterxml.membuf.MemBuffer). All buffers of a group share the same segment allocator (com.fasterxml.membuf.SegmentAllocator); which makes it possible to share set of reusable underlying ByteBuffers.
+
+This ability to share underlying segments between buffers, with strict memory bounds makes it possible to use library as basic buffer manager; for example to buffer input and/or output of a web server.
+
+# Usage
+
+[TO BE WRITTEN!] -- till then, check out unit tests.
+
 # Status
 
-Just getting started -- idea is simple, will take a week or two to implement correctly.
+Just wrote first unit tests and managed to get them to pass -- so very close to being usable.
