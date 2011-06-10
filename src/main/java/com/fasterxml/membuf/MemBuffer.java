@@ -82,7 +82,7 @@ public class MemBuffer
 
     /**
      * Number of segments reachable via linked list starting from
-     * <code>_head</code>
+     * <code>_tail</code>
      */
     protected int _usedSegmentsCount;
 
@@ -90,6 +90,11 @@ public class MemBuffer
      * Number of entries stored in this buffer.
      */
     protected int _entryCount;
+
+    /**
+     * Number of bytes stored in all appended entries.
+     */
+    protected long _totalPayloadLength;
     
     /*
     /**********************************************************************
@@ -173,6 +178,7 @@ public class MemBuffer
         _usedSegmentsCount = 1;
         _freeSegmentCount = minSegmentsToAllocate-1; // should we verify this?
         _entryCount = 0;
+        _totalPayloadLength = 0;
     }
     
     /*
@@ -201,21 +207,36 @@ public class MemBuffer
     public synchronized int getSegmentCount() {
         return _usedSegmentsCount;
     }
-    
+
     /**
-     * Method for checking how much memory is allocated for storing all
-     * entries, including overhead (length prefixes; free space in first
-     * and last segments).
-     * This is not the exact JVM memory usage as it does not include
-     * overhead of objects, but typically is accurate enough estimate
-     * when segment lengths are not trivially small.
+     * Method for checking what would be the maximum available space
+     * available for appending more entries. Since there is per-entry
+     * overhead (length prefix of at least one and at most five bytes),
+     * this is not all available for entries, but gives an approximate
+     * idea of that amount.
      */
-    public synchronized long getMemoryUsed()
+    public synchronized long getMaximumAvailableSpace()
     {
-        // rather simple: just need to know number of segments, segment size..
-        long segCount = (_usedSegmentsCount + _freeSegmentCount);
-        return segCount * _segmentSize;
+        // First: how much room do we have in the current write segment?
+        long space = _head.availableForAppend();
+        // and how many more segments could we allocate?
+        int canAllocate = (_maxSegmentsToAllocate - _usedSegmentsCount);
+
+        if (canAllocate > 0) {
+            space += (long) canAllocate * (long) _segmentSize;
+        }
+        return space;
     }
+
+    /**
+     * Method for checking total amount of payload buffered in this buffer.
+     * This does not include entry metadata (length prefixes).
+     */
+    public synchronized long getTotalPayloadLength()
+    {
+        return _totalPayloadLength;
+    }
+    
     /*
     /**********************************************************************
     /* Public API, write (append)
@@ -273,6 +294,7 @@ public class MemBuffer
             _doAppendChunked(_lengthPrefixBuffer, 0, prefixLength);
             _doAppendChunked(data, dataOffset, dataLength);
         }
+        _totalPayloadLength += dataLength;        
         if (++_entryCount == 1) {
             this.notifyAll();
         }
@@ -359,7 +381,8 @@ public class MemBuffer
         _nextEntryLength = -1;
         // and reduce entry count as well
         --_entryCount;
-        
+        _totalPayloadLength -= segLen;
+
         // a trivial case; marker entry (no payload)
         if (segLen == 0) {
             return EMPTY_PAYLOAD;
@@ -382,7 +405,6 @@ public class MemBuffer
     {
         // see how much of length prefix we can read
         int len = _tail.readLength();
-System.err.println("Len that was read: "+len);        
         if (len >= 0) { // all!
             return len;
         }

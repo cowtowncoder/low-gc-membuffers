@@ -43,11 +43,11 @@ public class Segment
     }
     
     /**
-     * Let's not allow using segments shorter than 16 bytes; partly
+     * Let's not allow using segments shorter than 8 bytes; partly
      * to ensure that length prefixes can not be split across more
      * than one segments.
      */
-    public final static int ABSOLUTE_MINIMUM_LENGTH = 16;
+    public final static int ABSOLUTE_MINIMUM_LENGTH = 8;
     
     /*
     /**********************************************************************
