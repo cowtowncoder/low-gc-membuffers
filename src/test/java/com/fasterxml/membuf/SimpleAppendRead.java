@@ -13,6 +13,17 @@ public class SimpleAppendRead extends MembufTestBase
         assertEquals(0, buffer.getEntryCount());
         assertEquals(10, buffer.getMemoryUsed());
         assertEquals(-1, buffer.getNextEntryLength());
+
+        assertNull(buffer.getNextEntry());
+        
+        byte[] chunk1 = buildChunk(3);
+        buffer.appendEntry(chunk1);
+        assertEquals(1, buffer.getEntryCount());
+        // should take 4 bytes (length, payload); but let's remove first right away
+
+        byte[] actual = buffer.getNextEntry();
+        assertNotNull(actual);
+        verifyChunk(actual, chunk1.length);
     }
 
     /*

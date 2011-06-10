@@ -197,6 +197,11 @@ public class Segment
     }
 
     public int availableForReading() {
+        /*
+        if (_readBuffer == null) { // not yet initialized for reading? how much have we written?
+            return _buffer.position();
+        }
+        */
         return _readBuffer.remaining();
     }
     
@@ -249,7 +254,8 @@ public class Segment
         if (available == 0) {
             return -1;
         }
-        int length = _buffer.get();
+        int length = _readBuffer.get();
+
         if (length < 0) { // single-byte length, simple
             return (length & 0x7F);
         }
@@ -258,7 +264,7 @@ public class Segment
         }
 
         // second byte:
-        int b = _buffer.get();
+        int b = _readBuffer.get();
         if (b < 0) { // two-byte completed
             return (length << 7) + (b & 0x7F);
         }
@@ -268,7 +274,7 @@ public class Segment
         }
 
         // third byte:
-        b = _buffer.get();
+        b = _readBuffer.get();
         if (b < 0) {
             return (length << 7) + (b & 0x7F);
         }
@@ -278,7 +284,7 @@ public class Segment
         }
 
         // fourth byte:
-        b = _buffer.get();
+        b = _readBuffer.get();
         if (b < 0) {
             return (length << 7) + (b & 0x7F);
         }
@@ -288,7 +294,7 @@ public class Segment
         }
 
         // fifth and last byte
-        b = _buffer.get();
+        b = _readBuffer.get();
         if (b < 0) {
             return (length << 7) + (b & 0x7F);
         }

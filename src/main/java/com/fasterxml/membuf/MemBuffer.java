@@ -166,6 +166,10 @@ public class MemBuffer
         // and first one is used as both head and tail
         initialSegments.relink(null);
         _head = _tail = initialSegments;
+        // also, better initialize initial segment for writing and reading
+        _head.initForWriting(null);
+        _head.initForReading();
+        
         _usedSegmentsCount = 1;
         _freeSegmentCount = minSegmentsToAllocate-1; // should we verify this?
         _entryCount = 0;
@@ -351,6 +355,11 @@ public class MemBuffer
             return null;
         }
         int segLen = getNextEntryLength();
+        // but ensure that it gets reset for chunk after this one
+        _nextEntryLength = -1;
+        // and reduce entry count as well
+        --_entryCount;
+        
         // a trivial case; marker entry (no payload)
         if (segLen == 0) {
             return EMPTY_PAYLOAD;
@@ -366,7 +375,6 @@ public class MemBuffer
             // but if not we'll just do the segment read...
             _doReadChunked(result, 0, segLen);
         }
-        --_entryCount;
         return result;
     }
     
@@ -374,6 +382,7 @@ public class MemBuffer
     {
         // see how much of length prefix we can read
         int len = _tail.readLength();
+System.err.println("Len that was read: "+len);        
         if (len >= 0) { // all!
             return len;
         }
