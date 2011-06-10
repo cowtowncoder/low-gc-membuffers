@@ -172,7 +172,7 @@ public class MemBuffer
         initialSegments.relink(null);
         _head = _tail = initialSegments;
         // also, better initialize initial segment for writing and reading
-        _head.initForWriting(null);
+        _head.initForWriting();
         _head.initForReading();
         
         _usedSegmentsCount = 1;
@@ -196,7 +196,7 @@ public class MemBuffer
     }
 
     public synchronized boolean isEmpty() {
-        return _entryCount > 0;
+        return (_entryCount == 0);
     }
     
     /**
@@ -321,7 +321,9 @@ public class MemBuffer
             // otherwise, need another segment, so complete current write
             seg.finishWriting();
             // and allocate, init-for-writing new one:
-            _head = seg = _reuseFree().initForWriting(seg);
+            Segment newSeg = _reuseFree().initForWriting();
+            seg.relink(newSeg);
+            _head = seg = newSeg;
         }
     }
 
@@ -365,17 +367,101 @@ public class MemBuffer
         }
         return len;
     }
-    
+
     /**
      * Method for reading and removing next available entry from buffer.
-     * If no ent
+     * If no entry is available, will block to wait for more data.
      */
-    public synchronized byte[] getNextEntry()
+    public synchronized byte[] getNextEntry() throws InterruptedException
     {
         // first: must have something to return
-        if (_entryCount == 0) {
-            return null;
+        while (_entryCount == 0) {
+            this.wait();
         }
+        return _doGetNext();
+    }
+
+    /**
+     * Method that will read, remove and return next entry, if one is
+     * available; or return null if not.
+     */
+    public synchronized byte[] getNextEntryIfAvailable() {
+        return (_entryCount == 0) ? null : _doGetNext();
+    }
+    
+    /**
+     * Method to get (and remove) next entry from the buffer, if one
+     * is available. If buffer is empty, may wait up to specified amount
+     * of time for new data to arrive.
+     * 
+     * @param timeoutMsecs Amount of time to wait for more data if
+     *   buffer is empty, if non-zero positive number; if zero or
+     *   negative number, will return immediately
+     *   
+     * @return Next entry from buffer, if one was available either
+     *   immediately or before waiting for full timeout; or null
+     *   if no entry became available
+     */
+    public synchronized byte[] getNextEntry(long timeoutMsecs) throws InterruptedException
+    {
+        if (_entryCount > 0) {
+            return _doGetNext();
+        }
+        long now = System.currentTimeMillis();
+        long end = now + timeoutMsecs;
+        while (now < end) {
+            this.wait(end - now);
+            if (_entryCount > 0) {
+                return _doGetNext();
+            }
+            now = System.currentTimeMillis();
+        }
+        return null;
+    }    
+
+    /**
+     * Method that can be called to wait until there is at least one
+     * entry available for reading.
+     *<p>
+     * Note that it is possible to have a race condition if there are
+     * multiple readers, such that even if this method returns, following
+     * read could fail/block (when another reader thread manages to thread
+     * before current thread reads next entry); this method can only be
+     * used to guarantee data for single-threaded reads, although it may
+     * work as an optimization for multiple reader case as well.
+     */
+    public synchronized void waitForNextEntry() throws InterruptedException
+    {
+        if (_entryCount == 0) {
+            this.wait();
+        }
+    }
+    public synchronized void waitForNextEntry(long maxWaitMsecs) throws InterruptedException
+    {
+        if (_entryCount == 0) {
+            this.wait(maxWaitMsecs);
+        }
+    }
+    
+    private int _readEntryLength()
+    {
+        // see how much of length prefix we can read
+        int len = _tail.readLength();
+        if (len >= 0) { // all!
+            return len;
+        }
+
+        // otherwise we got negated version of partial length, so find what we got:
+        len = -len - 1;
+
+        // and move to read the next segment;
+        _freeReadSegment();
+        // and then read enough data to figure out length:
+        return _tail.readSplitLength(len);
+    }
+
+    private byte[] _doGetNext()
+    {
         int segLen = getNextEntryLength();
         // but ensure that it gets reset for chunk after this one
         _nextEntryLength = -1;
@@ -401,50 +487,38 @@ public class MemBuffer
         return result;
     }
     
-    private int _readEntryLength()
-    {
-        // see how much of length prefix we can read
-        int len = _tail.readLength();
-        if (len >= 0) { // all!
-            return len;
-        }
-
-        // otherwise we got negated version of partial length, so find what we got:
-        len = -len - 1;
-
-        // and move to read the next segment;
-        Segment old = _tail;
-        Segment next = old.getNext();
-        old.finishReading();
-        --_usedSegmentsCount;
-        _tail = next.initForReading();
-        // how about freed segment? reuse?
-        if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
-            _firstFreeSegment = _firstFreeSegment.relink(old);
-            ++_freeSegmentCount;
-        }
-        // and then read enough data to figure out length:
-        return _tail.readSplitLength(len);
-    }
-
     /**
      * Helper method that handles append when contents may need to be split
      * across multiple segments.
      */
     protected void _doReadChunked(byte[] buffer, int offset, int length)
     {
-        Segment seg = _tail;
         while (true) {
-            int actual = seg.tryRead(buffer, offset, length);
+            int actual = _tail.tryRead(buffer, offset, length);
             offset += actual;
             length -= actual;
             if (length == 0) { // complete, can leave
                 return;
             }
-            // otherwise, need another segment, so complete current read
-            seg.finishReading();
-            // and allocate, init-for-writing new one:
-            _tail = seg = _tail.getNext().initForReading();
+            _freeReadSegment();
+        }
+    }
+
+    /**
+     * Helper method called when the current tail segment has been completely
+     * read, and we want to free or reuse it and start reading the next
+     * segment.
+     */
+    private void _freeReadSegment()
+    {
+        Segment old = _tail;
+        Segment next = old.finishReading();
+        --_usedSegmentsCount;
+        _tail = next.initForReading();
+        // how about freed segment? reuse?
+        if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
+            _firstFreeSegment = _firstFreeSegment.relink(old);
+            ++_freeSegmentCount;
         }
     }
     

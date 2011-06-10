@@ -2,7 +2,7 @@ package com.fasterxml.membuf;
 
 public class SimpleAppendReadTest extends MembufTestBase
 {
-    public void testX() throws Exception
+    public void testSimpleAppendAndGet() throws Exception
     {
         // will use segments of size 10 bytes; only one segment per-allocator reuse
         // and maximum allocation of 4 segments per-allocator
@@ -12,11 +12,12 @@ public class SimpleAppendReadTest extends MembufTestBase
 
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
         // no content, beginning of buffer, all 30 bytes available...
         assertEquals(30, buffer.getMaximumAvailableSpace());
         assertEquals(-1, buffer.getNextEntryLength());
 
-        assertNull(buffer.getNextEntry());
+        assertNull(buffer.getNextEntryIfAvailable());
         
         byte[] chunk3 = buildChunk(3);
         buffer.appendEntry(chunk3);
@@ -55,9 +56,45 @@ public class SimpleAppendReadTest extends MembufTestBase
         // and now we should be empty...
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+        // including holding on to just one segment
         assertEquals(1, buffer.getSegmentCount());
+
+        // and shouldn't find anything else, for now
+        assertNull(buffer.getNextEntryIfAvailable());
     }
 
+    /**
+     * Separate test for appending and reading empty segments; segments
+     * with 0 bytes of payload which consist of just a single length
+     * indicator byte.
+     */
+    public void testEmptySegments() throws Exception
+    {
+        MemBuffers bufs = new MemBuffers(10, 1, 3);
+        MemBuffer buffer = bufs.createBuffer(1, 2);
+        byte[] empty = new byte[0];
+
+        assertEquals(0, buffer.getEntryCount());
+        assertEquals(1, buffer.getSegmentCount());
+        assertEquals(20, buffer.getMaximumAvailableSpace());
+
+        // should be able to append 20 of empties...
+        for (int i = 0; i < 20; ++i) {
+            buffer.appendEntry(empty);
+        }
+        assertEquals(20, buffer.getEntryCount());
+        assertEquals(2, buffer.getSegmentCount());
+
+        for (int i = 0; i < 20; ++i) {
+            byte[] data = buffer.getNextEntry();
+            assertEquals(0, data.length);
+        }
+        assertEquals(0, buffer.getEntryCount());
+        assertTrue(buffer.isEmpty());
+        assertEquals(1, buffer.getSegmentCount());
+    }
+    
     /*
     /**********************************************************************
     /* Helper methods

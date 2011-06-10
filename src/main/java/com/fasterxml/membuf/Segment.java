@@ -105,13 +105,12 @@ public class Segment
      *<p>
      * This state transition must occur from {@link State#FREE}.
      */
-    protected Segment initForWriting(Segment prevWriteSegment)
+    protected Segment initForWriting()
     {
         if (_state != State.FREE) {
             throw new IllegalStateException("Trying to initForWriting segment, state "+_state);
         }
         _state = State.WRITING;
-        _nextSegment = prevWriteSegment;
         return this;
     }
 
@@ -150,8 +149,10 @@ public class Segment
     }
 
     /**
-     * Method called when all contents has been read from this segment,
-     * and read position has moved to a new segment.
+     * Method called when all contents has been read from this segment.
+     * Will return next segment and clear it.
+     * 
+     * @return Next segment after this segment (before clearing link)
      */
     protected Segment finishReading()
     {
@@ -159,12 +160,13 @@ public class Segment
             throw new IllegalStateException("Trying to finishReading, state "+_state);
         }
         _state = State.FREE;
-        _nextSegment = null;
+        Segment result = _nextSegment;
+        relink(null);
         // clear write pointer for further reuse
         _buffer.clear();
         // and drop reference to read-wrapper:
         _readBuffer = null;
-        return this;
+        return result;
     }
     
     /*
@@ -175,6 +177,10 @@ public class Segment
 
     public Segment relink(Segment next)
     {
+        // sanity check; should be possible to remove in future
+        if (next == this) {
+            throw new IllegalStateException("trying to set cyclic link");
+        }
         _nextSegment = next;
         return this;
     }
@@ -310,7 +316,7 @@ public class Segment
     {
         while (true) {
             partial = (partial << 7);
-            int b = _buffer.get();
+            int b = _readBuffer.get();
             if (b < 0) { // complete...
                 return partial + (b & 0x7F);
             }
@@ -331,7 +337,7 @@ public class Segment
     {
         int actualLen = Math.min(availableForReading(), length);
         if (actualLen > 0) {
-            _readBuffer.get(buffer, offset, length);
+            _readBuffer.get(buffer, offset, actualLen);
         }
         return actualLen;
     }
