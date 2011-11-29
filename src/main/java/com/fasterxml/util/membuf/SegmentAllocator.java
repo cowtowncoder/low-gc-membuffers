@@ -70,7 +70,7 @@ public class SegmentAllocator
      * and reallocating segments, as segments typically use native
      * {@link java.nio.ByteBuffer}s that may be costly to allocate.
      * 
-     * @param Length (in bytes) of segments to allocate
+     * @param segmentSize Length (in bytes) of segments to allocate
      * @param minSegmentsToRetain Number of segments that we will retain after
      *   being released, for reuse; if 0, will not reuse any segments (although
      *   individual buffers may still do local reuse)

@@ -127,7 +127,7 @@ garbage collection overhead (especially latency)
               <Private-Package>
 </Private-Package>
               <Export-Package>
-com.fasterxml.membuf
+com.fasterxml.util.membuf
 </Export-Package>
             </instructions>
           </configuration>

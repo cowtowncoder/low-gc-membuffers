@@ -41,7 +41,7 @@ public class MemBuffers
      * @param segmentsToRetain Maximum number of segments allocator
      *   may reuse
      *   (see {@link SegmentAllocator} for details)
-     * @param maxSegment Maximum number of allocated (and not released) segments
+     * @param maxSegments Maximum number of allocated (and not released) segments
      *   allowed at any given point
      *   (see {@link SegmentAllocator} for details)
      */

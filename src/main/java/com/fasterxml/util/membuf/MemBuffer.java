@@ -122,7 +122,7 @@ public class MemBuffer
 
     /**
      * Number of segments reachable via {@link #_firstFreeSegment};
-     * less than equal to {@link _minSegments}.
+     * less than equal to {@link _maxSegmentsToAllocate}.
      */
     protected int _freeSegmentCount;
 
@@ -147,7 +147,7 @@ public class MemBuffer
 
     /**
      * @param allocator Allocator used for allocating underlying segments
-     * @param maxSegmentsToRetain Maximum number of segments to hold on to
+     * @param minSegmentsToAllocate Maximum number of segments to hold on to
      *   (for reuse) after being released. Increases minimum memory usage
      *   but can improve performance by avoiding unnecessary re-allocation;
      *   and also guarantees that buffer always has at least this much
@@ -155,7 +155,7 @@ public class MemBuffer
      * @param maxSegmentsToAllocate Maximum number of segments that can be
      *   allocated for this buffer: limits maximum capacity and memory usage
      * @param initialSegments Chain of pre-allocated segments, containing
-     *   <code>maxSegmentsToRetain</code> segments that are allocated to ensure
+     *   <code>_maxSegmentsForReuse</code> segments that are allocated to ensure
      *   that there is always specified minimum capacity available
      */
     public MemBuffer(SegmentAllocator allocator,
