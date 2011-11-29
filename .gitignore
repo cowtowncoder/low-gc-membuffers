@@ -1,3 +1,9 @@
+# use glob syntax.
+syntax: glob
+*.class
+*~
+*.bak
+
 # Skip maven 'target' directory
 target
 

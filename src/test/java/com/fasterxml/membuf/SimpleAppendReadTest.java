@@ -46,10 +46,14 @@ public class SimpleAppendReadTest extends MembufTestBase
 
         // then read them all
         assertEquals(7, buffer.getNextEntryLength());
+        // repeat to ensure length is not reset (or re-read)
+        assertEquals(7, buffer.getNextEntryLength());
+        assertEquals(7, buffer.getNextEntryLength());
         actual = buffer.getNextEntry();
         verifyChunk(actual, chunk7.length);
         actual = buffer.getNextEntry();
         verifyChunk(actual, chunk7.length);
+        assertEquals(7, buffer.getNextEntryLength());
         actual = buffer.getNextEntry();
         verifyChunk(actual, chunk7.length);
 
