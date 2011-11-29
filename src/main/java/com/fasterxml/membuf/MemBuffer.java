@@ -517,8 +517,18 @@ public class MemBuffer
         _tail = next.initForReading();
         // how about freed segment? reuse?
         if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
-            _firstFreeSegment = _firstFreeSegment.relink(old);
-            ++_freeSegmentCount;
+            if (_firstFreeSegment == null) {
+                // sanity check
+                if (_freeSegmentCount != 0) {
+                    throw new IllegalStateException("_firstFreeSegment null; count "+_freeSegmentCount+" (should be 0)");
+                }
+                // this is enough; old.next has been set to null already:
+                _firstFreeSegment = old;
+                _freeSegmentCount = 1;
+            } else {
+                _firstFreeSegment = _firstFreeSegment.relink(old);
+                ++_freeSegmentCount;
+            }
         }
     }
     
