@@ -1,10 +1,13 @@
-package com.fasterxml.membuf;
+package com.fasterxml.util.membuf;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
 import org.junit.Assert;
+
+import com.fasterxml.util.membuf.MemBuffer;
+import com.fasterxml.util.membuf.MemBuffers;
 
 /**
  * Unit test that uses a sample file, sending all entries, one by

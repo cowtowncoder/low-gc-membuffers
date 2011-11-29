@@ -1,4 +1,7 @@
-package com.fasterxml.membuf;
+package com.fasterxml.util.membuf;
+
+import com.fasterxml.util.membuf.MemBuffer;
+import com.fasterxml.util.membuf.MemBuffers;
 
 public class SimpleAppendReadTest extends MembufTestBase
 {

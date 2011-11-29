@@ -1,4 +1,4 @@
-package com.fasterxml.membuf;
+package com.fasterxml.util.membuf;
 
 import junit.framework.TestCase;
 
