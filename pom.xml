@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.util</groupId>
   <artifactId>low-gc-memq</artifactId>
   <name>Low GC memory queue</name>
-  <version>0.5.0</version>
+  <version>0.5.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <description>In-memory, bounded-size queue data structure that aims at minimizing
 garbage collection overhead (especially latency)
