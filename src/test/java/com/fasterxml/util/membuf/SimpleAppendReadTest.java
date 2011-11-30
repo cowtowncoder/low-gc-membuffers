@@ -101,10 +101,19 @@ public class SimpleAppendReadTest extends MembufTestBase
         assertTrue(buffer.isEmpty());
         assertEquals(1, buffer.getSegmentCount());
     }
-    
-    /*
-    /**********************************************************************
-    /* Helper methods
-    /**********************************************************************
+
+    /**
+     * Unit test that verifies that read from empty buffer
+     * would block; use timeout as verification
      */
+    public void testTryReadFromEmpty() throws Exception
+    {
+        MemBuffers bufs = new MemBuffers(1000, 1, 100);
+        MemBuffer buffer = bufs.createBuffer(1, 2);
+        
+        byte[] data = buffer.getNextEntryIfAvailable();
+        assertNull(data);
+        data = buffer.getNextEntry(10L); // 10 msecs delay
+        assertNull(data);
+    }
 }

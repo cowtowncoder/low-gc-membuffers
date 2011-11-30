@@ -141,6 +141,7 @@ public class SegmentAllocator
         // Can we reuse it?
         if (_reusableSegmentCount < _maxReusableSegments) {
             _firstReusableSegment = segToRelease.relink(_firstReusableSegment);
+            ++_reusableSegmentCount;
         }
     }
     

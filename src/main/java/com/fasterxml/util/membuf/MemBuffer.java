@@ -410,7 +410,7 @@ public class MemBuffer
         long now = System.currentTimeMillis();
         long end = now + timeoutMsecs;
         while (now < end) {
-            this.wait(end - now);
+            wait(end - now);
             if (_entryCount > 0) {
                 return _doGetNext();
             }
@@ -529,6 +529,8 @@ public class MemBuffer
                 _firstFreeSegment = _firstFreeSegment.relink(old);
                 ++_freeSegmentCount;
             }
+        } else { // if no reuse, see if allocator can share
+            _segmentAllocator.releaseSegment(old);
         }
     }
     
