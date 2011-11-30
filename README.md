@@ -6,17 +6,23 @@ GC overhead minimization is achieved by use of direct ByteBuffers (memory alloca
 
 Conceptually memory buffers are just simple circular buffers (ring buffers); library supports efficient reusing and sharing of underlying segments for sets of buffers, although for many use cases single buffer suffices.
 
-# Fancier stuff: multiple buffers
+## Fancier stuff: multiple buffers
 
 Although having individual buffers is useful as is, this library does bit better: it actually defines "buffer groups" (com.fasterxml.membuf.MemBuffers) that consist of zero or more actual buffers (com.fasterxml.membuf.MemBuffer). All buffers of a group share the same segment allocator (com.fasterxml.membuf.SegmentAllocator); which makes it possible to share set of reusable underlying ByteBuffers.
 
 This ability to share underlying segments between buffers, with strict memory bounds makes it possible to use library as basic buffer manager; for example to buffer input and/or output of a web server.
+
+## Thread-safety
+
+All pieces are designed to be used by multiple threads (often just 2, producer/consumer), so all access is properly synchronized.
 
 # Status
 
 Small set of unit tests exist, and code appears solid enough to start building test systems -- but do not yet do prod systems with it. :)
 
 # Usage
+
+## Start with `MemBuffers` factory
 
 It all starts with `MemBuffers`, which can be viewed as container and factory of actual buffers (`MemBuffer`). To construct one, you need to specify amount of memory to use, as well as how memory should be sliced: so, for example:
 
@@ -27,11 +33,17 @@ The segments are then used by actual buffer instances (more on this in a bit)
 
 So how do you choose parameters? Smaller the segments, more granular is memory allocation, which can mean more efficient memory use (since overhead is bounded to at most 1 segment-full per active buffer). But it also increases number of segment instances, possibly increasing fragmentation and adding overhead.
 
+Note that you can create multiple instances of `MemBuffers`, if you want to have more control over how pool of segments is allocated amongst individual buffers.
+
+## Create individual buffers, `MemBuffer`
+
 Actual buffers are then allocated using
 
     MemBuffer items = bufs.createBuffer(2, 5);
 
-which would indicate that this buffer will hold on to at least 2 segments (i.e. about 60kB raw storage) and use at most 5 (so max usage of 150kB). Due to circular buffer style of allocation, at least 'segments - 1' amount of memory will be available for actual queue; that is, up to one segment may be temporarily unavailable depending on pattern of append/remove operations.
+which would indicate that this buffer will hold on to at least 2 segments (i.e. about 60kB raw storage) and use at most 5 (so max usage of 150kB). Due to circular buffer style of allocation, at least 'segments - 1' amount of memory will be available for actual queue (i.e. guaranteed space of 120kB; that is, up to one segment may be temporarily unavailable depending on pattern of append/remove operations.
+
+## And start buffering/unbuffering
 
 To append entries, you use:
 
@@ -54,4 +66,13 @@ and to pop entries:
     }
     // or:
     next = items.getNextEntry(1000L); // block for at most 1 second before giving up
+
+## Statistics, anyone?
+
+Finally, you can also obtain various statistics of buffer instances:
+
+    int entries = items.getEntryCount(); // how many available for getting?
+    int segmentsInUse = items.getSegmentCount();
+    long maxFree = items.getMaximumAvailableSpace(); // approximate free space
+    long payload = items.getTotalPayloadLength(); // how much used by data?
 
