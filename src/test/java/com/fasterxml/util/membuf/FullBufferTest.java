@@ -6,6 +6,9 @@ import org.junit.Assert;
 
 public class FullBufferTest extends MembufTestBase
 {
+    /**
+     * Test for verifying behavior when buffer is full.
+     */
     public void testTryWriteToFull() throws Exception
     {
         // up to 24 bytes of room (and 12 guaranteed)
@@ -25,6 +28,7 @@ public class FullBufferTest extends MembufTestBase
         // and if do without try, should get an exception
         try {
             buffer.appendEntry(data);
+            fail("Append should have failed");
         } catch (IllegalStateException e) {
             verifyException(e, "can't allocate");
         }
@@ -44,5 +48,50 @@ public class FullBufferTest extends MembufTestBase
         buffer.appendEntry(data);
         assertEquals(1, buffer.getEntryCount());
         assertEquals(16L, buffer.getTotalPayloadLength());
+    }
+
+    /**
+     * Test for verifying that number of buffers that we can create is
+     * also bound.
+     */
+    public void testMaxBuffers() throws Exception
+    {
+        // with max 5 segments, each buffer requiring at least two, can create two
+        MemBuffers bufs = new MemBuffers(12, 1, 5);
+        MemBuffer buf1 = bufs.createBuffer(2, 4);
+        assertNotNull(buf1);
+        MemBuffer buf2 = bufs.createBuffer(2, 4);
+        assertNotNull(buf2);
+
+        // and then we should fail:
+        try {
+            bufs.createBuffer(2, 4);
+            fail("Buffer creation should have failed");
+        } catch (IllegalStateException e) {
+            verifyException(e, "due to segment allocation limits");
+        }
+        assertNull(bufs.tryCreateBuffer(2, 4));
+
+        // furthermore, should be able to extend one of buffers by one segment:
+        buf1.appendEntry(new byte[32]); // needs 33 bytes
+        // but not with additional expansion
+        assertFalse(buf1.tryAppendEntry(new byte[4]));
+
+        // and for second buffer can full up to 24 bytes:
+        buf2.appendEntry(new byte[23]);
+        // but not for more
+        try {
+            buf2.appendEntry(new byte[5]);
+            fail("Append should have failed");
+        } catch (IllegalStateException e) {
+            verifyException(e, "can't allocate");
+        }
+
+        // and should be able to get out entries as well:
+        byte[] data = buf1.getNextEntry();
+        assertEquals(32, data.length);
+
+        data = buf2.getNextEntry();
+        assertEquals(23, data.length);
     }
 }
