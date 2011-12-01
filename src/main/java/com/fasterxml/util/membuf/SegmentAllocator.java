@@ -74,7 +74,7 @@ public class SegmentAllocator
      * @param minSegmentsToRetain Number of segments that we will retain after
      *   being released, for reuse; if 0, will not reuse any segments (although
      *   individual buffers may still do local reuse)
-     * @param maxSegment Maximum number of allocated (and not released) segments
+     * @param maxSegments Maximum number of allocated (and not released) segments
      *   allowed at any given point;
      *   strictly limits maximum memory usage by all {@link MemBuffer}s that
      *   use this allocator.

@@ -129,7 +129,7 @@ public class MemBuffer
 
     /**
      * Number of segments reachable via {@link #_firstFreeSegment};
-     * less than equal to {@link _maxSegmentsToAllocate}.
+     * less than equal to {@link #_maxSegmentsToAllocate}.
      */
     protected int _freeSegmentCount;
 
