@@ -1,5 +1,7 @@
 package com.fasterxml.util.membuf;
 
+import java.io.*;
+
 /*
  * Copyright Tatu Saloranta, 2011-
  */
@@ -18,10 +20,15 @@ package com.fasterxml.util.membuf;
  * and consumer. If it turns out that there are bottlenecks that could be
  * avoided with more granular (or external) locking, this design can be
  * revisited.
+ *<p>
+ * Note that if instances are discarded, they <b>MUST</b> be closed:
+ * finalize() method is not implemented since it is both somewhat unreliable
+ * (i.e. should not be counted on) and can add overhead for GC processing.
  * 
  * @author Tatu Saloranta
  */
 public class MemBuffer
+    implements Closeable // just for convenience
 {
     private final static byte[] EMPTY_PAYLOAD = new byte[0];
     
@@ -217,6 +224,10 @@ public class MemBuffer
      */
     public synchronized long getMaximumAvailableSpace()
     {
+        if (_head == null) { // closed
+            return -1L;
+        }
+        
         // First: how much room do we have in the current write segment?
         long space = _head.availableForAppend();
         // and how many more segments could we allocate?
@@ -261,6 +272,10 @@ public class MemBuffer
     
     public synchronized boolean tryAppendEntry(byte[] data, int dataOffset, int dataLength)
     {
+        if (_head == null) {
+            _reportClosed();
+        }
+        
         // first, calculate total size (length prefix + payload)
         int prefixLength = _calcLengthPrefix(_lengthPrefixBuffer, dataLength);
         int freeInCurrent = _head.availableForAppend();
@@ -340,6 +355,9 @@ public class MemBuffer
      */
     public synchronized int getNextEntryLength()
     {
+        if (_head == null) {
+            _reportClosed();
+        }
         int len = _nextEntryLength;
         if (len < 0) { // need to read it?
             if (_entryCount == 0) { // but can only read if something is actually available
@@ -356,6 +374,9 @@ public class MemBuffer
      */
     public synchronized byte[] getNextEntry() throws InterruptedException
     {
+        if (_head == null) {
+            _reportClosed();
+        }
         // first: must have something to return
         while (_entryCount == 0) {
             this.wait();
@@ -386,6 +407,9 @@ public class MemBuffer
      */
     public synchronized byte[] getNextEntry(long timeoutMsecs) throws InterruptedException
     {
+        if (_head == null) {
+            _reportClosed();
+        }
         if (_entryCount > 0) {
             return _doGetNext();
         }
@@ -414,17 +438,23 @@ public class MemBuffer
      */
     public synchronized void waitForNextEntry() throws InterruptedException
     {
+        if (_head == null) {
+            _reportClosed();
+        }
         if (_entryCount == 0) {
             this.wait();
         }
     }
     public synchronized void waitForNextEntry(long maxWaitMsecs) throws InterruptedException
     {
+        if (_head == null) {
+            _reportClosed();
+        }
         if (_entryCount == 0) {
             this.wait(maxWaitMsecs);
         }
     }
-
+    
     /*
     /**********************************************************************
     /* Public API, state changes
@@ -438,6 +468,10 @@ public class MemBuffer
      */
     public synchronized void clear()
     {
+        if (_head == null) { // closed; nothing to do
+            return;
+        }
+        
         // first, free all segments except for head
         while (_tail != _head) {
             _freeReadSegment();
@@ -449,6 +483,24 @@ public class MemBuffer
         _entryCount = 0;
         _totalPayloadLength = 0L;
         _nextEntryLength = -1;
+    }
+
+    @Override // from Closeable -- note, does NOT throw IOException
+    public synchronized void close()
+    {
+        // first do regular cleanup
+        clear();
+        // then free the head/tail node as well
+        _usedSegmentsCount = 0;
+        _segmentAllocator.releaseSegment(_head);
+        _head = _tail = null;
+        // and any locally recycled buffers as well
+        Segment seg;
+        while ((seg = _firstFreeSegment) != null) {
+            _firstFreeSegment = seg._nextSegment;
+            _segmentAllocator.releaseSegment(seg);
+        }
+        _freeSegmentCount = 0;
     }
     
     /*
@@ -603,5 +655,11 @@ public class MemBuffer
         buffer[4] = (byte) ((length & 0x7f) | 0x80);
         return 5;
     }
-    
+
+    /* Helper method called to throw an exception when an active method
+     * is called after buffer has been closed.
+     */
+    protected void _reportClosed() {
+        throw new IllegalStateException("MemBuffer instance closed, can not use");
+    }
 }
