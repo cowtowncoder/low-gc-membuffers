@@ -144,13 +144,13 @@ public class SegmentAllocator
             ++_reusableSegmentCount;
         }
     }
-    
+
     /*
     /**********************************************************************
     /* Internal methods
     /**********************************************************************
      */
-
+    
     protected Segment _allocateSegment()
     {
         // can reuse a segment returned earlier?
