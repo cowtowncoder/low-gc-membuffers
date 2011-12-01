@@ -29,7 +29,7 @@ or similarly if you need to read a sequence of entries as atomic unit.
 
 # Status
 
-Small set of unit tests exist, and code appears solid enough to start building test systems -- but do not yet do prod systems with it. :)
+A set of unit tests exist, and code appears solid enough to start building test systems. But be careful to fully evaluate the library before using at as component before 1.0 release.
 
 # Usage
 
@@ -86,4 +86,9 @@ Finally, you can also obtain various statistics of buffer instances:
     int segmentsInUse = items.getSegmentCount();
     long maxFree = items.getMaximumAvailableSpace(); // approximate free space
     long payload = items.getTotalPayloadLength(); // how much used by data?
+
+## Download
+
+Check out [Wiki](https://github.com/cowtowncoder/low-gc-membuffers/wiki) for downloads, Javadocs etc.
+
 
