@@ -326,24 +326,6 @@ public class MemBuffer
             _head = seg = newSeg;
         }
     }
-
-    /**
-     * Helper method for reusing a segment from free-segments list.
-     * Caller must guarantee there is such a segment available; this is
-     * done in advance to achieve atomicity of multi-segment-allocation.
-     */
-    protected final Segment _reuseFree()
-    {
-        Segment freeSeg = _firstFreeSegment;
-        if (freeSeg == null) { // sanity check
-            throw new IllegalStateException("Internal error: no free segments available");
-        }
-        _firstFreeSegment = freeSeg.getNext();
-        --_freeSegmentCount;
-        _head = freeSeg;
-        ++_usedSegmentsCount;
-        return freeSeg;
-    }
     
     /*
     /**********************************************************************
@@ -442,7 +424,60 @@ public class MemBuffer
             this.wait(maxWaitMsecs);
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Public API, state changes
+    /**********************************************************************
+     */
+
+    /**
+     * Method that will discard contents of this buffer; functionally similar
+     * to just reading all contents, but is more efficient and guaranteed
+     * to be atomic operation.
+     */
+    public synchronized void clear()
+    {
+        // first, free all segments except for head
+        while (_tail != _head) {
+            _freeReadSegment();
+        }
+        // then re-init head/tail
+        _tail.clear();
+        
+        // and reset various counters
+        _entryCount = 0;
+        _totalPayloadLength = 0L;
+        _nextEntryLength = -1;
+    }
     
+    /*
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
+     */
+
+    /* Helper method for reusing a segment from free-segments list.
+     * Caller must guarantee there is such a segment available; this is
+     * done in advance to achieve atomicity of multi-segment-allocation.
+     */
+    protected final Segment _reuseFree()
+    {
+        Segment freeSeg = _firstFreeSegment;
+        if (freeSeg == null) { // sanity check
+            throw new IllegalStateException("Internal error: no free segments available");
+        }
+        _firstFreeSegment = freeSeg.getNext();
+        --_freeSegmentCount;
+        _head = freeSeg;
+        ++_usedSegmentsCount;
+        return freeSeg;
+    }
+    
+    /* Helper method used to read length of next segment.
+     * Caller must ensure that there is at least one more segment
+     * to read.
+     */
     private int _readEntryLength()
     {
         // see how much of length prefix we can read
@@ -533,12 +568,6 @@ public class MemBuffer
             _segmentAllocator.releaseSegment(old);
         }
     }
-    
-    /*
-    /**********************************************************************
-    /* Internal methods
-    /**********************************************************************
-     */
 
     private int _calcLengthPrefix(byte[] buffer, int length)
     {

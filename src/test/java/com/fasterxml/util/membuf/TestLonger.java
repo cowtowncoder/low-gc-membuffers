@@ -34,8 +34,15 @@ public class TestLonger extends MembufTestBase
         MemBuffers bufs = new MemBuffers(30 * 1024, 2, 11);
         MemBuffer buffer = bufs.createBuffer(2, 11);
 
-        // then append/remove three times
+        // then append/remove multiple times
         appendAndRemove(rows, buffer);
+        appendAndRemove(rows, buffer);
+        appendAndRemove(rows, buffer);
+        appendAndRemove(rows, buffer);
+        appendAndRemove(rows, buffer);
+
+        // then try appends with partial read, clear
+        appendAndClear(rows, buffer);
     }
 
     /*
@@ -97,4 +104,38 @@ public class TestLonger extends MembufTestBase
         assertEquals(1, buffer.getSegmentCount());
     }
 
+    protected void appendAndClear(List<byte[]> rows, MemBuffer buffer)
+        throws InterruptedException
+    {
+        long totalPayload = 0L;
+        for (byte[] b : rows) {
+            totalPayload += b.length;
+            buffer.appendEntry(b);
+            assertEquals(totalPayload, buffer.getTotalPayloadLength());
+        }
+
+        assertEquals(rows.size(), buffer.getEntryCount());
+        assertEquals(totalPayload, buffer.getTotalPayloadLength());
+        // we measured that it will take 10 segments for this data
+        assertEquals(10, buffer.getSegmentCount());
+
+        // then only read first 5 lines
+
+        int left = rows.size();
+        for (int i = 0; i < 5; ++i) {
+            byte[] exp = rows.get(i);
+            byte[] actual = buffer.getNextEntry(100L);
+            Assert.assertArrayEquals(exp, actual);
+            totalPayload -= exp.length;
+            assertEquals(totalPayload, buffer.getTotalPayloadLength());
+            --left;
+            assertEquals(left, buffer.getEntryCount());
+        }
+        // then clear again, verify it's empty...
+        buffer.clear();
+        assertEquals(0, buffer.getEntryCount());
+        assertEquals(0L, buffer.getTotalPayloadLength());
+        // always have at least one segment
+        assertEquals(1, buffer.getSegmentCount());
+    }
 }

@@ -16,6 +16,17 @@ This ability to share underlying segments between buffers, with strict memory bo
 
 All pieces are designed to be used by multiple threads (often just 2, producer/consumer), so all access is properly synchronized.
 
+In addition, locking is done using buffer instances, so it may occasionally make sense to synchronize on buffer instance since this allows you to create atomic sequences of operations, like so:
+
+    MemBuffer buffer = ...
+    synchronized (buffer) {
+      // read latest, add right back:
+      byte[] msg = buffer.getNextEntry();
+      buffer.appendEntry(msg);
+    }
+
+or similarly if you need to read a sequence of entries as atomic unit.
+
 # Status
 
 Small set of unit tests exist, and code appears solid enough to start building test systems -- but do not yet do prod systems with it. :)

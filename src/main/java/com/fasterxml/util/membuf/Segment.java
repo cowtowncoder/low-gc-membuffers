@@ -8,7 +8,9 @@ import java.nio.ByteBuffer;
 
 /**
  * Container for individual segments that form physical storage level of
- * the logical queue.
+ * the logical queue; basically a wrapper around (direct) {@link ByteBuffer},
+ * adding state information and linkage to next segment in chain
+ * (of used or free segments).
  * 
  * @author Tatu Saloranta
  */
@@ -168,6 +170,23 @@ public class Segment
         _readBuffer = null;
         return result;
     }
+
+    /**
+     * Method that will erase any content segment may have and reset
+     * various pointers: will be called when clearing buffer, the last
+     * remaining segment needs to be cleared.
+     */
+    protected void clear()
+    {
+        // temporarily change state to 'free'
+        _state = State.FREE;
+        _readBuffer = null; // could/should we just reset it instead?
+        _buffer.clear(); // clear the write pointer
+        // so that we can do same call sequence as when instances are created
+        initForWriting();
+        initForReading();
+        // so that state should now be READING_AND_WRITING
+    }
     
     /*
     /**********************************************************************
@@ -203,11 +222,9 @@ public class Segment
     }
 
     public int availableForReading() {
-        /*
-        if (_readBuffer == null) { // not yet initialized for reading? how much have we written?
-            return _buffer.position();
+        if (_readBuffer == null) { // sanity check...
+            throw new IllegalStateException("Method should not be called when _readBuffer is null");
         }
-        */
         return _readBuffer.remaining();
     }
     

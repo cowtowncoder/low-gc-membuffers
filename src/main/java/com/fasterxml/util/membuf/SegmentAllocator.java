@@ -157,6 +157,7 @@ public class SegmentAllocator
         if (_reusableSegmentCount > 0) {
             Segment segment = _firstReusableSegment;
             _firstReusableSegment = segment.getNext();
+            ++_bufferOwnedSegmentCount; 
             --_reusableSegmentCount;
             return segment;
         }
