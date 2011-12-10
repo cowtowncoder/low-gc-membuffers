@@ -87,8 +87,16 @@ Finally, you can also obtain various statistics of buffer instances:
     long maxFree = items.getMaximumAvailableSpace(); // approximate free space
     long payload = items.getTotalPayloadLength(); // how much used by data?
 
-## Download
+# Download
 
 Check out [Wiki](https://github.com/cowtowncoder/low-gc-membuffers/wiki) for downloads, Javadocs etc.
 
+# Known/potential problems
+
+Default (and currently only) buffer implementation uses direct `ByteBuffer`s, and amount of memory that can be allocated is limited by JVM option `-XX:MaxDirectMemorySize`, which by default has relatively low size of 64megs.
+To increase this setting, add setting like:
+
+    -XX:MaxDirectMemorySize=512m
+
+otherwise you are likely to hit an OutOfMemoryError when using larger buffers.
 
