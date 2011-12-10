@@ -14,7 +14,9 @@ import java.io.*;
  * byte sequences and almost all memory is simply used by
  * allocated <code>ByteBuffer</code>s.
  *<p>
- * Access to queue is fully synchronized, since parts will have to be anyway
+ * Access to queue is fully synchronized -- meaning that all methods are
+ * synchronized by implementations as necessary, and caller should not need
+ * to use external synchronization -- since parts will have to be anyway
  * (updating of stats, pointers), and since all real-world use cases will
  * need some level of synchronization anyway, even with just single producer
  * and consumer. If it turns out that there are bottlenecks that could be
@@ -202,6 +204,15 @@ public class MemBuffer
         return _entryCount;
     }
 
+    /**
+     * Method for checking whether this buffer has no entries,
+     * functionally equivalent to:
+     *<pre>
+     *   getEntryCount() == 0
+     *</pre>
+     * 
+     * @return True if this buffer contains no entries
+     */
     public synchronized boolean isEmpty() {
         return (_entryCount == 0);
     }
@@ -254,10 +265,18 @@ public class MemBuffer
     /**********************************************************************
      */
 
+    /**
+     * Method that tries to append an entry in buffer and returning;
+     * if there is no room, a {@link IllegalStateException} is thrown.
+     */
     public final void appendEntry(byte[] data) {
         appendEntry(data, 0, data.length);
     }
 
+    /**
+     * Method that tries to append an entry in buffer and returning;
+     * if there is no room, a {@link IllegalStateException} is thrown.
+     */
     public void appendEntry(byte[] data, int dataOffset, int dataLength)
     {
         if (!tryAppendEntry(data, dataOffset, dataLength)) {
@@ -266,10 +285,20 @@ public class MemBuffer
         }
     }
 
+    /**
+     * Method that tries to append an entry in buffer if there is enough room;
+     * if there is, entry is appended and 'true' returned; otherwise no changes
+     * are made and 'false' is returned.
+     */
     public final boolean tryAppendEntry(byte[] data) {
         return tryAppendEntry(data, 0, data.length);
     }
     
+    /**
+     * Method that tries to append an entry in buffer if there is enough room;
+     * if there is, entry is appended and 'true' returned; otherwise no changes
+     * are made and 'false' is returned.
+     */
     public synchronized boolean tryAppendEntry(byte[] data, int dataOffset, int dataLength)
     {
         if (_head == null) {
@@ -445,6 +474,22 @@ public class MemBuffer
             this.wait();
         }
     }
+
+    /**
+     * Method that can be called to wait until there is at least one
+     * entry available for reading; but to only wait up until specified
+     * time has elapsed. Note that wait time is lower-bound and actual
+     * wait may be longer, depending on things like timer resolution;
+     * this depends on how accurately {@link Object#wait(long)} limits
+     * wait time.
+     *<p>
+     * Note that it is possible to have a race condition if there are
+     * multiple readers, such that even if this method returns, following
+     * read could fail/block (when another reader thread manages to thread
+     * before current thread reads next entry); this method can only be
+     * used to guarantee data for single-threaded reads, although it may
+     * work as an optimization for multiple reader case as well.
+     */
     public synchronized void waitForNextEntry(long maxWaitMsecs) throws InterruptedException
     {
         if (_head == null) {
@@ -485,6 +530,12 @@ public class MemBuffer
         _nextEntryLength = -1;
     }
 
+    /**
+     * Method that can be used to clean up resources (segments
+     * allocated) this buffer is using, necessary step to take
+     * for unused instances in case underlying storage uses
+     * off-heap memory (such as direct-allocated {@link ByteBuffer}s).
+     */
     @Override // from Closeable -- note, does NOT throw IOException
     public synchronized void close()
     {
