@@ -8,7 +8,7 @@ Conceptually memory buffers are just simple circular buffers (ring buffers); lib
 
 ## Fancier stuff: multiple buffers
 
-Although having individual buffers is useful as is, this library does bit better: it actually defines "buffer groups" (com.fasterxml.membuf.MemBuffers) that consist of zero or more actual buffers (com.fasterxml.membuf.MemBuffer). All buffers of a group share the same segment allocator (com.fasterxml.membuf.SegmentAllocator); which makes it possible to share set of reusable underlying ByteBuffers.
+Although having individual buffers is useful as is, this library does bit better: it actually defines "buffer groups" (com.fasterxml.util.membuf.MemBuffers) that consist of zero or more actual buffers (com.fasterxml.util.membuf.MemBuffer). All buffers of a group share the same segment allocator (com.fasterxml.util.membuf.SegmentAllocator); which makes it possible to share set of reusable underlying ByteBuffers.
 
 This ability to share underlying segments between buffers, with strict memory bounds makes it possible to use library as basic buffer manager; for example to buffer input and/or output of a web server.
 
