@@ -5,7 +5,7 @@ For full usage, check out
 <a href="https://github.com/cowtowncoder/low-gc-membuffers">project home</a>,
 but here is an example of simple usage:
 <p>
-First thing needed is creation of {@link MemBuffers} instance:
+First thing needed is creation of {@link com.fasterxml.util.membuf.MemBuffers} instance:
 
 <pre>
   // use segments of 64kB; allocate 2 first, allocate at most 16
@@ -13,7 +13,7 @@ First thing needed is creation of {@link MemBuffers} instance:
   MemBuffers bufs = new MemBuffers(64 * 1024, 2, 16);
 </pre>
 
-this instance can be used for constructing {@link MemBuffer} instances:
+this instance can be used for constructing {@link com.fasterxml.util.membuf.MemBuffer} instances:
 <pre>
   // create buffer that starts with a single 64kB segment;
   // and can expand to up to 192kB
