@@ -74,21 +74,21 @@ public abstract class Segment
      *<p>
      * This state transition must occur from {@link State#FREE}.
      */
-    protected abstract Segment initForWriting();
+    public abstract Segment initForWriting();
 
     /**
      * Method called when writes to this segment have been completed,
      * which occurs when segment is full, more content is to be written,
      * and another segment is becoming the active write-segment.
      */
-    protected abstract Segment finishWriting();
+    public abstract Segment finishWriting();
     
     /**
      * Method called when the segment becomes the active read segment.
      * Its state may or may not change, but we do need to create the
      * reader-wrapper for ByteBuffer
      */
-    protected abstract Segment initForReading();
+    public abstract Segment initForReading();
 
     /**
      * Method called when all contents has been read from this segment.
@@ -96,14 +96,14 @@ public abstract class Segment
      * 
      * @return Next segment after this segment (before clearing link)
      */
-    protected abstract Segment finishReading();
+    public abstract Segment finishReading();
 
     /**
      * Method that will erase any content segment may have and reset
      * various pointers: will be called when clearing buffer, the last
      * remaining segment needs to be cleared.
      */
-    protected abstract void clear();
+    public abstract void clear();
     
     /*
     /**********************************************************************
@@ -132,7 +132,7 @@ public abstract class Segment
      * that it will actually fit (if it can't, it should instead call
      * {@link #tryAppend}).
      */
-    protected abstract void append(byte[] src, int offset, int length);
+    public abstract void append(byte[] src, int offset, int length);
 
     /**
      * Append operation that tries to append as much of input data as
@@ -140,7 +140,7 @@ public abstract class Segment
      * 
      * @return Number of bytes actually appended
      */
-    protected abstract int tryAppend(byte[] src, int offset, int length);
+    public abstract int tryAppend(byte[] src, int offset, int length);
 
     /*
     /**********************************************************************
@@ -148,11 +148,13 @@ public abstract class Segment
     /**********************************************************************
      */
 
-    protected abstract void read(byte[] buffer, int offset, int length);
-
-    protected abstract int tryRead(byte[] buffer, int offset, int length);
-
     public abstract int readLength();
 
-    protected abstract int readSplitLength(int partial);
+    public abstract int readSplitLength(int partial);
+
+    public abstract void read(byte[] buffer, int offset, int length);
+
+    public abstract int tryRead(byte[] buffer, int offset, int length);
+
+    protected abstract int skip(int length);
 }

@@ -234,6 +234,14 @@ public class ByteBufferSegment extends Segment
         return actualLen;
     }
     
+    @Override
+    public int skip(int length)
+    {
+        length = Math.min(length, availableForReading());
+        _readBuffer.position(_readBuffer.position() + length);
+        return length;
+    }
+
     /**
      * Method for reading as much of the length prefix as possible from
      * the current pointer in this segment. This will be from 0 to 5 bytes,

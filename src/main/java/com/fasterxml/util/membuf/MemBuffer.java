@@ -452,8 +452,45 @@ public class MemBuffer
             now = System.currentTimeMillis();
         }
         return null;
-    }    
+    }
 
+    /**
+     * Method that will skip the next entry from the buffer, if an entry
+     * is available, and return length of the skipped entry: if buffer
+     * is empty, will return -1
+     * 
+     * @return Length of skipped entry, if buffer was not empty; -1 if buffer
+     *   was empty
+     */
+    public synchronized int skipNextEntry()
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount < 1) {
+            return -1;
+        }
+
+        final int segLen = getNextEntryLength();
+        // ensure lengthh indicator gets reset for chunk after this one
+        _nextEntryLength = -1;
+        // and reduce entry count as well
+        --_entryCount;
+        _totalPayloadLength -= segLen;
+
+        // a trivial case; marker entry (no payload)
+        int remaining = segLen;
+        while (remaining > 0) {
+            remaining -= _tail.skip(remaining);
+            if (remaining == 0) { // all skipped?
+                break;
+            }
+            _freeReadSegment();
+        }
+        return segLen;
+        
+    }
+    
     /**
      * Method that can be called to wait until there is at least one
      * entry available for reading.
@@ -601,6 +638,10 @@ public class MemBuffer
     private byte[] _doGetNext()
     {
         int segLen = getNextEntryLength();
+
+        // start with result allocation, so that possible OOME does not corrupt state
+        byte[] result = new byte[segLen];
+        
         // but ensure that it gets reset for chunk after this one
         _nextEntryLength = -1;
         // and reduce entry count as well
@@ -611,8 +652,6 @@ public class MemBuffer
         if (segLen == 0) {
             return EMPTY_PAYLOAD;
         }
-        
-        byte[] result = new byte[segLen];
 
         // ok: simple case; all data available from within current segment
         int avail = _tail.availableForReading();
