@@ -98,6 +98,10 @@ public abstract class SegmentAllocator
      */
 
     public int getSegmentSize() { return _segmentSize; }
+
+    // Used by unit tests
+    public int getReusableSegmentCount() { return _reusableSegmentCount; }
+    public int getBufferOwnedSegmentCount() { return _bufferOwnedSegmentCount; }
     
     /**
      * Method that will try to allocate specified number of segments

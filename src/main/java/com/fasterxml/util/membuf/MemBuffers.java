@@ -3,6 +3,7 @@ package com.fasterxml.util.membuf;
 import java.util.*;
 
 import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
+import com.fasterxml.util.membuf.impl.MemBufferImpl;
 
 /*
  * Copyright Tatu Saloranta, 2011-
@@ -74,6 +75,8 @@ public class MemBuffers
     /**********************************************************************
      */
 
+    public SegmentAllocator getAllocator() { return _segmentAllocator; }
+    
     /**
      * Method that will try to create a {@link MemBuffer} with configured allocator,
      * using specified arguments.
@@ -96,14 +99,26 @@ public class MemBuffers
      * null will be returned.
      */
     public MemBuffer tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
-            
     {
         Segment initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
         // may not be able to allocate segments; if so, need to fail
         if (initialSegments == null) {
             return null;
         }
-        return new MemBuffer(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+        return _createBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+    }
+
+    /*
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
+     */
+
+    protected MemBuffer _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+            Segment initialSegments)
+    {
+        return new MemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
                 initialSegments);
+        
     }
 }

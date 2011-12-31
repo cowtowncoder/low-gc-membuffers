@@ -156,5 +156,5 @@ public abstract class Segment
 
     public abstract int tryRead(byte[] buffer, int offset, int length);
 
-    protected abstract int skip(int length);
+    public abstract int skip(int length);
 }
