@@ -548,7 +548,7 @@ public class MemBuffer
         // and any locally recycled buffers as well
         Segment seg;
         while ((seg = _firstFreeSegment) != null) {
-            _firstFreeSegment = seg._nextSegment;
+            _firstFreeSegment = seg.getNext();
             _segmentAllocator.releaseSegment(seg);
         }
         _freeSegmentCount = 0;

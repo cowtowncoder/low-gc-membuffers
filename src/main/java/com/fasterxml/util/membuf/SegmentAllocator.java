@@ -11,7 +11,7 @@ package com.fasterxml.util.membuf;
  * shared segments (above and beyond simple reuse that individual
  * queues can do).
  */
-public class SegmentAllocator
+public abstract class SegmentAllocator
 {
     /*
     /**********************************************************************
@@ -150,21 +150,8 @@ public class SegmentAllocator
     /* Internal methods
     /**********************************************************************
      */
-    
-    protected Segment _allocateSegment()
-    {
-        // can reuse a segment returned earlier?
-        if (_reusableSegmentCount > 0) {
-            Segment segment = _firstReusableSegment;
-            _firstReusableSegment = segment.getNext();
-            ++_bufferOwnedSegmentCount; 
-            --_reusableSegmentCount;
-            return segment;
-        }
-        Segment segment = new Segment(_segmentSize);
-        ++_bufferOwnedSegmentCount; 
-        return segment;
-    }
+
+    protected abstract Segment _allocateSegment();
     
     protected boolean _canAllocate(int count)
     {

@@ -2,6 +2,8 @@ package com.fasterxml.util.membuf;
 
 import java.util.*;
 
+import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
+
 /*
  * Copyright Tatu Saloranta, 2011-
  */
@@ -11,6 +13,11 @@ import java.util.*;
  * {@link MemBuffer} instances that all share a single
  * {@link SegmentAllocator} instance, and global memory 
  * allocation limits (enforced by allocator).
+ *<p>
+ * Note that sub-classing is explicitly supported; this is needed to
+ * use custom {@link SegmentAllocator}s, {@link Segment}s and/or {@link MemBuffer}s.
+ * Default {@link MemBuffers} implementation will use default implementations
+ * of other components.
  * 
  * @author Tatu Saloranta
  */
@@ -47,7 +54,7 @@ public class MemBuffers
      */
     public MemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
     {
-        this(new SegmentAllocator(segmentSize, segmentsToRetain, maxSegments));
+        this(new ByteBufferSegmentAllocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
     /**
