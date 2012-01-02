@@ -17,8 +17,21 @@ import com.fasterxml.util.membuf.MemBuffers;
 public class TestLonger extends MembufTestBase
 {
     final Charset ENCODING = Charset.forName("ISO-8859-1");
-    
+
     public void testShakespeareLineByLine() throws Exception
+    {
+        _testShakespeareLineByLine(Allocator.BYTE_BUFFER_DIRECT);
+        _testShakespeareLineByLine(Allocator.BYTE_BUFFER_FAKE);
+        _testShakespeareLineByLine(Allocator.BYTE_ARRAY);
+    }
+    
+    /*
+    /**********************************************************************
+    /* Actual test impls
+    /**********************************************************************
+     */
+    
+    private void _testShakespeareLineByLine(Allocator aType) throws Exception
     {
         // First, read the data
         BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -31,7 +44,7 @@ public class TestLonger extends MembufTestBase
          * be enough; use 11 buffers of 30k each (one more than
          * absolutely needed)
          */
-        MemBuffers bufs = new MemBuffers(30 * 1024, 2, 11);
+        MemBuffers bufs = createBuffers(aType, 30 * 1024, 2, 11);
         MemBuffer buffer = bufs.createBuffer(2, 11);
 
         // then append/remove multiple times

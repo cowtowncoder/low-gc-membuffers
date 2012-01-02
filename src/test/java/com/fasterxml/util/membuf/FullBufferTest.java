@@ -4,16 +4,43 @@ import java.util.Arrays;
 
 import org.junit.Assert;
 
+/**
+ * Tests to verify handling of case where memory buffers are filled up.
+ */
 public class FullBufferTest extends MembufTestBase
 {
+    public void testTryWriteToFull() throws Exception
+    {
+        _testTryWriteToFull(Allocator.BYTE_BUFFER_DIRECT);
+        _testTryWriteToFull(Allocator.BYTE_BUFFER_FAKE);
+        _testTryWriteToFull(Allocator.BYTE_ARRAY);
+    }
+
+    /**
+     * Test for verifying that number of buffers that we can create is
+     * also bound.
+     */
+    public void testMaxBuffers() throws Exception
+    {
+        _testMaxBuffers(Allocator.BYTE_BUFFER_DIRECT);
+        _testMaxBuffers(Allocator.BYTE_BUFFER_FAKE);
+        _testMaxBuffers(Allocator.BYTE_ARRAY);
+    }
+    
+    /*
+    /**********************************************************************
+    /* Actual test impls
+    /**********************************************************************
+     */
+    
     /**
      * Test for verifying behavior when buffer is full.
      */
-    public void testTryWriteToFull() throws Exception
+    public void _testTryWriteToFull(Allocator aType) throws Exception
     {
         // up to 24 bytes of room (and 12 guaranteed)
-        MemBuffers bufs = new MemBuffers(12, 1, 2);
-        MemBuffer buffer = bufs.createBuffer(1, 2);
+        final MemBuffers bufs = createBuffers(aType, 12, 1, 2);
+        final MemBuffer buffer = bufs.createBuffer(1, 2);
         byte[] data = new byte[16];
         Arrays.fill(data, (byte) 0xFF);
 
@@ -50,15 +77,11 @@ public class FullBufferTest extends MembufTestBase
         assertEquals(16L, buffer.getTotalPayloadLength());
     }
 
-    /**
-     * Test for verifying that number of buffers that we can create is
-     * also bound.
-     */
-    public void testMaxBuffers() throws Exception
+    public void _testMaxBuffers(Allocator aType) throws Exception
     {
         // with max 5 segments, each buffer requiring at least two, can create two
-        MemBuffers bufs = new MemBuffers(12, 1, 5);
-        MemBuffer buf1 = bufs.createBuffer(2, 4);
+        final MemBuffers bufs = createBuffers(aType, 12, 1, 5);
+        final MemBuffer buf1 = bufs.createBuffer(2, 4);
         assertNotNull(buf1);
         MemBuffer buf2 = bufs.createBuffer(2, 4);
         assertNotNull(buf2);

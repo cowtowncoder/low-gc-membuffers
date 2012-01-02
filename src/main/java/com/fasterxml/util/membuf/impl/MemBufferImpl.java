@@ -386,8 +386,15 @@ public class MemBufferImpl extends MemBuffer
     }
 
     @Override
-    public synchronized byte[] getNextEntryIfAvailable() {
-        return (_entryCount == 0) ? null : _doGetNext();
+    public synchronized byte[] getNextEntryIfAvailable()
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount == 0) {
+            return null;
+        }
+        return _doGetNext();
     }
     
     @Override
@@ -411,6 +418,59 @@ public class MemBufferImpl extends MemBuffer
         return null;
     }
 
+    @Override
+    public synchronized int readNextEntry(byte[] buffer, int offset) throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        // first: must have something to return
+        while (_entryCount == 0) {
+            this.wait();
+        }
+        return _doGetNext(buffer, offset);
+    }
+
+    @Override
+    public synchronized int readNextEntryIfAvailable(byte[] buffer, int offset)
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount == 0) {
+            return Integer.MIN_VALUE;
+        }
+        return _doGetNext(buffer, offset);
+    }
+
+    @Override
+    public synchronized int readNextEntry(long timeoutMsecs, byte[] buffer, int offset)
+        throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount > 0) {
+            return _doGetNext(buffer, offset);
+        }
+        long now = System.currentTimeMillis();
+        long end = now + timeoutMsecs;
+        while (now < end) {
+            wait(end - now);
+            if (_entryCount > 0) {
+                return _doGetNext(buffer, offset);
+            }
+            now = System.currentTimeMillis();
+        }
+        return Integer.MIN_VALUE;
+    }
+    
+    /*
+    /**********************************************************************
+    /* Public API, read-like access: skipping, wait-for-next
+    /**********************************************************************
+     */
+    
     @Override
     public synchronized int skipNextEntry()
     {
@@ -534,7 +594,44 @@ public class MemBufferImpl extends MemBuffer
         }
         return result;
     }
-    
+
+    private int _doGetNext(byte[] buffer, int offset)
+    {
+        int end = buffer.length;
+        
+        if (offset >= end || offset < 0) {
+            throw new IllegalArgumentException("Illegal offset ("+offset+"): allowed values [0, "+end+"[");
+        }
+        final int maxLen = end - offset;
+        final int segLen = getNextEntryLength();
+
+        // not enough room?
+        if (segLen > maxLen) {
+            return -segLen;
+        }
+        
+        // but ensure that it gets reset for chunk after this one
+        _nextEntryLength = -1;
+        // and reduce entry count as well
+        --_entryCount;
+        _totalPayloadLength -= segLen;
+
+        // a trivial case; marker entry (no payload)
+        if (segLen == 0) {
+            return 0;
+        }
+
+        // ok: simple case; all data available from within current segment
+        int avail = _tail.availableForReading();
+        if (avail >= segLen) {
+            _tail.read(buffer, offset, segLen);
+        } else {
+            // but if not we'll just do the segment read...
+            _doReadChunked(buffer, offset, segLen);
+        }
+        return segLen;
+    }
+
     /**
      * Helper method that handles append when contents may need to be split
      * across multiple segments.

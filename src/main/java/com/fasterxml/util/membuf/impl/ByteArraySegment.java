@@ -1,50 +1,24 @@
 package com.fasterxml.util.membuf.impl;
 
-import java.nio.ByteBuffer;
+import com.fasterxml.util.membuf.Segment;
 
-import com.fasterxml.util.membuf.*;
-
-/**
- * {@link Segment} implementation that uses {@link ByteBuffer}s for
- * storing data.
- * Basically a wrapper around (direct) {@link ByteBuffer},
- * adding state information and linkage to next segment in chain
- * (of used or free segments).
- * 
- * @author Tatu Saloranta
- */
-public class ByteBufferSegment extends SegmentBase
+public class ByteArraySegment extends SegmentBase
 {
-    /*
-    /**********************************************************************
-    /* Storage
-    /**********************************************************************
-     */
+    protected final byte[] _buffer;
+
+    protected int _appendPtr;
     
-    /**
-     * Underlying low-level buffer in which raw entry data is queued
-     */
-    protected final ByteBuffer _buffer;
-
-    /**
-     * Wrapper buffer used for reading previously written content; wrapper
-     * used to allow separate pointers for reading and writing content.
-     */
-    protected ByteBuffer _readBuffer;
-
+    protected int _readPtr;
+    
     /*
     /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
     
-    public ByteBufferSegment(int size, boolean useDirect)
+    public ByteArraySegment(int size)
     {
-        super();
-        if (size < ABSOLUTE_MINIMUM_LENGTH) {
-            size = ABSOLUTE_MINIMUM_LENGTH;
-        }
-        _buffer = useDirect ? ByteBuffer.allocateDirect(size) : ByteBuffer.allocate(size);
+        _buffer = new byte[size];
     }
 
     /*
@@ -53,40 +27,31 @@ public class ByteBufferSegment extends SegmentBase
     /**********************************************************************
      */
 
-    //public Segment initForWriting()
+    @Override
+    public Segment initForWriting()
+    {
+        super.initForWriting();
+        _appendPtr = 0;
+        return this;
+    }
+
     //public Segment finishWriting()
     
     @Override
     public Segment initForReading()
     {
         super.initForReading();
-        _readBuffer = _buffer.asReadOnlyBuffer();
-        _readBuffer.clear();
+        _readPtr = 0;
         return this;
     }
 
-    @Override
-    public Segment finishReading()
-    {
-        Segment result = super.finishReading();
-        // clear write pointer for further reuse
-        _buffer.clear();
-        // and drop reference to read-wrapper:
-        _readBuffer = null;
-        return result;
-    }
+    //public Segment finishReading()
 
-    /**
-     * Method that will erase any content segment may have and reset
-     * various pointers: will be called when clearing buffer, the last
-     * remaining segment needs to be cleared.
-     */
     @Override
     public void clear()
     {
-        _readBuffer = null; // could/should we just reset it instead?
-        _buffer.clear(); // clear the write pointer
         super.clear();
+        _readPtr = _appendPtr = 0;
     }
 
     /*
@@ -97,15 +62,12 @@ public class ByteBufferSegment extends SegmentBase
 
     @Override
     public int availableForAppend() {
-        return _buffer.remaining();
+        return _buffer.length - _appendPtr;
     }
 
     @Override
     public int availableForReading() {
-        if (_readBuffer == null) { // sanity check...
-            throw new IllegalStateException("Method should not be called when _readBuffer is null");
-        }
-        return _readBuffer.remaining();
+        return _buffer.length - _readPtr;
     }
 
     /*
@@ -121,7 +83,9 @@ public class ByteBufferSegment extends SegmentBase
      */
     @Override
     public void append(byte[] src, int offset, int length) {
-        _buffer.put(src, offset, length);
+        int dst = _appendPtr;
+        _appendPtr += length;
+        System.arraycopy(src, offset, _buffer, dst, length);
     }
 
     /**
@@ -135,7 +99,9 @@ public class ByteBufferSegment extends SegmentBase
     {
         int actualLen = Math.min(length, availableForAppend());
         if (actualLen > 0) {
-            _buffer.put(src, offset, actualLen);
+            int dst = _appendPtr;
+            _appendPtr += length;
+            System.arraycopy(src, offset, _buffer, dst, actualLen);
         }
         return actualLen;
     }
@@ -149,7 +115,9 @@ public class ByteBufferSegment extends SegmentBase
     @Override
     public void read(byte[] buffer, int offset, int length)
     {
-        _readBuffer.get(buffer, offset, length);
+        int src = _readPtr;
+        _readPtr += length;
+        System.arraycopy(_buffer, src, buffer, offset, length);
     }
 
     /**
@@ -158,18 +126,20 @@ public class ByteBufferSegment extends SegmentBase
     @Override
     public int tryRead(byte[] buffer, int offset, int length)
     {
-        int actualLen = Math.min(availableForReading(), length);
-        if (actualLen > 0) {
-            _readBuffer.get(buffer, offset, actualLen);
+        length = Math.min(availableForReading(), length);
+        if (length > 0) {
+            int src = _readPtr;
+            _readPtr += length;
+            System.arraycopy(_buffer, src, buffer, offset, length);
         }
-        return actualLen;
+        return length;
     }
     
     @Override
     public int skip(int length)
     {
         length = Math.min(length, availableForReading());
-        _readBuffer.position(_readBuffer.position() + length);
+        _readPtr += length;
         return length;
     }
 
@@ -186,7 +156,7 @@ public class ByteBufferSegment extends SegmentBase
         if (available == 0) {
             return -1;
         }
-        int length = _readBuffer.get();
+        int length = _buffer[_readPtr++];
 
         if (length < 0) { // single-byte length, simple
             return (length & 0x7F);
@@ -196,7 +166,7 @@ public class ByteBufferSegment extends SegmentBase
         }
 
         // second byte:
-        int b = _readBuffer.get();
+        int b = _buffer[_readPtr++];
         if (b < 0) { // two-byte completed
             return (length << 7) + (b & 0x7F);
         }
@@ -206,7 +176,7 @@ public class ByteBufferSegment extends SegmentBase
         }
 
         // third byte:
-        b = _readBuffer.get();
+        b = _buffer[_readPtr++];
         if (b < 0) {
             return (length << 7) + (b & 0x7F);
         }
@@ -216,7 +186,7 @@ public class ByteBufferSegment extends SegmentBase
         }
 
         // fourth byte:
-        b = _readBuffer.get();
+        b = _buffer[_readPtr++];
         if (b < 0) {
             return (length << 7) + (b & 0x7F);
         }
@@ -226,7 +196,7 @@ public class ByteBufferSegment extends SegmentBase
         }
 
         // fifth and last byte
-        b = _readBuffer.get();
+        b = _buffer[_readPtr++];
         if (b < 0) {
             return (length << 7) + (b & 0x7F);
         }
@@ -243,7 +213,7 @@ public class ByteBufferSegment extends SegmentBase
     {
         while (true) {
             partial = (partial << 7);
-            int b = _readBuffer.get();
+            int b = _buffer[_readPtr++];
             if (b < 0) { // complete...
                 return partial + (b & 0x7F);
             }

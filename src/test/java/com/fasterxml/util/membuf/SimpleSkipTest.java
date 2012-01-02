@@ -4,11 +4,38 @@ public class SimpleSkipTest extends MembufTestBase
 {
     public void testSimpleSkips() throws Exception
     {
+        _testSimpleSkips(Allocator.BYTE_BUFFER_DIRECT);
+        _testSimpleSkips(Allocator.BYTE_BUFFER_FAKE);
+        _testSimpleSkips(Allocator.BYTE_ARRAY);
+    }
+    
+    public void testSimpleSkipAndRead() throws Exception
+    {
+        _testSimpleSkipAndRead(Allocator.BYTE_BUFFER_DIRECT);
+        _testSimpleSkipAndRead(Allocator.BYTE_BUFFER_FAKE);
+        _testSimpleSkipAndRead(Allocator.BYTE_ARRAY);
+    }
+
+    public void testLongerSkip() throws Exception
+    {
+        _testLongerSkip(Allocator.BYTE_BUFFER_DIRECT);
+        _testLongerSkip(Allocator.BYTE_BUFFER_FAKE);
+        _testLongerSkip(Allocator.BYTE_ARRAY);
+    }
+
+    /*
+    /**********************************************************************
+    /* Actual test impls
+    /**********************************************************************
+     */
+
+    private void _testSimpleSkips(Allocator aType) throws Exception
+    {
         // will use segments of size 10 bytes; only one segment per-allocator reuse
         // and maximum allocation of 4 segments per-allocator
-        MemBuffers bufs = new MemBuffers(10, 1, 4);
+        final MemBuffers bufs = createBuffers(aType, 10, 1, 4);
         // buffer will have similar limits
-        MemBuffer buffer = bufs.createBuffer(1, 3);
+        final MemBuffer buffer = bufs.createBuffer(1, 3);
 
         // append 5 segments
         for (int i = 5; i > 0; --i) {
@@ -33,10 +60,10 @@ public class SimpleSkipTest extends MembufTestBase
         assertTrue(buffer.isEmpty());
     }
 
-    public void testSimpleSkipAndRead() throws Exception
+    private void _testSimpleSkipAndRead(Allocator aType) throws Exception
     {
-        MemBuffers bufs = new MemBuffers(10, 1, 4);
-        MemBuffer buffer = bufs.createBuffer(1, 3);
+        final MemBuffers bufs = createBuffers(aType, 10, 1, 4);
+        final MemBuffer buffer = bufs.createBuffer(1, 3);
 
         for (int i = 5; i > 0; --i) { // 5, 4, 3, 2, 1 segments
             buffer.appendEntry(new byte[i]);
@@ -59,10 +86,10 @@ public class SimpleSkipTest extends MembufTestBase
     }
 
     // Test to verify that skip works across buffer boundaries
-    public void testLongerSkip() throws Exception
+    private void _testLongerSkip(Allocator aType) throws Exception
     {
-        MemBuffers bufs = new MemBuffers(10, 1, 4);
-        MemBuffer buffer = bufs.createBuffer(1, 3);
+        final MemBuffers bufs = createBuffers(aType, 10, 1, 4);
+        final MemBuffer buffer = bufs.createBuffer(1, 3);
         // maximum: 29 data bytes, 1 for length
         buffer.appendEntry(new byte[29]);
         assertEquals(29, buffer.skipNextEntry());
