@@ -3,8 +3,22 @@ package com.fasterxml.util.membuf.impl;
 import com.fasterxml.util.membuf.*;
 
 /**
- * Default {@link MemBuffer} implementation, which implements fully
- * synchronized access.
+ * Default {@link MemBuffer} implementation, which implements buffer
+ * using segmented circular buffer, composed of {@link Segment}s
+ * allocated dnua
+ *<p>
+ * Access to queue is fully synchronized -- meaning that all methods are
+ * synchronized by implementations as necessary, and caller should not need
+ * to use external synchronization -- since parts will have to be anyway
+ * (updating of stats, pointers), and since all real-world use cases will
+ * need some level of synchronization anyway, even with just single producer
+ * and consumer. If it turns out that there are bottlenecks that could be
+ * avoided with more granular (or external) locking, this design can be
+ * revisited.
+ *<p>
+ * Note that if instances are discarded, they <b>MUST</b> be closed:
+ * finalize() method is not implemented since it is both somewhat unreliable
+ * (i.e. should not be counted on) and can add overhead for GC processing.
  */
 public class MemBufferImpl extends MemBuffer
 {
@@ -92,6 +106,13 @@ public class MemBufferImpl extends MemBuffer
      * Length of the next entry, if known; -1 if not yet known.
      */
     protected int _nextEntryLength = -1;
+
+    /**
+     * Segment that was peeked, if any. When entries are peeked, a copy
+     * of data is store in this property and actual contents are remove
+     * as if entry was read normally.
+     */
+    protected byte[] _peekedEntry;
     
     /*
     /**********************************************************************
@@ -175,12 +196,12 @@ public class MemBufferImpl extends MemBuffer
 
     @Override
     public synchronized int getEntryCount() {
-        return _entryCount;
+        return (_peekedEntry == null) ? _entryCount : (_entryCount+1);
     }
 
     @Override
     public synchronized boolean isEmpty() {
-        return (_entryCount == 0);
+        return (_entryCount == 0) && (_peekedEntry == null);
     }
     
     @Override
@@ -209,7 +230,8 @@ public class MemBufferImpl extends MemBuffer
     @Override
     public synchronized long getTotalPayloadLength()
     {
-        return _totalPayloadLength;
+        return (_peekedEntry == null) ? _totalPayloadLength
+                : (_peekedEntry.length + _totalPayloadLength);
     }
     
     /*
@@ -236,6 +258,7 @@ public class MemBufferImpl extends MemBuffer
         _entryCount = 0;
         _totalPayloadLength = 0L;
         _nextEntryLength = -1;
+        _peekedEntry = null;
     }
 
     @Override // from Closeable -- note, does NOT throw IOException
@@ -362,6 +385,9 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
+        if (_peekedEntry != null) {
+            return _peekedEntry.length;
+        }
         int len = _nextEntryLength;
         if (len < 0) { // need to read it?
             if (_entryCount == 0) { // but can only read if something is actually available
@@ -378,6 +404,11 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
+        if (_peekedEntry != null) {
+            byte[] result = _peekedEntry;
+            _peekedEntry = null;
+            return result;
+        }        
         // first: must have something to return
         while (_entryCount == 0) {
             this.wait();
@@ -391,6 +422,11 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
+        if (_peekedEntry != null) {
+            byte[] result = _peekedEntry;
+            _peekedEntry = null;
+            return result;
+        }        
         if (_entryCount == 0) {
             return null;
         }
@@ -403,6 +439,11 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
+        if (_peekedEntry != null) {
+            byte[] result = _peekedEntry;
+            _peekedEntry = null;
+            return result;
+        }        
         if (_entryCount > 0) {
             return _doGetNext();
         }
@@ -424,11 +465,15 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
+        if (_peekedEntry != null) {
+            return _doReadPeekedEntry(buffer, offset);
+        }        
+        
         // first: must have something to return
         while (_entryCount == 0) {
             this.wait();
         }
-        return _doGetNext(buffer, offset);
+        return _doReadNext(buffer, offset);
     }
 
     @Override
@@ -440,7 +485,7 @@ public class MemBufferImpl extends MemBuffer
         if (_entryCount == 0) {
             return Integer.MIN_VALUE;
         }
-        return _doGetNext(buffer, offset);
+        return _doReadNext(buffer, offset);
     }
 
     @Override
@@ -451,14 +496,14 @@ public class MemBufferImpl extends MemBuffer
             _reportClosed();
         }
         if (_entryCount > 0) {
-            return _doGetNext(buffer, offset);
+            return _doReadNext(buffer, offset);
         }
         long now = System.currentTimeMillis();
         long end = now + timeoutMsecs;
         while (now < end) {
             wait(end - now);
             if (_entryCount > 0) {
-                return _doGetNext(buffer, offset);
+                return _doReadNext(buffer, offset);
             }
             now = System.currentTimeMillis();
         }
@@ -480,7 +525,12 @@ public class MemBufferImpl extends MemBuffer
         if (_entryCount < 1) {
             return -1;
         }
-
+        if (_peekedEntry != null) {
+            int len = _peekedEntry.length;
+            _peekedEntry = null;
+            return len;
+        }
+        
         final int segLen = getNextEntryLength();
         // ensure lengthh indicator gets reset for chunk after this one
         _nextEntryLength = -1;
@@ -500,6 +550,21 @@ public class MemBufferImpl extends MemBuffer
         return segLen;
         
     }
+
+    @Override
+    public synchronized byte[] peekNextEntry()
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_peekedEntry == null) {
+            if (_entryCount < 1) {
+                return null;
+            }
+            _peekedEntry = _doGetNext();
+        }
+        return _peekedEntry;
+    }
     
     @Override
     public synchronized void waitForNextEntry() throws InterruptedException
@@ -507,7 +572,7 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
-        if (_entryCount == 0) {
+        if (_entryCount == 0 && _peekedEntry == null) {
             this.wait();
         }
     }
@@ -518,7 +583,7 @@ public class MemBufferImpl extends MemBuffer
         if (_head == null) {
             _reportClosed();
         }
-        if (_entryCount == 0) {
+        if (_entryCount == 0 && _peekedEntry == null) {
             this.wait(maxWaitMsecs);
         }
     }    
@@ -595,7 +660,7 @@ public class MemBufferImpl extends MemBuffer
         return result;
     }
 
-    private int _doGetNext(byte[] buffer, int offset)
+    private int _doReadNext(byte[] buffer, int offset)
     {
         int end = buffer.length;
         
@@ -649,6 +714,26 @@ public class MemBufferImpl extends MemBuffer
         }
     }
 
+    private int _doReadPeekedEntry(byte[] buffer, int offset)
+    {
+        int end = buffer.length;
+        if (offset >= end || offset < 0) {
+            throw new IllegalArgumentException("Illegal offset ("+offset+"): allowed values [0, "+end+"[");
+        }
+        final int maxLen = end - offset;
+        final int segLen = _peekedEntry.length;
+
+        // not enough room?
+        if (segLen > maxLen) {
+            return -segLen;
+        }
+        if (segLen > 0) {
+            System.arraycopy(_peekedEntry, 0, buffer, offset, segLen);
+        }
+        _peekedEntry = null;
+        return segLen;
+    }
+    
     /**
      * Helper method called when the current tail segment has been completely
      * read, and we want to free or reuse it and start reading the next

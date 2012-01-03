@@ -7,25 +7,15 @@ import java.io.*;
  */
 
 /**
- * Actual memory queue implementation, which uses set of {@link Segment}s as
- * virtual ring buffer. Number of segments used is bound by minimum and maximum
+ * Class that defines memory buffer interface.
+ *<p>
+ * While not mandated by the interface, existing implementations all usea a
+ * set of {@link Segment}s as virtual ring buffer.
+ * Number of segments used is bound by minimum and maximum
  * amounts, which defines minimim and maximum memory usage.
  * Memory usage is relatively easy to estimate since data is stored as
  * byte sequences and almost all memory is simply used by
  * allocated <code>ByteBuffer</code>s.
- *<p>
- * Access to queue is fully synchronized -- meaning that all methods are
- * synchronized by implementations as necessary, and caller should not need
- * to use external synchronization -- since parts will have to be anyway
- * (updating of stats, pointers), and since all real-world use cases will
- * need some level of synchronization anyway, even with just single producer
- * and consumer. If it turns out that there are bottlenecks that could be
- * avoided with more granular (or external) locking, this design can be
- * revisited.
- *<p>
- * Note that if instances are discarded, they <b>MUST</b> be closed:
- * finalize() method is not implemented since it is both somewhat unreliable
- * (i.e. should not be counted on) and can add overhead for GC processing.
  * 
  * @author Tatu Saloranta
  */
@@ -192,7 +182,7 @@ public abstract class MemBuffer
 
     /**
      * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if succesful; or, if buffer does
+     * return length of the entry in bytes, if successful; or, if buffer does
      * not have enough space, return negative number as error code.
      * If no entry is available, will return {@link Integer.MIN_VALUE}.
      * 
@@ -234,7 +224,7 @@ public abstract class MemBuffer
     
     /*
     /**********************************************************************
-    /* Public API, read-like access: skipping, wait-for-next
+    /* Public API, read-like access: skipping, peeking, wait-for-next
     /**********************************************************************
      */
     
@@ -247,6 +237,18 @@ public abstract class MemBuffer
      *   was empty
      */
     public abstract int skipNextEntry();
+
+    /**
+     * Method that will read, and return (but NOT remove) the next entry,
+     * if one is available; or return null if none available.
+     * Method is idempotent.
+     *<p>
+     * Note that implementations may require additional storage
+     * for keeping track of recently peeked entry; for example, they
+     * may retain a byte array copy of the contents separate from
+     * physical storage.
+     */
+    public abstract byte[] peekNextEntry();
     
     /**
      * Method that can be called to wait until there is at least one
