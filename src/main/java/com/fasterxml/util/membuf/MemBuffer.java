@@ -84,7 +84,7 @@ public abstract class MemBuffer
      * Method that can be used to clean up resources (segments
      * allocated) this buffer is using, necessary step to take
      * for unused instances in case underlying storage uses
-     * off-heap memory (such as direct-allocated {@link ByteBuffer}s).
+     * off-heap memory (such as direct-allocated {@link java.nio.ByteBuffer}s).
      */
     @Override // from Closeable -- note, does NOT throw IOException
     public abstract void close();
@@ -190,7 +190,7 @@ public abstract class MemBuffer
      *  for read to succeed
      * @param offset Offset in buffer to use for storing results
      *
-     * @return {@link Integer.MIN_VALUE} if no entry was available,
+     * @return {@link Integer#MIN_VALUE} if no entry was available,
      *   length of the entry (non-negative) read if read succeeds,
      *   or negative number that indicates length of the entry in case
      *   of failures: for example, if buffer only had space for 4 bytes,
@@ -213,7 +213,7 @@ public abstract class MemBuffer
      *  for read to succeed
      * @param offset Offset in buffer to use for storing results
      *
-     * @return {@link Integer.MIN_VALUE} if no entry was available,
+     * @return {@link Integer#MIN_VALUE} if no entry was available,
      *   length of the entry (non-negative) read if read succeeds,
      *   or negative number that indicates length of the entry in case
      *   of failures: for example, if buffer only had space for 4 bytes,
