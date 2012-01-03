@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.util</groupId>
   <artifactId>low-gc-membuffers</artifactId>
   <name>Low GC memory buffers</name>
-  <version>0.7.1-SNAPSHOT</version>
+  <version>0.8.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
   <description>In-memory, bounded-size queue data structure that aims at minimizing
 garbage collection overhead (especially latency)
@@ -116,7 +116,7 @@ garbage collection overhead (especially latency)
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>2.3.4</version>
+          <version>2.3.6</version>
           <extensions>true</extensions>
           <configuration>
             <instructions>
@@ -126,8 +126,12 @@ garbage collection overhead (especially latency)
 </Import-Package>
               <Private-Package>
 </Private-Package>
+              <!-- Whether to export 'impl' is open to debate; but for now it has necessary
+                   base classes for anyone who wants to create custom segment types
+                -->
               <Export-Package>
 com.fasterxml.util.membuf
+,com.fasterxml.util.membuf.impl
 </Export-Package>
             </instructions>
           </configuration>
