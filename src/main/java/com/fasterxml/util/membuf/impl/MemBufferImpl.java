@@ -183,7 +183,17 @@ public class MemBufferImpl extends MemBuffer
         _head.initForReading();
         
         _usedSegmentsCount = 1;
-        _freeSegmentCount = minSegmentsToAllocate-1; // should we verify this?
+        // should we sanity-check this to make sure?
+        _freeSegmentCount = minSegmentsToAllocate-1;
+
+        // if yes, uncomment this...
+        /*
+            int count = count(_firstFreeSegment);
+            if (count != _freeSegmentCount) {
+                throw new IllegalStateException("Bad initial _freeSegmentCount ("+_freeSegmentCount+"): but only got "+count+" linked");
+            }
+        */
+        
         _entryCount = 0;
         _totalPayloadLength = 0;
     }
@@ -248,8 +258,9 @@ public class MemBufferImpl extends MemBuffer
         }
         
         // first, free all segments except for head
+        String error = null;
         while (_tail != _head) {
-            _freeReadSegment();
+            error = _freeReadSegment(error);
         }
         // then re-init head/tail
         _tail.clear();
@@ -259,6 +270,10 @@ public class MemBufferImpl extends MemBuffer
         _totalPayloadLength = 0L;
         _nextEntryLength = -1;
         _peekedEntry = null;
+
+        if (error != null) { // sanity check after everything else
+            throw new IllegalStateException(error);
+        }
     }
 
     @Override // from Closeable -- note, does NOT throw IOException
@@ -271,12 +286,16 @@ public class MemBufferImpl extends MemBuffer
         _segmentAllocator.releaseSegment(_head);
         _head = _tail = null;
         // and any locally recycled buffers as well
-        Segment seg;
-        while ((seg = _firstFreeSegment) != null) {
-            _firstFreeSegment = seg.getNext();
-            _segmentAllocator.releaseSegment(seg);
-        }
+        
+        Segment seg = _firstFreeSegment;
+        _firstFreeSegment = null;
         _freeSegmentCount = 0;
+        
+        while (seg != null) {
+            Segment next = seg.getNext();
+            _segmentAllocator.releaseSegment(seg);
+            seg = next;
+        }
     }
 
     /*
@@ -330,7 +349,7 @@ public class MemBufferImpl extends MemBuffer
                 if ((_usedSegmentsCount + _freeSegmentCount + segmentsToAlloc) > _maxSegmentsToAllocate) {
                     return false;
                 }
-                // if we are, let's try allocate
+                // if we are, let's try allocate: will be added to "free" segments first, then used
                 Segment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
                 if (newFree == null) {
                     return false;
@@ -540,12 +559,16 @@ public class MemBufferImpl extends MemBuffer
 
         // a trivial case; marker entry (no payload)
         int remaining = segLen;
+        String error = null;
         while (remaining > 0) {
             remaining -= _tail.skip(remaining);
             if (remaining == 0) { // all skipped?
                 break;
             }
-            _freeReadSegment();
+            error = _freeReadSegment(error);
+        }
+        if (error != null) {
+            throw new IllegalStateException(error);
         }
         return segLen;
         
@@ -603,10 +626,22 @@ public class MemBufferImpl extends MemBuffer
         if (freeSeg == null) { // sanity check
             throw new IllegalStateException("Internal error: no free segments available");
         }
+        
+//int oldCount = count(_firstFreeSegment);
+        
         _firstFreeSegment = freeSeg.getNext();
-        --_freeSegmentCount;
+        --_freeSegmentCount;        
         _head = freeSeg;
         ++_usedSegmentsCount;
+
+//sanity check as well:
+/*
+int count = count(_firstFreeSegment);
+System.err.print("[r="+oldCount+"->"+_freeSegmentCount+"(c="+count+")/u="+_usedSegmentsCount+"]");
+if (count != _freeSegmentCount) {
+ System.err.println("ERROR: free seg "+_freeSegmentCount+"; but saw "+count+" actual!");
+}
+*/
         return freeSeg;
     }
     
@@ -626,7 +661,10 @@ public class MemBufferImpl extends MemBuffer
         len = -len - 1;
 
         // and move to read the next segment;
-        _freeReadSegment();
+        String error = _freeReadSegment(null);
+        if (error != null) {
+            throw new IllegalStateException(error);
+        }
         // and then read enough data to figure out length:
         return _tail.readSplitLength(len);
     }
@@ -703,14 +741,18 @@ public class MemBufferImpl extends MemBuffer
      */
     protected void _doReadChunked(byte[] buffer, int offset, int length)
     {
+        String error = null;
         while (true) {
             int actual = _tail.tryRead(buffer, offset, length);
             offset += actual;
             length -= actual;
             if (length == 0) { // complete, can leave
-                return;
+                break;
             }
-            _freeReadSegment();
+            error = _freeReadSegment(error);
+        }
+        if (error != null) {
+            throw new IllegalStateException(error);
         }
     }
 
@@ -738,8 +780,10 @@ public class MemBufferImpl extends MemBuffer
      * Helper method called when the current tail segment has been completely
      * read, and we want to free or reuse it and start reading the next
      * segment.
+     * Since throwing exceptions from this method could lead to corruption,
+     * we will only return error indicator for any problems.
      */
-    private void _freeReadSegment()
+    private String _freeReadSegment(String prevError)
     {
         Segment old = _tail;
         Segment next = old.finishReading();
@@ -748,20 +792,36 @@ public class MemBufferImpl extends MemBuffer
         // how about freed segment? reuse?
         if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
             if (_firstFreeSegment == null) {
-                // sanity check
+                // sanity check: should never occur
                 if (_freeSegmentCount != 0) {
-                    throw new IllegalStateException("_firstFreeSegment null; count "+_freeSegmentCount+" (should be 0)");
+// !!! TEST                    
+                    if (prevError == null) {
+                        prevError = "_firstFreeSegment null; count "+_freeSegmentCount+" (should be 0)";
+                    }
+                    // but has happened in the past, so fix even then
+                    _freeSegmentCount = 0;                    
                 }
                 // this is enough; old.next has been set to null already:
                 _firstFreeSegment = old;
                 _freeSegmentCount = 1;
             } else {
-                _firstFreeSegment = _firstFreeSegment.relink(old);
+//int oldCount = count(_firstFreeSegment);
+                
+                _firstFreeSegment = old.relink(_firstFreeSegment);
                 ++_freeSegmentCount;
+// sanity check as well:
+/*
+int count = count(_firstFreeSegment);
+System.err.print("[F:("+_entryCount+")"+oldCount+"->"+_freeSegmentCount+"("+count+")/u="+_usedSegmentsCount+"]");
+if (count != _freeSegmentCount) {
+ System.err.println("ERROR: free seg "+_freeSegmentCount+"; but saw "+count+" actual!");
+}
+*/
             }
         } else { // if no reuse, see if allocator can share
             _segmentAllocator.releaseSegment(old);
         }
+        return prevError;
     }
 
     private int _calcLengthPrefix(byte[] buffer, int length)
@@ -804,5 +864,15 @@ public class MemBufferImpl extends MemBuffer
      */
     protected void _reportClosed() {
         throw new IllegalStateException("MemBuffer instance closed, can not use");
+    }
+
+    @SuppressWarnings("unused")
+    private final static int count(Segment s) {
+        int count = 0;
+        while (s != null) {
+            ++count;
+            s = s.getNext();
+        }
+        return count;
     }
 }

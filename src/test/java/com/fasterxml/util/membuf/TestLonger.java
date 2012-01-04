@@ -45,7 +45,7 @@ public class TestLonger extends MembufTestBase
          * absolutely needed)
          */
         MemBuffers bufs = createBuffers(aType, 30 * 1024, 2, 11);
-        MemBuffer buffer = bufs.createBuffer(2, 11);
+        MemBuffer buffer = bufs.createBuffer(8, 11);
 
         // then append/remove multiple times
         appendAndRemove(rows, buffer);
@@ -55,6 +55,10 @@ public class TestLonger extends MembufTestBase
         appendAndRemove(rows, buffer);
 
         // then try appends with partial read, clear
+        appendAndClear(rows, buffer);
+
+        // and repeat once for bot
+        appendAndRemove(rows, buffer);
         appendAndClear(rows, buffer);
     }
 

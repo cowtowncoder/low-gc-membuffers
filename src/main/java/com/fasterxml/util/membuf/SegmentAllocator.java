@@ -13,6 +13,12 @@ package com.fasterxml.util.membuf;
  */
 public abstract class SegmentAllocator
 {
+    /**
+     * As a sanity check, we will not allow segments shorter than 4 bytes;
+     * even that small makes little sense, but is useful for unit tests.
+     */
+    public final static int MIN_SEGMENT_LENGTH = 4;
+    
     /*
     /**********************************************************************
     /* Configuration
@@ -81,6 +87,14 @@ public abstract class SegmentAllocator
      */
     public SegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
     {
+        if (segmentSize < MIN_SEGMENT_LENGTH) {
+            throw new IllegalArgumentException("segmentSize minimum is "+MIN_SEGMENT_LENGTH+" bytes");
+        }
+        if (minSegmentsToRetain < 0 || minSegmentsToRetain > maxSegments) {
+            throw new IllegalArgumentException("minSegmentsToRetain ("+minSegmentsToRetain
+                    +") must be at least 0; can not exceed maxSegments ("+maxSegments+")");
+        }
+        
         _segmentSize = segmentSize;
         // should we pre-allocated segments?
         _maxReusableSegments = minSegmentsToRetain;
