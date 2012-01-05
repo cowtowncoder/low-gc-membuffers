@@ -95,7 +95,9 @@ public class TestLonger extends MembufTestBase
         final int initialCount = buffer.getEntryCount();
         final long initialLength = buffer.getTotalPayloadLength();
         for (int i = 0; i < count; ++i) {
-            buffer.appendEntry(chunk);
+            if (!buffer.tryAppendEntry(chunk)) {
+                fail("Failed to append; i = "+i+" / "+count);
+            }
         }
         assertEquals(initialCount + count, buffer.getEntryCount());
         assertEquals(initialLength + (count * chunk.length), buffer.getTotalPayloadLength());
