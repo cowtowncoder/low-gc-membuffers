@@ -200,6 +200,14 @@ public class MemBufferImpl extends MemBuffer
 
     /*
     /**********************************************************************
+    /* Extended API (for testing)
+    /**********************************************************************
+     */
+
+    public SegmentAllocator getAllocator() { return _segmentAllocator; }
+    
+    /*
+    /**********************************************************************
     /* Public API, simple statistics (not data) accessors
     /**********************************************************************
      */

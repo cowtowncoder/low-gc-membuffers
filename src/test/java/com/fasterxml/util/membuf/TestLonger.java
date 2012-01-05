@@ -8,6 +8,7 @@ import org.junit.Assert;
 
 import com.fasterxml.util.membuf.MemBuffer;
 import com.fasterxml.util.membuf.MemBuffers;
+import com.fasterxml.util.membuf.impl.MemBufferImpl;
 
 /**
  * Unit test that uses a sample file, sending all entries, one by
@@ -23,6 +24,13 @@ public class TestLonger extends MembufTestBase
         _testShakespeareLineByLine(Allocator.BYTE_BUFFER_DIRECT);
         _testShakespeareLineByLine(Allocator.BYTE_BUFFER_FAKE);
         _testShakespeareLineByLine(Allocator.BYTE_ARRAY);
+    }
+
+    public void test12SegmentBuffer() throws Exception
+    {
+        _test12SegmentBuffer(Allocator.BYTE_BUFFER_DIRECT);
+        _test12SegmentBuffer(Allocator.BYTE_BUFFER_FAKE);
+        _test12SegmentBuffer(Allocator.BYTE_ARRAY);
     }
     
     /*
@@ -63,56 +71,60 @@ public class TestLonger extends MembufTestBase
     }
 
     // And then a more mechanical test:
-    public void test12SegmentBuffer() throws Exception
+    public void _test12SegmentBuffer(Allocator aType) throws Exception
     {
         // 48kB, in 12 x 4kB segments
-        MemBuffers bufs = new MemBuffers(4 * 1024, 2, 12);
-        MemBuffer buffer = bufs.createBuffer(8, 12);
+        MemBuffers bufs = createBuffers(aType, 4 * 1024, 4, 12);
+        MemBuffer buffer = bufs.createBuffer(5, 12);
 
         /* should have space for at least 11 * 4 == 44kB at any point;
          * but use uneven length to force boundary conditions.
          */
         final byte[] chunk = buildChunk(257);
-        final int initialCount = (44 * 1024) / 259;
+        final int initialCount = (11 * 4 * 1024) / 259;
         _write(buffer, chunk, initialCount); // 258 per entry due to 2-byte length prefix
 
+        final SegmentAllocator all = ((MemBufferImpl) buffer).getAllocator();
+        // should be close to full, so:
+        assertEquals(11, buffer.getSegmentCount());
+        assertEquals(11, all.getBufferOwnedSegmentCount());
+        // nothing yet returned, hence not 1
+        assertEquals(0, all.getReusableSegmentCount());
+        
         // and then read some, append some..... one third, say
         final int deltaCount = initialCount / 3;
-
         _read(buffer, chunk, deltaCount);
+
+        assertEquals(8, buffer.getSegmentCount());
+        assertEquals(8, all.getBufferOwnedSegmentCount());
+        // somewhat arbitrary, depends on boundary: 2 or 3
+        assertEquals(3, all.getReusableSegmentCount());
+        
         _write(buffer, chunk, deltaCount);
         _read(buffer, chunk, deltaCount);
         _write(buffer, chunk, deltaCount);
+        // read to almost empty:
         _read(buffer, chunk, deltaCount);
         _read(buffer, chunk, deltaCount);
         _read(buffer, chunk, deltaCount);
         _write(buffer, chunk, deltaCount);
         _read(buffer, chunk, deltaCount);
-    }
 
-    private void _write(MemBuffer buffer, byte[] chunk, int count) throws Exception
-    {
-        final int initialCount = buffer.getEntryCount();
-        final long initialLength = buffer.getTotalPayloadLength();
-        for (int i = 0; i < count; ++i) {
-            if (!buffer.tryAppendEntry(chunk)) {
-                fail("Failed to append; i = "+i+" / "+count);
-            }
-        }
-        assertEquals(initialCount + count, buffer.getEntryCount());
-        assertEquals(initialLength + (count * chunk.length), buffer.getTotalPayloadLength());
-    }
+        // and then read the remainder
+        int count = _skipAll(buffer);
+        assertEquals(2, count);
+        assertEquals(0, buffer.getEntryCount());
 
-    private void _read(MemBuffer buffer, byte[] chunk, int count) throws Exception
-    {
-        final int initialCount = buffer.getEntryCount();
-        final long initialLength = buffer.getTotalPayloadLength();
-        for (int i = 0; i < count; ++i) {
-            byte[] next = buffer.getNextEntry(1L);
-            Assert.assertArrayEquals(chunk, next);
-        }
-        assertEquals(initialCount - count, buffer.getEntryCount());
-        assertEquals(initialLength - (count * chunk.length), buffer.getTotalPayloadLength());
+        // should be 1 or 2 when empty
+        assertEquals(1, buffer.getSegmentCount());
+        assertEquals(5, all.getBufferOwnedSegmentCount());
+        assertEquals(4, all.getReusableSegmentCount());
+
+        // and finally, let's fully fill up again
+        _write(buffer, chunk, initialCount);
+        assertEquals(12, buffer.getSegmentCount());
+        assertEquals(12, all.getBufferOwnedSegmentCount());
+        assertEquals(0, all.getReusableSegmentCount());
     }
     
     /*
@@ -207,5 +219,40 @@ public class TestLonger extends MembufTestBase
         assertEquals(0L, buffer.getTotalPayloadLength());
         // always have at least one segment
         assertEquals(1, buffer.getSegmentCount());
+    }
+
+    private int _skipAll(MemBuffer buffer)
+    {
+        int count = 0;
+        
+        while (buffer.skipNextEntry() >= 0) {
+            ++count;
+        }
+        return count;
+    }
+    
+    private void _write(MemBuffer buffer, byte[] chunk, int count) throws Exception
+    {
+        final int initialCount = buffer.getEntryCount();
+        final long initialLength = buffer.getTotalPayloadLength();
+        for (int i = 0; i < count; ++i) {
+            if (!buffer.tryAppendEntry(chunk)) {
+                fail("Failed to append; i = "+i+" / "+count);
+            }
+        }
+        assertEquals(initialCount + count, buffer.getEntryCount());
+        assertEquals(initialLength + (count * chunk.length), buffer.getTotalPayloadLength());
+    }
+
+    private void _read(MemBuffer buffer, byte[] chunk, int count) throws Exception
+    {
+        final int initialCount = buffer.getEntryCount();
+        final long initialLength = buffer.getTotalPayloadLength();
+        for (int i = 0; i < count; ++i) {
+            byte[] next = buffer.getNextEntry(1L);
+            Assert.assertArrayEquals(chunk, next);
+        }
+        assertEquals(initialCount - count, buffer.getEntryCount());
+        assertEquals(initialLength - (count * chunk.length), buffer.getTotalPayloadLength());
     }
 }
