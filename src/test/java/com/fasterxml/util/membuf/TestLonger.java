@@ -62,6 +62,57 @@ public class TestLonger extends MembufTestBase
         appendAndClear(rows, buffer);
     }
 
+    // And then a more mechanical test:
+    public void test12SegmentBuffer() throws Exception
+    {
+        // 48kB, in 12 x 4kB segments
+        MemBuffers bufs = new MemBuffers(4 * 1024, 2, 12);
+        MemBuffer buffer = bufs.createBuffer(8, 12);
+
+        /* should have space for at least 11 * 4 == 44kB at any point;
+         * but use uneven length to force boundary conditions.
+         */
+        final byte[] chunk = buildChunk(257);
+        final int initialCount = (44 * 1024) / 259;
+        _write(buffer, chunk, initialCount); // 258 per entry due to 2-byte length prefix
+
+        // and then read some, append some..... one third, say
+        final int deltaCount = initialCount / 3;
+
+        _read(buffer, chunk, deltaCount);
+        _write(buffer, chunk, deltaCount);
+        _read(buffer, chunk, deltaCount);
+        _write(buffer, chunk, deltaCount);
+        _read(buffer, chunk, deltaCount);
+        _read(buffer, chunk, deltaCount);
+        _read(buffer, chunk, deltaCount);
+        _write(buffer, chunk, deltaCount);
+        _read(buffer, chunk, deltaCount);
+    }
+
+    private void _write(MemBuffer buffer, byte[] chunk, int count) throws Exception
+    {
+        final int initialCount = buffer.getEntryCount();
+        final long initialLength = buffer.getTotalPayloadLength();
+        for (int i = 0; i < count; ++i) {
+            buffer.appendEntry(chunk);
+        }
+        assertEquals(initialCount + count, buffer.getEntryCount());
+        assertEquals(initialLength + (count * chunk.length), buffer.getTotalPayloadLength());
+    }
+
+    private void _read(MemBuffer buffer, byte[] chunk, int count) throws Exception
+    {
+        final int initialCount = buffer.getEntryCount();
+        final long initialLength = buffer.getTotalPayloadLength();
+        for (int i = 0; i < count; ++i) {
+            byte[] next = buffer.getNextEntry(1L);
+            Assert.assertArrayEquals(chunk, next);
+        }
+        assertEquals(initialCount - count, buffer.getEntryCount());
+        assertEquals(initialLength - (count * chunk.length), buffer.getTotalPayloadLength());
+    }
+    
     /*
     /**********************************************************************
     /* Helper methods
