@@ -6,8 +6,8 @@ import com.fasterxml.util.membuf.*;
  * Intermediate base class for {@link SegmentAllocator}s
  * that construct {@link Segment}s that store byte sequences.
  */
-public abstract class BytesSegmentAllocator
-    extends SegmentAllocator<BytesSegment>
+public abstract class SegmentAllocatorBase<S extends Segment<S>>
+    extends SegmentAllocator<S>
 {
     /**
      * As a sanity check, we will not allow segments shorter than 4 bytes;
@@ -25,7 +25,7 @@ public abstract class BytesSegmentAllocator
      * And here we hold on to segments that have been returned by buffers
      * after use.
      */
-    protected BytesSegment _firstReusableSegment;
+    protected S _firstReusableSegment;
     
     /*
     /**********************************************************************
@@ -50,7 +50,7 @@ public abstract class BytesSegmentAllocator
      *   strictly limits maximum memory usage by all {@link MemBuffer}s that
      *   use this allocator.
      */
-    public BytesSegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
+    public SegmentAllocatorBase(int segmentSize, int minSegmentsToRetain, int maxSegments)
     {
         super(segmentSize, minSegmentsToRetain, maxSegments);
         if (segmentSize < MIN_SEGMENT_LENGTH) {
@@ -77,7 +77,7 @@ public abstract class BytesSegmentAllocator
      * @return Head of segment list (with newly allocated entries as first
      *    entries) if allocation succeeded; null if not
      */
-    public synchronized BytesSegment allocateSegments(int count, BytesSegment segmentList)
+    public synchronized S allocateSegments(int count, S segmentList)
     {
         if (count < 1) {
             throw new IllegalArgumentException("Must allocate at least one segment (count = "+count+")");
@@ -96,7 +96,7 @@ public abstract class BytesSegmentAllocator
      * contents of a segment and do not want to hold on to it for local
      * reuse.
      */
-    public synchronized void releaseSegment(BytesSegment segToRelease)
+    public synchronized void releaseSegment(S segToRelease)
     {
         if (--_bufferOwnedSegmentCount < 0) { // sanity check; not needed in perfect world
             int count = _bufferOwnedSegmentCount;
@@ -117,7 +117,7 @@ public abstract class BytesSegmentAllocator
     /**********************************************************************
      */
 
-    protected abstract BytesSegment _allocateSegment();
+    protected abstract S _allocateSegment();
     
     protected boolean _canAllocate(int count)
     {

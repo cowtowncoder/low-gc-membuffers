@@ -59,7 +59,7 @@ public class ByteBufferLongsSegment extends LongsSegment
      * Factory method for construction {@link LongsSegmentAllocator} that
      * constructs instances of this segment type
      */
-    public static LongsSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+    public static Allocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
             boolean allocateNativeBuffers) {
         return new Allocator(segmentSize, minSegmentsToRetain, maxSegments, allocateNativeBuffers);
     }
@@ -215,7 +215,7 @@ public class ByteBufferLongsSegment extends LongsSegment
      * {@link SegmentAllocator} implementation that allocates
      * {@link ByteBufferLongsSegment}s.
      */
-    public static class Allocator extends LongsSegmentAllocator
+    public static class Allocator extends SegmentAllocatorBase<LongsSegment>
     {
         protected final boolean _cfgAllocateNative;
 

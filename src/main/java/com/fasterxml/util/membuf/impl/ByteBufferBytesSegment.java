@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 import com.fasterxml.util.membuf.*;
 import com.fasterxml.util.membuf.base.BytesSegment;
-import com.fasterxml.util.membuf.base.BytesSegmentAllocator;
+import com.fasterxml.util.membuf.base.SegmentAllocatorBase;
 
 /**
  * {@link Segment} implementation that uses {@link ByteBuffer}s for
@@ -51,10 +51,10 @@ public class ByteBufferBytesSegment extends BytesSegment
 
 
     /**
-     * Factory method for construction {@link BytesSegmentAllocator} that
+     * Factory method for construction {@link SegmentAllocatorBase} that
      * constructs instances of this segment type
      */
-    public static BytesSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+    public static Allocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
             boolean allocateNativeBuffers) {
         return new Allocator(segmentSize, minSegmentsToRetain, maxSegments, allocateNativeBuffers);
     }
@@ -273,7 +273,7 @@ public class ByteBufferBytesSegment extends BytesSegment
      * {@link SegmentAllocator} implementation that allocates
      * {@link ArrayByteSegment}s.
      */
-    public static class Allocator extends BytesSegmentAllocator
+    public static class Allocator extends SegmentAllocatorBase<BytesSegment>
     {
         protected final boolean _cfgAllocateNative;
         

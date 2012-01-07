@@ -30,7 +30,7 @@ public class ArrayLongsSegment extends LongsSegment
      * Factory method for construction {@link LongsSegmentAllocator} that
      * constructs instances of this segment type
      */
-    public static LongsSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
+    public static Allocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
         return new Allocator(segmentSize, minSegmentsToRetain, maxSegments);
     }
     
@@ -185,7 +185,7 @@ public class ArrayLongsSegment extends LongsSegment
      * {@link SegmentAllocator} implementation that allocates
      * {@link ArrayLongsSegment}s.
      */
-    public static class Allocator extends LongsSegmentAllocator
+    public static class Allocator extends SegmentAllocatorBase<LongsSegment>
     {
         public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
             super(segmentSize, minSegmentsToRetain, maxSegments);
