@@ -1,13 +1,13 @@
 package com.fasterxml.util.membuf;
 
 import com.fasterxml.util.membuf.base.BytesSegment;
-import com.fasterxml.util.membuf.base.MemBufferBase;
+import com.fasterxml.util.membuf.base.ChunkyMemBufferBase;
 
 /**
  * {@link MemBuffer} implementation for buffers where values
  * are byte sequences.
  */
-public abstract class BytesMemBuffer extends MemBufferBase<BytesSegment>
+public abstract class BytesMemBuffer extends ChunkyMemBufferBase<BytesSegment>
 {
     /**
      * Segment that was peeked, if any. When entries are peeked, a copy

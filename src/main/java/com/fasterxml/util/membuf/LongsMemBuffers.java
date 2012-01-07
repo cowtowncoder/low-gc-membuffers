@@ -51,7 +51,7 @@ public class LongsMemBuffers extends MemBuffersBase<LongsMemBuffer, LongsSegment
      */
 
     @Override
-    protected LongsMemBuffer _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+    protected LongsMemBuffer _createChunkedBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             LongsSegment initialSegments)
     {
         return new LongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,

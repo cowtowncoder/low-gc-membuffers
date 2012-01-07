@@ -1,10 +1,13 @@
 package com.fasterxml.util.membuf.base;
 
-import com.fasterxml.util.membuf.MemBuffer;
-import com.fasterxml.util.membuf.Segment;
-import com.fasterxml.util.membuf.SegmentAllocator;
+import com.fasterxml.util.membuf.*;
 
-public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
+/**
+ * Shared base class for all types of {@link MemBuffer} implementations
+ * (regardless of underlying content type or streaming/chunked style)
+ */
+public abstract class MemBufferBase<S extends Segment<S>>
+    implements MemBuffer // partial impl
 {
     /*
     /**********************************************************************
@@ -68,26 +71,10 @@ public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
     protected int _usedSegmentsCount;
 
     /**
-     * Number of entries stored in this buffer.
-     */
-    protected int _entryCount;
-
-    /**
      * Number of bytes stored in all appended entries.
      */
     protected long _totalPayloadLength;
 
-    /*
-    /**********************************************************************
-    /* Read handling
-    /**********************************************************************
-     */
-
-    /**
-     * Length of the next entry, if known; -1 if not yet known.
-     */
-    protected int _nextEntryLength = -1;
-    
     /*
     /**********************************************************************
     /* Simple segment reuse
@@ -106,8 +93,14 @@ public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
      * less than equal to {@link #_maxSegmentsToAllocate}.
      */
     protected int _freeSegmentCount;
-
-    public MemBufferBase(SegmentAllocator<S> allocator,
+    
+    /*
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
+     */
+    
+    protected MemBufferBase(SegmentAllocator<S> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             S initialSegments)
     {
@@ -125,21 +118,15 @@ public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
         _head.initForReading();
         
         _usedSegmentsCount = 1;
-        // should we sanity-check this to make sure?
-        _freeSegmentCount = minSegmentsToAllocate-1;
-
-        // if yes, uncomment this...
+        // Sanity checks? if yes, uncomment this...
         /*
             int count = count(_firstFreeSegment);
             if (count != _freeSegmentCount) {
                 throw new IllegalStateException("Bad initial _freeSegmentCount ("+_freeSegmentCount+"): but only got "+count+" linked");
             }
         */
-        
-        _entryCount = 0;
-        _totalPayloadLength = 0;
+        _freeSegmentCount = minSegmentsToAllocate-1;
     }
-
 
     /*
     /**********************************************************************
@@ -183,37 +170,14 @@ public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
         }
         return space;
     }
-    
+
     /*
     /**********************************************************************
     /* Public API, state changes
     /**********************************************************************
      */
 
-    @Override
-    public synchronized void clear()
-    {
-        if (_head == null) { // closed; nothing to do
-            return;
-        }
-        
-        // first, free all segments except for head
-        String error = null;
-        while (_tail != _head) {
-            error = _freeReadSegment(error);
-        }
-        // then re-init head/tail
-        _tail.clear();
-        
-        // and reset various counters
-        _entryCount = 0;
-        _totalPayloadLength = 0L;
-        _nextEntryLength = -1;
-        _clearPeeked();
-        if (error != null) { // sanity check after everything else
-            throw new IllegalStateException(error);
-        }
-    }
+    //public synchronized void clear()
 
     @Override // from Closeable -- note, does NOT throw IOException
     public synchronized void close()
@@ -236,6 +200,39 @@ public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
             seg = next;
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Internal methods for sub-classes to use
+    /**********************************************************************
+     */
+
+    /**
+     * Method intended to be called from "clear()", after sub-class has done
+     * its own cleanup. Not marked as synchronized as sub-class is expected
+     * to do that if necessary.
+     */
+    protected void _clear()
+    {
+        if (_head == null) { // closed; nothing to do
+            return;
+        }
+        // first: reset various counters (since this can't fail)
+        _totalPayloadLength = 0L;
+        _clearPeeked();
+        
+        // then free all segments except for head: note, may get an internal error:
+        String error = null;
+        while (_tail != _head) {
+            error = _freeReadSegment(error);
+        }
+        // then re-init head/tail
+        _tail.clear();
+        // and finally, indicate error, if any
+        if (error != null) { // sanity check after everything else
+            throw new IllegalStateException(error);
+        }
+    }
     
     /*
     /**********************************************************************
@@ -250,4 +247,5 @@ public abstract class MemBufferBase<S extends Segment<S>> extends MemBuffer
     protected abstract void _clearPeeked();
     
     protected abstract int _peekedLength();
+
 }

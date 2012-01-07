@@ -1,7 +1,6 @@
 package com.fasterxml.util.membuf.impl;
 
 import com.fasterxml.util.membuf.*;
-import com.fasterxml.util.membuf.base.BytesSegment;
 import com.fasterxml.util.membuf.base.LongsSegment;
 
 /**

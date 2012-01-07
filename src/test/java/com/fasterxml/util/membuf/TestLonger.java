@@ -6,7 +6,6 @@ import java.util.*;
 
 import org.junit.Assert;
 
-import com.fasterxml.util.membuf.MemBuffer;
 import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
 
 /**
@@ -218,7 +217,7 @@ public class TestLonger extends MembufTestBase
         assertEquals(1, buffer.getSegmentCount());
     }
 
-    private int _skipAll(MemBuffer buffer)
+    private int _skipAll(ChunkyMemBuffer buffer)
     {
         int count = 0;
         

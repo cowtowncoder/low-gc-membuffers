@@ -84,7 +84,7 @@ public abstract class MemBuffersBase<B extends MemBuffer, S extends Segment<S>>
         if (initialSegments == null) {
             return null;
         }
-        return _createBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+        return _createChunkedBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
     }
 
     /*
@@ -93,6 +93,6 @@ public abstract class MemBuffersBase<B extends MemBuffer, S extends Segment<S>>
     /**********************************************************************
      */
 
-    protected abstract B _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+    protected abstract B _createChunkedBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             S initialSegments);
 }

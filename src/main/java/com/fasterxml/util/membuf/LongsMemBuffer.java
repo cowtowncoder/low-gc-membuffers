@@ -1,9 +1,9 @@
 package com.fasterxml.util.membuf;
 
 import com.fasterxml.util.membuf.base.LongsSegment;
-import com.fasterxml.util.membuf.base.MemBufferBase;
+import com.fasterxml.util.membuf.base.ChunkyMemBufferBase;
 
-public abstract class LongsMemBuffer extends MemBufferBase<LongsSegment>
+public abstract class LongsMemBuffer extends ChunkyMemBufferBase<LongsSegment>
 {
     /**
      * Segment that was peeked, if any. When entries are peeked, a copy

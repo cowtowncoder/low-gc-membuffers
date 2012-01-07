@@ -24,20 +24,14 @@ import java.io.*;
  * 
  * @author Tatu Saloranta
  */
-public abstract class MemBuffer
-    implements Closeable // just for convenience
+public interface MemBuffer
+    extends Closeable // just for convenience
 {
     /*
     /**********************************************************************
     /* Public API, simple statistics (not data) accessors
     /**********************************************************************
      */
-
-    /**
-     * Method for checking how many entries are buffered in this buffer
-     * currently.
-     */
-    public abstract int getEntryCount();
 
     /**
      * Method for checking whether this buffer has no entries,
@@ -99,25 +93,6 @@ public abstract class MemBuffer
     /* Public API: type-independent data access
     /**********************************************************************
      */
-
-    /**
-     * Method that will check size of the next entry, if buffer has entries;
-     * returns size in bytes if there is at least one entry, or -1 if buffer
-     * is empty.
-     * Note that this method does not remove the entry and can be called multiple
-     * times, that is, it is fully idempotent.
-     */
-    public abstract int getNextEntryLength();
-    
-    /**
-     * Method that will skip the next entry from the buffer, if an entry
-     * is available, and return length of the skipped entry: if buffer
-     * is empty, will return -1
-     * 
-     * @return Length of skipped entry, if buffer was not empty; -1 if buffer
-     *   was empty
-     */
-    public abstract int skipNextEntry();
     
     /**
      * Method that can be called to wait until there is at least one

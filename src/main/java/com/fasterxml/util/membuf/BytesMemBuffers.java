@@ -51,7 +51,7 @@ public class BytesMemBuffers extends MemBuffersBase<BytesMemBuffer, BytesSegment
      */
 
     @Override
-    protected BytesMemBuffer _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+    protected BytesMemBuffer _createChunkedBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             BytesSegment initialSegments)
     {
         return new BytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
