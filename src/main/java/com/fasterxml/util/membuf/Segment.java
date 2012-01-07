@@ -132,24 +132,4 @@ public abstract class Segment<S extends Segment<S>>
      * Accessor for getting the next segment in linked list.
      */
     public abstract S getNext();
-    /*
-    /**********************************************************************
-    /* API: appending data
-    /**********************************************************************
-     */
-    
-    /**
-     * Append operation that appends specified data; caller must ensure
-     * that it will actually fit (if it can't, it should instead call
-     * {@link #tryAppend}).
-     */
-    public abstract void append(byte[] src, int offset, int length);
-
-    /**
-     * Append operation that tries to append as much of input data as
-     * possible, and returns number of bytes that were copied
-     * 
-     * @return Number of bytes actually appended
-     */
-    public abstract int tryAppend(byte[] src, int offset, int length);
 }

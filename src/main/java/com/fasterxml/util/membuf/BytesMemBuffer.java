@@ -1,5 +1,9 @@
 package com.fasterxml.util.membuf;
 
+/**
+ * {@link MemBuffer} implementation for buffers where values
+ * are byte sequences.
+ */
 public abstract class BytesMemBuffer extends MemBuffer
 {
     public BytesMemBuffer() {

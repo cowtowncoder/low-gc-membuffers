@@ -1,22 +1,14 @@
 package com.fasterxml.util.membuf;
 
-import com.fasterxml.util.membuf.base.MemBuffersBase;
-
 /*
  * Copyright Tatu Saloranta, 2011-
  */
 
 /**
- * Shared allocator object, used by all {@link MemBuffer} instances
- * that are part of a {@link MemBuffersBase}. It handles allocation
- * of new {@link Segment} instances, as well as sharing of
- * shared segments (above and beyond simple reuse that individual
- * queues can do).
- *<p>
- * Note that a single allocator can allocate buffers of different
- * underlying primitive types (as of 0.8.2), this to slightly
- * reduce number of distinct classes we need, despite Java not
- * allowing generics to be used for primitive types.
+ * Shared allocator object, used by standardl {@link MemBuffer} implementations.
+ * Handles allocation of new {@link Segment} instances, as well as sharing of
+ * reusable segments (above and beyond simple reuse that individual
+ * buffers can do).
  */
 public abstract class SegmentAllocator<T extends Segment<T>>
 {
