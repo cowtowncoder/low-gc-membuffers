@@ -5,19 +5,43 @@ For full usage, check out
 <a href="https://github.com/cowtowncoder/low-gc-membuffers">project home</a>,
 but here is an example of simple usage:
 <p>
-First thing needed is creation of {@link com.fasterxml.util.membuf.base.MemBuffersBase} instance:
+
+First thing you need is a factory to create {@link MemBuffer} instance you want.
+Buffers come in multiple flavors, divided by two main criteria:
+
+<ul>
+  <li>Type of values buffered: one of primitive types like "byte" or "long"
+   </li>
+  <li>Bundling of values: either "chunky" (value sequence boundaries are preserved
+so that each read matches append that added value sequence)
+  and "streamy" (boundaries NOT preserved: stream-style)
+   </li>
+ </ul>
+
+There is one factory for each value type, so we have:
+
+<ul>
+  <li>{@link MemBuffersForBytes} for <code>byte</code> sequence buffering
+   </li>
+  <li>{@link MemBuffersForLong} for <code>long</code> sequence buffering
+   </li>
+ </ul>
+
+To create byte-based buffer, you will thus do:
 
 <pre>
   // use segments of 64kB; allocate 2 first, allocate at most 16
   // (i.e. max memory usage ~1MB)
-  MemBuffers bufs = new MemBuffers(64 * 1024, 2, 16);
+  MemBuffersForBytes bufs = new MemBuffersForBytes(64 * 1024, 2, 16);
 </pre>
 
-this instance can be used for constructing {@link com.fasterxml.util.membuf.MemBuffer} instances:
+this factory object can create both "chunky" and "streamy" buffers: assuming you
+want to preserve byte boundaries you would use:
+
 <pre>
   // create buffer that starts with a single 64kB segment;
   // and can expand to up to 192kB
-  MemBuffer items = bufs.createBuffer(1, 4);
+  ChunkyBytesMemBuffer items = bufs.createChunkyBuffer(1, 4);
 </pre>
 
 Buffer instances are then used to append entries, and read them in FIFO order:
