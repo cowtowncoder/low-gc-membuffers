@@ -4,7 +4,8 @@ import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 
 import com.fasterxml.util.membuf.Segment;
-import com.fasterxml.util.membuf.base.LongsSegment;
+import com.fasterxml.util.membuf.SegmentAllocator;
+import com.fasterxml.util.membuf.base.*;
 
 /**
  * {@link Segment} implementation that uses {@link LongBuffer}s for
@@ -54,6 +55,15 @@ public class ByteBufferLongsSegment extends LongsSegment
         }
     }
 
+    /**
+     * Factory method for construction {@link LongsSegmentAllocator} that
+     * constructs instances of this segment type
+     */
+    public static LongsSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+            boolean allocateNativeBuffers) {
+        return new Allocator(segmentSize, minSegmentsToRetain, maxSegments, allocateNativeBuffers);
+    }
+    
     /*
     /**********************************************************************
     /* API: state changes
@@ -191,4 +201,42 @@ public class ByteBufferLongsSegment extends LongsSegment
         // !!! TBI
         return -1;
     }
+
+    /*
+    /**********************************************************************
+    /* Helper class: Allocator for this segment type
+    /**********************************************************************
+     */
+    
+    /**
+     * {@link SegmentAllocator} implementation that allocates
+     * {@link ByteBufferLongsSegment}s.
+     */
+    public static class Allocator extends LongsSegmentAllocator
+    {
+        protected final boolean _cfgAllocateNative;
+
+        public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+                boolean allocateNativeBuffers)
+               
+        {
+            super(segmentSize, minSegmentsToRetain, maxSegments);
+            _cfgAllocateNative = allocateNativeBuffers;
+        }
+        
+        protected LongsSegment _allocateSegment()
+        {
+            // can reuse a segment returned earlier?
+            if (_reusableSegmentCount > 0) {
+                LongsSegment segment = _firstReusableSegment;
+                _firstReusableSegment = segment.getNext();
+                ++_bufferOwnedSegmentCount; 
+                --_reusableSegmentCount;
+                return segment;
+            }
+            LongsSegment segment = new ByteBufferLongsSegment(_segmentSize, _cfgAllocateNative);
+            ++_bufferOwnedSegmentCount; 
+            return segment;
+        }    }
+
 }

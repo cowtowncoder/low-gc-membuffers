@@ -1,7 +1,13 @@
 package com.fasterxml.util.membuf.impl;
 
+import com.fasterxml.util.membuf.SegmentAllocator;
 import com.fasterxml.util.membuf.base.BytesSegment;
+import com.fasterxml.util.membuf.base.BytesSegmentAllocator;
 
+/**
+ * {@link BytesSegment} implementation that uses POJAs (Plain Old Java Array)
+ * for storing byte sequences.
+ */
 public class ArrayBytesSegment extends BytesSegment
 {
     protected final byte[] _buffer;
@@ -21,6 +27,14 @@ public class ArrayBytesSegment extends BytesSegment
         _buffer = new byte[size];
     }
 
+    /**
+     * Factory method for construction {@link BytesSegmentAllocator} that
+     * constructs instances of this segment type
+     */
+    public static BytesSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
+        return new Allocator(segmentSize, minSegmentsToRetain, maxSegments);
+    }
+    
     /*
     /**********************************************************************
     /* API: state changes
@@ -220,4 +234,37 @@ public class ArrayBytesSegment extends BytesSegment
             partial += b;
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Helper class: Allocator for this segment type
+    /**********************************************************************
+     */
+    
+    /**
+     * {@link SegmentAllocator} implementation that allocates
+     * {@link ArrayByteSegment}s.
+     */
+    public static class Allocator extends BytesSegmentAllocator
+    {
+        public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
+            super(segmentSize, minSegmentsToRetain, maxSegments);
+        }
+        
+        protected BytesSegment _allocateSegment()
+        {
+            // can reuse a segment returned earlier?
+            if (_reusableSegmentCount > 0) {
+                BytesSegment segment = _firstReusableSegment;
+                _firstReusableSegment = segment.getNext();
+                ++_bufferOwnedSegmentCount; 
+                --_reusableSegmentCount;
+                return segment;
+            }
+            BytesSegment segment = new ArrayBytesSegment(_segmentSize);
+            ++_bufferOwnedSegmentCount; 
+            return segment;
+        }
+    }
+
 }

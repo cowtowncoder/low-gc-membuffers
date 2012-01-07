@@ -4,10 +4,7 @@ import java.util.Arrays;
 
 import com.fasterxml.util.membuf.base.BytesSegment;
 import com.fasterxml.util.membuf.base.LongsSegment;
-import com.fasterxml.util.membuf.impl.ArrayBytesSegmentAllocator;
-import com.fasterxml.util.membuf.impl.ArrayLongsSegmentAllocator;
-import com.fasterxml.util.membuf.impl.ByteBufferBytesSegmentAllocator;
-import com.fasterxml.util.membuf.impl.ByteBufferLongsSegmentAllocator;
+import com.fasterxml.util.membuf.impl.*;
 
 import junit.framework.TestCase;
 
@@ -24,13 +21,13 @@ public abstract class MembufTestBase extends TestCase
         SegmentAllocator<BytesSegment> all;
         switch (a) {
         case BYTE_BUFFER_DIRECT:
-            all = new ByteBufferBytesSegmentAllocator(segLen, minSegs, maxSegs, true);
+            all = ByteBufferBytesSegment.allocator(segLen, minSegs, maxSegs, true);
             break;
         case BYTE_BUFFER_FAKE:
-            all = new ByteBufferBytesSegmentAllocator(segLen, minSegs, maxSegs, false);
+            all = ByteBufferBytesSegment.allocator(segLen, minSegs, maxSegs, false);
             break;
         case BYTE_ARRAY:
-            all = new ArrayBytesSegmentAllocator(segLen, minSegs, maxSegs);
+            all = ArrayBytesSegment.allocator(segLen, minSegs, maxSegs);
             break;
         default:
             throw new Error();
@@ -43,13 +40,13 @@ public abstract class MembufTestBase extends TestCase
         SegmentAllocator<LongsSegment> all;
         switch (a) {
         case BYTE_BUFFER_DIRECT:
-            all = new ByteBufferLongsSegmentAllocator(segLen, minSegs, maxSegs, true);
+            all = ByteBufferLongsSegment.allocator(segLen, minSegs, maxSegs, true);
             break;
         case BYTE_BUFFER_FAKE:
-            all = new ByteBufferLongsSegmentAllocator(segLen, minSegs, maxSegs, false);
+            all = ByteBufferLongsSegment.allocator(segLen, minSegs, maxSegs, false);
             break;
         case BYTE_ARRAY:
-            all = new ArrayLongsSegmentAllocator(segLen, minSegs, maxSegs);
+            all = ArrayLongsSegment.allocator(segLen, minSegs, maxSegs);
             break;
         default:
             throw new Error();

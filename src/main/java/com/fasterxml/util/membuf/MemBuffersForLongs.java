@@ -1,7 +1,7 @@
 package com.fasterxml.util.membuf;
 
 import com.fasterxml.util.membuf.base.*;
-import com.fasterxml.util.membuf.impl.ByteBufferLongsSegmentAllocator;
+import com.fasterxml.util.membuf.impl.ByteBufferLongsSegment;
 import com.fasterxml.util.membuf.impl.LongsMemBufferImpl;
 
 /**
@@ -40,7 +40,7 @@ public class MemBuffersForLongs extends MemBuffersBase<
      */
     public MemBuffersForLongs(int segmentSize, int segmentsToRetain, int maxSegments)
     {
-        this(new ByteBufferLongsSegmentAllocator(segmentSize, segmentsToRetain, maxSegments, true));
+        this(ByteBufferLongsSegment.allocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
     public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator)

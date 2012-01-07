@@ -1,8 +1,13 @@
 package com.fasterxml.util.membuf.impl;
 
-import com.fasterxml.util.membuf.base.LongsSegment;
+import com.fasterxml.util.membuf.SegmentAllocator;
+import com.fasterxml.util.membuf.base.*;
 
-public class ArrayLongsSegment  extends LongsSegment
+/**
+ * {@link LongsSegment} implementation that uses POJAs (Plain Old Java Array)
+ * for storing long sequences.
+ */
+public class ArrayLongsSegment extends LongsSegment
 {
     protected final long[] _buffer;
 
@@ -21,6 +26,14 @@ public class ArrayLongsSegment  extends LongsSegment
         _buffer = new long[size];
     }
 
+    /**
+     * Factory method for construction {@link LongsSegmentAllocator} that
+     * constructs instances of this segment type
+     */
+    public static LongsSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
+        return new Allocator(segmentSize, minSegmentsToRetain, maxSegments);
+    }
+    
     /*
     /**********************************************************************
     /* API: state changes
@@ -160,5 +173,37 @@ public class ArrayLongsSegment  extends LongsSegment
         length = Math.min(length, availableForReading());
         _readPtr += length;
         return length;
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper class: Allocator for this segment type
+    /**********************************************************************
+     */
+    
+    /**
+     * {@link SegmentAllocator} implementation that allocates
+     * {@link ArrayLongsSegment}s.
+     */
+    public static class Allocator extends LongsSegmentAllocator
+    {
+        public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
+            super(segmentSize, minSegmentsToRetain, maxSegments);
+        }
+        
+        protected LongsSegment _allocateSegment()
+        {
+            // can reuse a segment returned earlier?
+            if (_reusableSegmentCount > 0) {
+                LongsSegment segment = _firstReusableSegment;
+                _firstReusableSegment = segment.getNext();
+                ++_bufferOwnedSegmentCount; 
+                --_reusableSegmentCount;
+                return segment;
+            }
+            LongsSegment segment = new ArrayLongsSegment(_segmentSize);
+            ++_bufferOwnedSegmentCount; 
+            return segment;
+        }
     }
 }

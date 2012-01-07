@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import com.fasterxml.util.membuf.*;
 import com.fasterxml.util.membuf.base.BytesSegment;
+import com.fasterxml.util.membuf.base.BytesSegmentAllocator;
 
 /**
  * {@link Segment} implementation that uses {@link ByteBuffer}s for
@@ -48,6 +49,16 @@ public class ByteBufferBytesSegment extends BytesSegment
         _buffer = useDirect ? ByteBuffer.allocateDirect(size) : ByteBuffer.allocate(size);
     }
 
+
+    /**
+     * Factory method for construction {@link BytesSegmentAllocator} that
+     * constructs instances of this segment type
+     */
+    public static BytesSegmentAllocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+            boolean allocateNativeBuffers) {
+        return new Allocator(segmentSize, minSegmentsToRetain, maxSegments, allocateNativeBuffers);
+    }
+    
     /*
     /**********************************************************************
     /* API: state changes
@@ -249,6 +260,44 @@ public class ByteBufferBytesSegment extends BytesSegment
                 return partial + (b & 0x7F);
             }
             partial += b;
+        }
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper class: Allocator for this segment type
+    /**********************************************************************
+     */
+    
+    /**
+     * {@link SegmentAllocator} implementation that allocates
+     * {@link ArrayByteSegment}s.
+     */
+    public static class Allocator extends BytesSegmentAllocator
+    {
+        protected final boolean _cfgAllocateNative;
+        
+        public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+                boolean allocateNativeBuffers)
+               
+        {
+            super(segmentSize, minSegmentsToRetain, maxSegments);
+            _cfgAllocateNative = allocateNativeBuffers;
+        }
+        
+        protected BytesSegment _allocateSegment()
+        {
+            // can reuse a segment returned earlier?
+            if (_reusableSegmentCount > 0) {
+                BytesSegment segment = _firstReusableSegment;
+                _firstReusableSegment = segment.getNext();
+                ++_bufferOwnedSegmentCount; 
+                --_reusableSegmentCount;
+                return segment;
+            }
+            BytesSegment segment = new ByteBufferBytesSegment(_segmentSize, _cfgAllocateNative);
+            ++_bufferOwnedSegmentCount; 
+            return segment;
         }
     }
 }
