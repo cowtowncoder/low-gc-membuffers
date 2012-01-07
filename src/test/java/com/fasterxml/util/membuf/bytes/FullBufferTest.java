@@ -1,8 +1,10 @@
-package com.fasterxml.util.membuf;
+package com.fasterxml.util.membuf.bytes;
 
 import java.util.Arrays;
 
 import org.junit.Assert;
+
+import com.fasterxml.util.membuf.*;
 
 /**
  * Tests to verify handling of case where memory buffers are filled up.

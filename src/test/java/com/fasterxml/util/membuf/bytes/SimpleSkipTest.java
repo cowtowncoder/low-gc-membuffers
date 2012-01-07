@@ -1,4 +1,7 @@
-package com.fasterxml.util.membuf;
+package com.fasterxml.util.membuf.bytes;
+
+import com.fasterxml.util.membuf.ChunkyBytesMemBuffer;
+import com.fasterxml.util.membuf.MembufTestBase;
 
 public class SimpleSkipTest extends MembufTestBase
 {

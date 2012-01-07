@@ -1,4 +1,4 @@
-package com.fasterxml.util.membuf;
+package com.fasterxml.util.membuf.bytes;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -6,6 +6,7 @@ import java.util.*;
 
 import org.junit.Assert;
 
+import com.fasterxml.util.membuf.*;
 import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
 
 /**

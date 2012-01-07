@@ -1,6 +1,9 @@
-package com.fasterxml.util.membuf;
+package com.fasterxml.util.membuf.bytes;
 
 import org.junit.Assert;
+
+import com.fasterxml.util.membuf.ChunkyBytesMemBuffer;
+import com.fasterxml.util.membuf.MembufTestBase;
 
 public class SimplePeekTest extends MembufTestBase
 {
