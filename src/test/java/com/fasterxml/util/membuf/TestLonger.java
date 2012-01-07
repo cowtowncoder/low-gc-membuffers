@@ -228,7 +228,7 @@ public class TestLonger extends MembufTestBase
         return count;
     }
     
-    private void _write(MemBuffer buffer, byte[] chunk, int count) throws Exception
+    private void _write(BytesMemBuffer buffer, byte[] chunk, int count) throws Exception
     {
         final int initialCount = buffer.getEntryCount();
         final long initialLength = buffer.getTotalPayloadLength();

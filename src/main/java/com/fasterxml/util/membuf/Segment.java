@@ -132,4 +132,16 @@ public abstract class Segment<S extends Segment<S>>
      * Accessor for getting the next segment in linked list.
      */
     public abstract S getNext();
+
+    /*
+    /**********************************************************************
+    /* API for type-independent data access
+    /**********************************************************************
+     */
+
+    /**
+     * Method for trying to skip up to specified number of bytes.
+     */
+    public abstract int skip(int length);
+
 }

@@ -23,14 +23,13 @@ public class BufferCloseTest extends MembufTestBase
 
         assertEquals(3, alloc.getBufferOwnedSegmentCount());
         assertEquals(0, alloc.getReusableSegmentCount());
-        assertEquals(3, buffer._usedSegmentsCount);
+        assertEquals(3, buffer.getSegmentCount());
 
         buffer.close();
         
-        assertEquals(0, buffer._entryCount);
-        assertEquals(0L, buffer._totalPayloadLength);
-        assertEquals(0, buffer._usedSegmentsCount);
-        assertEquals(0, buffer._freeSegmentCount);
+        assertEquals(0, buffer.getEntryCount());
+        assertEquals(0L, buffer.getTotalPayloadLength());
+        assertEquals(0, buffer.getSegmentCount());
 
         assertEquals(0, alloc.getBufferOwnedSegmentCount());
         assertEquals(3, alloc.getReusableSegmentCount());

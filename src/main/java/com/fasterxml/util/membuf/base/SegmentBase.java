@@ -128,26 +128,6 @@ public abstract class SegmentBase<S extends Segment<S>>
         return _nextSegment;
     }
 
-    /*
-    /**********************************************************************
-    /* Partial API implementation: properties
-    /**********************************************************************
-     */
-
-    // public int availableForAppend();
-
-    // public int availableForReading();
-
-    /*
-    /**********************************************************************
-    /* Partial API implementation: appending data
-    /**********************************************************************
-     */
-    
-    //public void append(byte[] src, int offset, int length);
-
-    //public int tryAppend(byte[] src, int offset, int length)
-    
     // Silly work-around for generics problem:
     @SuppressWarnings("unchecked")
     private final S _this() {

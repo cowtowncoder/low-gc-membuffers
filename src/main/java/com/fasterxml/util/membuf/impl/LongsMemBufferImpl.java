@@ -2,10 +2,11 @@ package com.fasterxml.util.membuf.impl;
 
 import com.fasterxml.util.membuf.*;
 import com.fasterxml.util.membuf.base.BytesSegment;
+import com.fasterxml.util.membuf.base.LongsSegment;
 
 /**
  * {@link MemBuffer} implementation used for storing entries
- * that are sequences of byte values.
+ * that are sequences of long values.
  *<p>
  * Access to queue is fully synchronized -- meaning that all methods are
  * synchronized by implementations as necessary, and caller should not need
@@ -20,23 +21,10 @@ import com.fasterxml.util.membuf.base.BytesSegment;
  * finalize() method is not implemented since it is both somewhat unreliable
  * (i.e. should not be counted on) and can add overhead for GC processing.
  */
-public class BytesMemBufferImpl extends BytesMemBuffer
+public class LongsMemBufferImpl extends LongsMemBuffer
 {
-    private final static byte[] EMPTY_PAYLOAD = new byte[0];
-    
-    /*
-    /**********************************************************************
-    /* Temporary buffering
-    /**********************************************************************
-     */
+    private final static long[] EMPTY_PAYLOAD = new long[0];
 
-    /**
-     * Length prefix is between one and five bytes long, to encode
-     * int32 as VInt (most-significant-byte first),
-     * where last byte is indicated by set sign bit.
-     */
-    protected final byte[] _lengthPrefixBuffer = new byte[5];
-    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -56,9 +44,9 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      *   <code>_maxSegmentsForReuse</code> segments that are allocated to ensure
      *   that there is always specified minimum capacity available
      */
-    public BytesMemBufferImpl(SegmentAllocator<BytesSegment> allocator,
+    public LongsMemBufferImpl(SegmentAllocator<LongsSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            BytesSegment initialSegments)
+            LongsSegment initialSegments)
     {
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
@@ -71,12 +59,12 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      */
 
     @Override
-    public final void appendEntry(byte[] data) {
+    public final void appendEntry(long[] data) {
         appendEntry(data, 0, data.length);
     }
 
     @Override
-    public void appendEntry(byte[] data, int dataOffset, int dataLength)
+    public void appendEntry(long[] data, int dataOffset, int dataLength)
     {
         if (!tryAppendEntry(data, dataOffset, dataLength)) {
             throw new IllegalStateException("Not enough room in buffer to append entry of "+dataLength
@@ -85,24 +73,22 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
 
     @Override
-    public final boolean tryAppendEntry(byte[] data) {
+    public final boolean tryAppendEntry(long[] data) {
         return tryAppendEntry(data, 0, data.length);
     }
 
     @Override
-    public synchronized boolean tryAppendEntry(byte[] data, int dataOffset, int dataLength)
+    public synchronized boolean tryAppendEntry(long[] data, int dataOffset, int dataLength)
     {
         if (_head == null) {
             _reportClosed();
         }
-        
         // first, calculate total size (length prefix + payload)
-        int prefixLength = _calcLengthPrefix(_lengthPrefixBuffer, dataLength);
         int freeInCurrent = _head.availableForAppend();
-        int totalLength = (dataLength + prefixLength);
+        int totalLength = (dataLength + 1);
         // First, simple case: can fit it in the current buffer?
         if (freeInCurrent >= totalLength) {
-            _head.append(_lengthPrefixBuffer, 0, prefixLength);
+            _head.tryAppend(dataLength);
             _head.append(data, dataOffset, dataLength);
         } else {
             // if not, must check whether we could allocate enough segments to fit in
@@ -116,7 +102,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
                     return false;
                 }
                 // if we are, let's try allocate: will be added to "free" segments first, then used
-                BytesSegment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
+                LongsSegment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
                 if (newFree == null) {
                     return false;
                 }
@@ -125,8 +111,6 @@ public class BytesMemBufferImpl extends BytesMemBuffer
             }
     
             // and if we got this far, it's just simple matter of writing pieces into segments
-            // first length prefix
-            _doAppendChunked(_lengthPrefixBuffer, 0, prefixLength);
             _doAppendChunked(data, dataOffset, dataLength);
         }
         _totalPayloadLength += dataLength;        
@@ -136,25 +120,32 @@ public class BytesMemBufferImpl extends BytesMemBuffer
         return true;
     }
 
-    protected void _doAppendChunked(byte[] buffer, int offset, int length)
+    protected void _doAppendChunked(long[] buffer, int offset, int length)
     {
-        if (length < 1) {
-            return;
-        }
-        BytesSegment seg = _head;
-        while (true) {
-            int actual = seg.tryAppend(buffer, offset, length);
-            offset += actual;
-            length -= actual;
-            if (length == 0) { // complete, can leave
-                return;
-            }
-            // otherwise, need another segment, so complete current write
-            seg.finishWriting();
+        // first: append length prefix
+        if (!_head.tryAppend(length)) {
+            _head.finishWriting();
             // and allocate, init-for-writing new one:
-            BytesSegment newSeg = _reuseFree().initForWriting();
-            seg.relink(newSeg);
-            _head = seg = newSeg;
+            LongsSegment newSeg = _reuseFree().initForWriting();
+            _head.relink(newSeg);
+            _head = newSeg;
+        }
+        if (length > 0) {
+            LongsSegment seg = _head;
+            while (true) {
+                int actual = seg.tryAppend(buffer, offset, length);
+                offset += actual;
+                length -= actual;
+                if (length == 0) { // complete, can leave
+                    return;
+                }
+                // otherwise, need another segment, so complete current write
+                seg.finishWriting();
+                // and allocate, init-for-writing new one:
+                LongsSegment newSeg = _reuseFree().initForWriting();
+                seg.relink(newSeg);
+                _head = seg = newSeg;
+            }
         }
     }
 
@@ -184,13 +175,13 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
 
     @Override
-    public synchronized byte[] getNextEntry() throws InterruptedException
+    public synchronized long[] getNextEntry() throws InterruptedException
     {
         if (_head == null) {
             _reportClosed();
         }
         if (_peekedEntry != null) {
-            byte[] result = _peekedEntry;
+            long[] result = _peekedEntry;
             _peekedEntry = null;
             return result;
         }        
@@ -202,13 +193,13 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
 
     @Override
-    public synchronized byte[] getNextEntryIfAvailable()
+    public synchronized long[] getNextEntryIfAvailable()
     {
         if (_head == null) {
             _reportClosed();
         }
         if (_peekedEntry != null) {
-            byte[] result = _peekedEntry;
+            long[] result = _peekedEntry;
             _peekedEntry = null;
             return result;
         }        
@@ -219,13 +210,13 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
     
     @Override
-    public synchronized byte[] getNextEntry(long timeoutMsecs) throws InterruptedException
+    public synchronized long[] getNextEntry(long timeoutMsecs) throws InterruptedException
     {
         if (_head == null) {
             _reportClosed();
         }
         if (_peekedEntry != null) {
-            byte[] result = _peekedEntry;
+            long[] result = _peekedEntry;
             _peekedEntry = null;
             return result;
         }        
@@ -245,7 +236,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
 
     @Override
-    public synchronized int readNextEntry(byte[] buffer, int offset) throws InterruptedException
+    public synchronized int readNextEntry(long[] buffer, int offset) throws InterruptedException
     {
         if (_head == null) {
             _reportClosed();
@@ -262,7 +253,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
 
     @Override
-    public synchronized int readNextEntryIfAvailable(byte[] buffer, int offset)
+    public synchronized int readNextEntryIfAvailable(long[] buffer, int offset)
     {
         if (_head == null) {
             _reportClosed();
@@ -274,7 +265,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     }
 
     @Override
-    public synchronized int readNextEntry(long timeoutMsecs, byte[] buffer, int offset)
+    public synchronized int readNextEntry(long timeoutMsecs, long[] buffer, int offset)
         throws InterruptedException
     {
         if (_head == null) {
@@ -302,7 +293,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      */
     
     @Override
-    public synchronized byte[] peekNextEntry()
+    public synchronized long[] peekNextEntry()
     {
         if (_head == null) {
             _reportClosed();
@@ -339,8 +330,8 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      */
     protected String _freeReadSegment(String prevError)
     {
-        BytesSegment old = _tail;
-        BytesSegment next = old.finishReading();
+        LongsSegment old = _tail;
+        LongsSegment next = old.finishReading();
         --_usedSegmentsCount;
         _tail = next.initForReading();
         // how about freed segment? reuse?
@@ -377,28 +368,16 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      * Caller must guarantee there is such a segment available; this is
      * done in advance to achieve atomicity of multi-segment-allocation.
      */
-    protected final BytesSegment _reuseFree()
+    protected final LongsSegment _reuseFree()
     {
-        BytesSegment freeSeg = _firstFreeSegment;
+        LongsSegment freeSeg = _firstFreeSegment;
         if (freeSeg == null) { // sanity check
             throw new IllegalStateException("Internal error: no free segments available");
         }
-        
-//int oldCount = count(_firstFreeSegment);
-        
         _firstFreeSegment = freeSeg.getNext();
         --_freeSegmentCount;        
         _head = freeSeg;
         ++_usedSegmentsCount;
-
-//sanity check as well:
-/*
-int count = count(_firstFreeSegment);
-System.err.print("[r="+oldCount+"->"+_freeSegmentCount+"(c="+count+")/u="+_usedSegmentsCount+"]");
-if (count != _freeSegmentCount) {
- System.err.println("ERROR: free seg "+_freeSegmentCount+"; but saw "+count+" actual!");
-}
-*/
         return freeSeg;
     }
     
@@ -413,25 +392,26 @@ if (count != _freeSegmentCount) {
         if (len >= 0) { // all!
             return len;
         }
-
-        // otherwise we got negated version of partial length, so find what we got:
-        len = -len - 1;
-
+        // otherwise segment was empty, move on
         // and move to read the next segment;
         String error = _freeReadSegment(null);
         if (error != null) {
             throw new IllegalStateException(error);
         }
         // and then read enough data to figure out length:
-        return _tail.readSplitLength(len);
+        len = _tail.readLength();
+        if (len < 0) {
+            throw new IllegalStateException("Failed to read next segment length");
+        }
+        return len;
     }
 
-    private byte[] _doGetNext()
+    private long[] _doGetNext()
     {
         int segLen = getNextEntryLength();
 
         // start with result allocation, so that possible OOME does not corrupt state
-        byte[] result = new byte[segLen];
+        long[] result = new long[segLen];
         
         // but ensure that it gets reset for chunk after this one
         _nextEntryLength = -1;
@@ -455,7 +435,7 @@ if (count != _freeSegmentCount) {
         return result;
     }
 
-    private int _doReadNext(byte[] buffer, int offset)
+    private int _doReadNext(long[] buffer, int offset)
     {
         int end = buffer.length;
         
@@ -496,7 +476,7 @@ if (count != _freeSegmentCount) {
      * Helper method that handles append when contents may need to be split
      * across multiple segments.
      */
-    protected void _doReadChunked(byte[] buffer, int offset, int length)
+    protected void _doReadChunked(long[] buffer, int offset, int length)
     {
         String error = null;
         while (true) {
@@ -513,7 +493,7 @@ if (count != _freeSegmentCount) {
         }
     }
 
-    private int _doReadPeekedEntry(byte[] buffer, int offset)
+    private int _doReadPeekedEntry(long[] buffer, int offset)
     {
         int end = buffer.length;
         if (offset >= end || offset < 0) {
@@ -531,40 +511,5 @@ if (count != _freeSegmentCount) {
         }
         _peekedEntry = null;
         return segLen;
-    }
-
-    private int _calcLengthPrefix(byte[] buffer, int length)
-    {
-        if (length < 0) {
-            throw new IllegalArgumentException("Negative length: "+length);
-        }
-        if (length <= 0x7F) {
-            buffer[0] = (byte) (length | 0x80);
-            return 1;
-        }
-        if (length <= 0x3FFF) {
-            buffer[0] = (byte) ((length >> 7) & 0x7F);
-            buffer[1] = (byte) ((length & 0x7f) | 0x80);
-            return 2;
-        }
-        if (length <= 0x1FFFFF) {
-            buffer[0] = (byte) ((length >> 14) & 0x7F);
-            buffer[1] = (byte) ((length >> 7) & 0x7F);
-            buffer[2] = (byte) ((length & 0x7f) | 0x80);
-            return 3;
-        }
-        if (length <= 0x0FFFFFFF) {
-            buffer[0] = (byte) ((length >> 21) & 0x7F);
-            buffer[1] = (byte) ((length >> 14) & 0x7F);
-            buffer[2] = (byte) ((length >> 7) & 0x7F);
-            buffer[3] = (byte) ((length & 0x7f) | 0x80);
-            return 4;
-        }
-        buffer[0] = (byte) ((length >> 28) & 0x7F);
-        buffer[1] = (byte) ((length >> 21) & 0x7F);
-        buffer[2] = (byte) ((length >> 14) & 0x7F);
-        buffer[3] = (byte) ((length >> 7) & 0x7F);
-        buffer[4] = (byte) ((length & 0x7f) | 0x80);
-        return 5;
     }
 }

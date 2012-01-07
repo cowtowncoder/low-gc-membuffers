@@ -92,46 +92,22 @@ public abstract class MemBuffer
      * off-heap memory (such as direct-allocated {@link java.nio.ByteBuffer}s).
      */
     @Override // from Closeable -- note, does NOT throw IOException
-    public abstract void close();
-    
-    /*
-    /**********************************************************************
-    /* Public API, write (append)
-    /**********************************************************************
-     */
-
-    /**
-     * Method that tries to append an entry in buffer and returning;
-     * if there is no room, a {@link IllegalStateException} is thrown.
-     */
-    public abstract void appendEntry(byte[] data);
-
-    /**
-     * Method that tries to append an entry in buffer and returning;
-     * if there is no room, a {@link IllegalStateException} is thrown.
-     */
-    public abstract void appendEntry(byte[] data, int dataOffset, int dataLength);
-
-    /**
-     * Method that tries to append an entry in buffer if there is enough room;
-     * if there is, entry is appended and 'true' returned; otherwise no changes
-     * are made and 'false' is returned.
-     */
-    public abstract boolean tryAppendEntry(byte[] data);
-    
-    /**
-     * Method that tries to append an entry in buffer if there is enough room;
-     * if there is, entry is appended and 'true' returned; otherwise no changes
-     * are made and 'false' is returned.
-     */
-    public abstract boolean tryAppendEntry(byte[] data, int dataOffset, int dataLength);
-    
+    public abstract void close();    
 
     /*
     /**********************************************************************
-    /* Public API access: skipping, wait-for-next
+    /* Public API: type-independent data access
     /**********************************************************************
-g     */
+     */
+
+    /**
+     * Method that will check size of the next entry, if buffer has entries;
+     * returns size in bytes if there is at least one entry, or -1 if buffer
+     * is empty.
+     * Note that this method does not remove the entry and can be called multiple
+     * times, that is, it is fully idempotent.
+     */
+    public abstract int getNextEntryLength();
     
     /**
      * Method that will skip the next entry from the buffer, if an entry

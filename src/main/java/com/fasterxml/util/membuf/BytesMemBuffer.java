@@ -1,29 +1,81 @@
 package com.fasterxml.util.membuf;
 
+import com.fasterxml.util.membuf.base.BytesSegment;
+import com.fasterxml.util.membuf.base.MemBufferBase;
+
 /**
  * {@link MemBuffer} implementation for buffers where values
  * are byte sequences.
  */
-public abstract class BytesMemBuffer extends MemBuffer
+public abstract class BytesMemBuffer extends MemBufferBase<BytesSegment>
 {
-    public BytesMemBuffer() {
-        
+    /**
+     * Segment that was peeked, if any. When entries are peeked, a copy
+     * of data is store in this property and actual contents are remove
+     * as if entry was read normally.
+     */
+    protected byte[] _peekedEntry;
+    
+    protected BytesMemBuffer(SegmentAllocator<BytesSegment> allocator,
+            int minSegmentsToAllocate, int maxSegmentsToAllocate,
+            BytesSegment initialSegments) {
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
+    /*
+    /**********************************************************************
+    /* Public API, simple statistics (not data) accessors
+    /**********************************************************************
+     */
+
+    @Override
+    public synchronized int getEntryCount() {
+        return (_peekedEntry == null) ? _entryCount : (_entryCount+1);
+    }
+
+    @Override
+    public synchronized boolean isEmpty() {
+        return (_entryCount == 0) && (_peekedEntry == null);
+    }
+    
+    /*
+    /**********************************************************************
+    /* Public API, write (append)
+    /**********************************************************************
+     */
+
+    /**
+     * Method that tries to append an entry in buffer and returning;
+     * if there is no room, a {@link IllegalStateException} is thrown.
+     */
+    public abstract void appendEntry(byte[] data);
+
+    /**
+     * Method that tries to append an entry in buffer and returning;
+     * if there is no room, a {@link IllegalStateException} is thrown.
+     */
+    public abstract void appendEntry(byte[] data, int dataOffset, int dataLength);
+
+    /**
+     * Method that tries to append an entry in buffer if there is enough room;
+     * if there is, entry is appended and 'true' returned; otherwise no changes
+     * are made and 'false' is returned.
+     */
+    public abstract boolean tryAppendEntry(byte[] data);
+    
+    /**
+     * Method that tries to append an entry in buffer if there is enough room;
+     * if there is, entry is appended and 'true' returned; otherwise no changes
+     * are made and 'false' is returned.
+     */
+    public abstract boolean tryAppendEntry(byte[] data, int dataOffset, int dataLength);
+
+    
     /*
     /**********************************************************************
     /* Public API, getting next entry
     /**********************************************************************
      */
-
-    /**
-     * Method that will check size of the next entry, if buffer has entries;
-     * returns size in bytes if there is at least one entry, or -1 if buffer
-     * is empty.
-     * Note that this method does not remove the entry and can be called multiple
-     * times, that is, it is fully idempotent.
-     */
-    public abstract int getNextEntryLength();
 
     /**
      * Method for reading and removing next available entry from buffer.
@@ -116,12 +168,72 @@ public abstract class BytesMemBuffer extends MemBuffer
      */
     public abstract int readNextEntry(long timeoutMsecs, byte[] buffer, int offset)
         throws InterruptedException;
-    
+
     /*
     /**********************************************************************
-    /* Public API, read-like access: skipping, peeking, wait-for-next
+    /* Public API, read-like access: skipping, wait-for-next
     /**********************************************************************
      */
+    
+    @Override
+    public synchronized int skipNextEntry()
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount < 1) {
+            return -1;
+        }
+        if (_peekedEntry != null) {
+            int len = _peekedEntry.length;
+            _peekedEntry = null;
+            return len;
+        }
+        
+        final int segLen = getNextEntryLength();
+        // ensure lengthh indicator gets reset for chunk after this one
+        _nextEntryLength = -1;
+        // and reduce entry count as well
+        --_entryCount;
+        _totalPayloadLength -= segLen;
+
+        // a trivial case; marker entry (no payload)
+        int remaining = segLen;
+        String error = null;
+        while (remaining > 0) {
+            remaining -= _tail.skip(remaining);
+            if (remaining == 0) { // all skipped?
+                break;
+            }
+            error = _freeReadSegment(error);
+        }
+        if (error != null) {
+            throw new IllegalStateException(error);
+        }
+        return segLen;
+    }
+    
+    @Override
+    public synchronized void waitForNextEntry() throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount == 0 && _peekedEntry == null) {
+            this.wait();
+        }
+    }
+
+    @Override
+    public synchronized void waitForNextEntry(long maxWaitMsecs) throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_entryCount == 0 && _peekedEntry == null) {
+            this.wait(maxWaitMsecs);
+        }
+    }    
     
     /**
      * Method that will read, and return (but NOT remove) the next entry,
@@ -134,4 +246,20 @@ public abstract class BytesMemBuffer extends MemBuffer
      * physical storage.
      */
     public abstract byte[] peekNextEntry();
+
+    /*
+    /**********************************************************************
+    /* Abstract method implementations
+    /**********************************************************************
+     */
+
+    @Override
+    protected void _clearPeeked() {
+        _peekedEntry = null;
+    }
+
+    @Override
+    protected int _peekedLength() {
+        return (_peekedEntry == null) ? 0 : _peekedEntry.length;
+    }
 }
