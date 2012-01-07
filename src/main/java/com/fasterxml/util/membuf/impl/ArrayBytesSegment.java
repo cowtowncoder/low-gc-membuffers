@@ -2,7 +2,7 @@ package com.fasterxml.util.membuf.impl;
 
 import com.fasterxml.util.membuf.base.BytesSegment;
 
-public class BytesArraySegment extends BytesSegment
+public class ArrayBytesSegment extends BytesSegment
 {
     protected final byte[] _buffer;
 
@@ -16,7 +16,7 @@ public class BytesArraySegment extends BytesSegment
     /**********************************************************************
      */
     
-    public BytesArraySegment(int size)
+    public ArrayBytesSegment(int size)
     {
         _buffer = new byte[size];
     }
@@ -28,7 +28,7 @@ public class BytesArraySegment extends BytesSegment
      */
 
     @Override
-    public BytesArraySegment initForWriting()
+    public ArrayBytesSegment initForWriting()
     {
         super.initForWriting();
         _appendPtr = 0;
@@ -38,7 +38,7 @@ public class BytesArraySegment extends BytesSegment
     //public Segment finishWriting()
     
     @Override
-    public BytesArraySegment initForReading()
+    public ArrayBytesSegment initForReading()
     {
         super.initForReading();
         _readPtr = 0;

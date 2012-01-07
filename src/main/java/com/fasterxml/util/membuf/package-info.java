@@ -5,7 +5,7 @@ For full usage, check out
 <a href="https://github.com/cowtowncoder/low-gc-membuffers">project home</a>,
 but here is an example of simple usage:
 <p>
-First thing needed is creation of {@link com.fasterxml.util.membuf.MemBuffers} instance:
+First thing needed is creation of {@link com.fasterxml.util.membuf.base.MemBuffersBase} instance:
 
 <pre>
   // use segments of 64kB; allocate 2 first, allocate at most 16

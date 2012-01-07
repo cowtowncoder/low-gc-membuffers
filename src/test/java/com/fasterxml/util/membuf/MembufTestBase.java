@@ -3,8 +3,8 @@ package com.fasterxml.util.membuf;
 import java.util.Arrays;
 
 import com.fasterxml.util.membuf.base.BytesSegment;
-import com.fasterxml.util.membuf.impl.BytesArraySegmentAllocator;
-import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
+import com.fasterxml.util.membuf.impl.ArrayBytesSegmentAllocator;
+import com.fasterxml.util.membuf.impl.ByteBufferBytesSegmentAllocator;
 
 import junit.framework.TestCase;
 
@@ -21,13 +21,13 @@ public abstract class MembufTestBase extends TestCase
         SegmentAllocator<BytesSegment> all;
         switch (a) {
         case BYTE_BUFFER_DIRECT:
-            all = new ByteBufferSegmentAllocator(segLen, minSegs, maxSegs, true);
+            all = new ByteBufferBytesSegmentAllocator(segLen, minSegs, maxSegs, true);
             break;
         case BYTE_BUFFER_FAKE:
-            all = new ByteBufferSegmentAllocator(segLen, minSegs, maxSegs, false);
+            all = new ByteBufferBytesSegmentAllocator(segLen, minSegs, maxSegs, false);
             break;
         case BYTE_ARRAY:
-            all = new BytesArraySegmentAllocator(segLen, minSegs, maxSegs);
+            all = new ArrayBytesSegmentAllocator(segLen, minSegs, maxSegs);
             break;
         default:
             throw new Error();

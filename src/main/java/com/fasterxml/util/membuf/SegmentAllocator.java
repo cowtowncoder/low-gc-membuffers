@@ -1,12 +1,14 @@
 package com.fasterxml.util.membuf;
 
+import com.fasterxml.util.membuf.base.MemBuffersBase;
+
 /*
  * Copyright Tatu Saloranta, 2011-
  */
 
 /**
  * Shared allocator object, used by all {@link MemBuffer} instances
- * that are part of a {@link MemBuffers}. It handles allocation
+ * that are part of a {@link MemBuffersBase}. It handles allocation
  * of new {@link Segment} instances, as well as sharing of
  * shared segments (above and beyond simple reuse that individual
  * queues can do).

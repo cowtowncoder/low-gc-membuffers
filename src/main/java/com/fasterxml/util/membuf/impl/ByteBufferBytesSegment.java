@@ -14,7 +14,7 @@ import com.fasterxml.util.membuf.base.BytesSegment;
  * 
  * @author Tatu Saloranta
  */
-public class ByteBufferSegment extends BytesSegment
+public class ByteBufferBytesSegment extends BytesSegment
 {
     /*
     /**********************************************************************
@@ -39,7 +39,7 @@ public class ByteBufferSegment extends BytesSegment
     /**********************************************************************
      */
     
-    public ByteBufferSegment(int size, boolean useDirect)
+    public ByteBufferBytesSegment(int size, boolean useDirect)
     {
         super();
         if (size < ABSOLUTE_MINIMUM_LENGTH) {

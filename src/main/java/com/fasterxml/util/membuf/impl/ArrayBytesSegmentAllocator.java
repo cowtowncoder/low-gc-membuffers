@@ -6,9 +6,9 @@ import com.fasterxml.util.membuf.base.BytesSegmentAllocator;
 
 /**
  * {@link SegmentAllocator} implementation that allocates
- * {@link BytesArraySegment}s, which are simple byte array backed segments.
+ * {@link ArrayBytesSegment}s, which are simple byte array backed segments.
  */
-public class BytesArraySegmentAllocator extends BytesSegmentAllocator
+public class ArrayBytesSegmentAllocator extends BytesSegmentAllocator
 {
     /*
     /**********************************************************************
@@ -16,7 +16,7 @@ public class BytesArraySegmentAllocator extends BytesSegmentAllocator
     /**********************************************************************
      */
     
-    public BytesArraySegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
+    public ArrayBytesSegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
            
     {
         super(segmentSize, minSegmentsToRetain, maxSegments);
@@ -38,7 +38,7 @@ public class BytesArraySegmentAllocator extends BytesSegmentAllocator
             --_reusableSegmentCount;
             return segment;
         }
-        BytesSegment segment = new BytesArraySegment(_segmentSize);
+        BytesSegment segment = new ArrayBytesSegment(_segmentSize);
         ++_bufferOwnedSegmentCount; 
         return segment;
     }

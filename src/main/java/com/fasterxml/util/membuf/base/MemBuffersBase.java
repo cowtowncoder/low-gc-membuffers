@@ -1,4 +1,8 @@
-package com.fasterxml.util.membuf;
+package com.fasterxml.util.membuf.base;
+
+import com.fasterxml.util.membuf.MemBuffer;
+import com.fasterxml.util.membuf.Segment;
+import com.fasterxml.util.membuf.SegmentAllocator;
 
 /*
  * Copyright Tatu Saloranta, 2011-
@@ -12,7 +16,7 @@ package com.fasterxml.util.membuf;
  *<p>
  * Note that sub-classing is explicitly supported; this is needed to
  * use custom {@link SegmentAllocator}s, {@link Segment}s and/or {@link MemBuffer}s.
- * Default {@link MemBuffers} implementation will use default implementations
+ * Default {@link MemBuffersBase} implementation will use default implementations
  * of other components.
  *<p>
  * Also note that while this object is the factory for {@link MemBuffer} instances,
@@ -21,7 +25,7 @@ package com.fasterxml.util.membuf;
  * 
  * @author Tatu Saloranta
  */
-public abstract class MemBuffers<B extends MemBuffer, S extends Segment<S>>
+public abstract class MemBuffersBase<B extends MemBuffer, S extends Segment<S>>
 {
     /**
      * Allocator used by buffers constructed by this object.
@@ -40,7 +44,7 @@ public abstract class MemBuffers<B extends MemBuffer, S extends Segment<S>>
      * 
      * @param allocator Allocator to use for instantiated {@link MemBuffer}s.
      */
-    public MemBuffers(SegmentAllocator<S> allocator) {
+    public MemBuffersBase(SegmentAllocator<S> allocator) {
         _segmentAllocator = allocator;
     }
 

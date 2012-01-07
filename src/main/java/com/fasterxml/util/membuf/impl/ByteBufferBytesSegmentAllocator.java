@@ -5,9 +5,9 @@ import com.fasterxml.util.membuf.base.BytesSegment;
 import com.fasterxml.util.membuf.base.BytesSegmentAllocator;
 
 /**
- * {@link SegmentAllocator} that allocates {@link ByteBufferSegment}.
+ * {@link SegmentAllocator} that allocates {@link ByteBufferBytesSegment}.
  */
-public class ByteBufferSegmentAllocator extends BytesSegmentAllocator
+public class ByteBufferBytesSegmentAllocator extends BytesSegmentAllocator
 {
     /*
     /**********************************************************************
@@ -23,7 +23,7 @@ public class ByteBufferSegmentAllocator extends BytesSegmentAllocator
     /**********************************************************************
      */
     
-    public ByteBufferSegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
+    public ByteBufferBytesSegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments,
             boolean allocateNativeBuffers)
            
     {
@@ -47,7 +47,7 @@ public class ByteBufferSegmentAllocator extends BytesSegmentAllocator
             --_reusableSegmentCount;
             return segment;
         }
-        BytesSegment segment = new ByteBufferSegment(_segmentSize, _cfgAllocateNative);
+        BytesSegment segment = new ByteBufferBytesSegment(_segmentSize, _cfgAllocateNative);
         ++_bufferOwnedSegmentCount; 
         return segment;
     }

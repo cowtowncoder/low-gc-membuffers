@@ -1,6 +1,5 @@
 /**
-Package that contains implementation of the API, as well as intermediate base classes
-implementations use.
+Package that contains implementations of the API classes.
 */
 
 package com.fasterxml.util.membuf.impl;
