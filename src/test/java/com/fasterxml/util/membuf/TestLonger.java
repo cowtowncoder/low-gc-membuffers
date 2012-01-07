@@ -51,7 +51,7 @@ public class TestLonger extends MembufTestBase
          * be enough; use 11 buffers of 30k each (one more than
          * absolutely needed)
          */
-        MemBuffer buffer = createBuffers(aType, 30 * 1024, 2, 11).createBuffer(8, 11);
+        BytesMemBuffer buffer = createBytesBuffers(aType, 30 * 1024, 2, 11).createBuffer(8, 11);
 
         // then append/remove multiple times
         appendAndRemove(rows, buffer);
@@ -72,12 +72,12 @@ public class TestLonger extends MembufTestBase
     public void _test12SegmentBuffer(Allocator aType) throws Exception
     {
         // 48kB, in 12 x 4kB segments
-        MemBuffer buffer = createBuffers(aType, 4 * 1024, 4, 12).createBuffer(5, 12);
+        BytesMemBuffer buffer = createBytesBuffers(aType, 4 * 1024, 4, 12).createBuffer(5, 12);
 
         /* should have space for at least 11 * 4 == 44kB at any point;
          * but use uneven length to force boundary conditions.
          */
-        final byte[] chunk = buildChunk(257);
+        final byte[] chunk = buildBytesChunk(257);
         final int initialCount = (11 * 4 * 1024) / 259;
         _write(buffer, chunk, initialCount); // 258 per entry due to 2-byte length prefix
 
@@ -140,7 +140,7 @@ public class TestLonger extends MembufTestBase
         return lines;
     }
 
-    protected void appendAndRemove(List<byte[]> rows, MemBuffer buffer)
+    protected void appendAndRemove(List<byte[]> rows, BytesMemBuffer buffer)
         throws InterruptedException
     {
         long totalPayload = 0L;
@@ -183,7 +183,7 @@ public class TestLonger extends MembufTestBase
         assertEquals(1, buffer.getSegmentCount());
     }
 
-    protected void appendAndClear(List<byte[]> rows, MemBuffer buffer)
+    protected void appendAndClear(List<byte[]> rows, BytesMemBuffer buffer)
         throws InterruptedException
     {
         long totalPayload = 0L;
@@ -241,7 +241,7 @@ public class TestLonger extends MembufTestBase
         assertEquals(initialLength + (count * chunk.length), buffer.getTotalPayloadLength());
     }
 
-    private void _read(MemBuffer buffer, byte[] chunk, int count) throws Exception
+    private void _read(BytesMemBuffer buffer, byte[] chunk, int count) throws Exception
     {
         final int initialCount = buffer.getEntryCount();
         final long initialLength = buffer.getTotalPayloadLength();

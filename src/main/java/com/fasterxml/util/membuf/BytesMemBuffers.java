@@ -5,6 +5,12 @@ import com.fasterxml.util.membuf.base.MemBuffersBase;
 import com.fasterxml.util.membuf.impl.ByteBufferBytesSegmentAllocator;
 import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
 
+/**
+ * Factory for creating {@link BytesMemBuffer}s, memory buffers that
+ * contain byte sequences.
+ *<p>
+ * Default segments use {@link java.nio.ByteBuffer}s to store byte sequences.
+ */
 public class BytesMemBuffers extends MemBuffersBase<BytesMemBuffer, BytesSegment>
 {
     /*

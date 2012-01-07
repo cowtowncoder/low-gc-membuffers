@@ -7,19 +7,20 @@ import java.io.*;
  */
 
 /**
- * Class that defines generic memory buffer interface. Note that
- * generic typing is handled by defining type of {@link MemBuffer}
- * created: this is necessary since Java generics can not be used
- * for primitive types, which are the "real" generic type we would
- * ideally use (byte, long etc).
+ * Class that defines generic memory buffer interface.
+ * Memory buffers are extendable linear FIFO data structures.
+ * Since this base type does not expose all access (mostly because
+ * generic typing does not work for primitive values), it is
+ * not commonly used, but it may be useful for printing diagnostics
+ * or some synchronization.
  *<p>
  * While not mandated by the interface, existing implementations all use a
  * set of {@link Segment}s as virtual ring buffer.
  * Number of segments used is bound by minimum and maximum
  * amounts, which defines minimum and maximum memory usage.
  * Memory usage is relatively easy to estimate since data is stored as
- * byte sequences and almost all memory is simply used by
- * allocated <code>ByteBuffer</code>s.
+ * linear sequences (arrays or <code>XxxBuffer</code>s (like <code>ByteBuffer</code>)
+ * having very little overhead.
  * 
  * @author Tatu Saloranta
  */
@@ -125,112 +126,12 @@ public abstract class MemBuffer
      */
     public abstract boolean tryAppendEntry(byte[] data, int dataOffset, int dataLength);
     
+
     /*
     /**********************************************************************
-    /* Public API, reading
+    /* Public API access: skipping, wait-for-next
     /**********************************************************************
-     */
-
-    /**
-     * Method that will check size of the next entry, if buffer has entries;
-     * returns size in bytes if there is at least one entry, or -1 if buffer
-     * is empty.
-     * Note that this method does not remove the entry and can be called multiple
-     * times, that is, it is fully idempotent.
-     */
-    public abstract int getNextEntryLength();
-
-    /**
-     * Method for reading and removing next available entry from buffer.
-     * If no entry is available, will block to wait for more data.
-     */
-    public abstract byte[] getNextEntry() throws InterruptedException;
-
-    /**
-     * Method that will read, remove and return next entry, if one is
-     * available; or return null if not.
-     */
-    public abstract byte[] getNextEntryIfAvailable();
-    
-    /**
-     * Method to get (and remove) next entry from the buffer, if one
-     * is available. If buffer is empty, may wait up to specified amount
-     * of time for new data to arrive.
-     * 
-     * @param timeoutMsecs Amount of time to wait for more data if
-     *   buffer is empty, if non-zero positive number; if zero or
-     *   negative number, will return immediately
-     *   
-     * @return Next entry from buffer, if one was available either
-     *   immediately or before waiting for full timeout; or null
-     *   if no entry became available
-     */
-    public abstract byte[] getNextEntry(long timeoutMsecs) throws InterruptedException;
-
-    /**
-     * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if succesful; or, if buffer does
-     * not have enough space, return negative number as error code.
-     * If no entry is available, will block to wait for more data.
-     * 
-     * @param buffer Buffer in which entry is to be read: must have enough space
-     *  for read to succeed
-     * @param offset Offset in buffer to use for storing results
-     *
-     * @return Length of the entry (non-negative) if read succeeds;
-     *   or, negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
-     *   and entry length was 6, would return -6.
-     */
-    public abstract int readNextEntry(byte[] buffer, int offset) throws InterruptedException;
-
-    /**
-     * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if successful; or, if buffer does
-     * not have enough space, return negative number as error code.
-     * If no entry is available, will return {@link Integer.MIN_VALUE}.
-     * 
-     * @param buffer Buffer in which entry is to be read: must have enough space
-     *  for read to succeed
-     * @param offset Offset in buffer to use for storing results
-     *
-     * @return {@link Integer#MIN_VALUE} if no entry was available,
-     *   length of the entry (non-negative) read if read succeeds,
-     *   or negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
-     *   and entry length was 6, would return -6.
-     */
-    public abstract int readNextEntryIfAvailable(byte[] buffer, int offset);
-    
-    /**
-     * Method for reading and removing next entry from the buffer, if one
-     * is available.
-     * If buffer is empty, may wait up to specified amount of time for new data to arrive.
-     * If no entry is available after timeout, will return {@link Integer.MIN_VALUE}.
-     * If length of entry exceeds available buffer space, will return negative number
-     * that indicates length of the entry that would have been copied.
-     * 
-     * @param timeoutMsecs Amount of time to wait for more data if
-     *   buffer is empty, if non-zero positive number; if zero or
-     *   negative number, will return immediately
-     * @param buffer Buffer in which entry is to be read: must have enough space
-     *  for read to succeed
-     * @param offset Offset in buffer to use for storing results
-     *
-     * @return {@link Integer#MIN_VALUE} if no entry was available,
-     *   length of the entry (non-negative) read if read succeeds,
-     *   or negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
-     *   and entry length was 6, would return -6.
-     */
-    public abstract int readNextEntry(long timeoutMsecs, byte[] buffer, int offset)
-        throws InterruptedException;
-    
-    /*
-    /**********************************************************************
-    /* Public API, read-like access: skipping, peeking, wait-for-next
-    /**********************************************************************
-     */
+g     */
     
     /**
      * Method that will skip the next entry from the buffer, if an entry
@@ -241,18 +142,6 @@ public abstract class MemBuffer
      *   was empty
      */
     public abstract int skipNextEntry();
-
-    /**
-     * Method that will read, and return (but NOT remove) the next entry,
-     * if one is available; or return null if none available.
-     * Method is idempotent.
-     *<p>
-     * Note that implementations may require additional storage
-     * for keeping track of recently peeked entry; for example, they
-     * may retain a byte array copy of the contents separate from
-     * physical storage.
-     */
-    public abstract byte[] peekNextEntry();
     
     /**
      * Method that can be called to wait until there is at least one
