@@ -7,12 +7,16 @@ import java.io.*;
  */
 
 /**
- * Class that defines memory buffer interface.
+ * Class that defines generic memory buffer interface. Note that
+ * generic typing is handled by defining type of {@link MemBuffer}
+ * created: this is necessary since Java generics can not be used
+ * for primitive types, which are the "real" generic type we would
+ * ideally use (byte, long etc).
  *<p>
- * While not mandated by the interface, existing implementations all usea a
+ * While not mandated by the interface, existing implementations all use a
  * set of {@link Segment}s as virtual ring buffer.
  * Number of segments used is bound by minimum and maximum
- * amounts, which defines minimim and maximum memory usage.
+ * amounts, which defines minimum and maximum memory usage.
  * Memory usage is relatively easy to estimate since data is stored as
  * byte sequences and almost all memory is simply used by
  * allocated <code>ByteBuffer</code>s.

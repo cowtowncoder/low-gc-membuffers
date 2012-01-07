@@ -15,9 +15,9 @@ public abstract class MembufTestBase extends TestCase
         BYTE_ARRAY;
     }
 
-    protected MemBuffers createBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
+    protected ByteMemBuffers createBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
     {
-        SegmentAllocator all;
+        SegmentAllocator<ByteMemBuffer> all;
         switch (a) {
         case BYTE_BUFFER_DIRECT:
             all = new ByteBufferSegmentAllocator(segLen, minSegs, maxSegs, true);
@@ -31,7 +31,7 @@ public abstract class MembufTestBase extends TestCase
         default:
             throw new Error();
         }
-        return new MemBuffers(all);
+        return new ByteMemBuffers(all);
     }
     
     public byte[] buildChunk(int length)

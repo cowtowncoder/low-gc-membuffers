@@ -7,6 +7,10 @@ package com.fasterxml.util.membuf;
 /**
  * Core definition of containers for individual segments that form physical
  * storage level of the logical queue.
+ * Note that at this level we don't yet know physical primitive type
+ * used under the hood (from byte to long): all lengths are in these
+ * fundamental units (i.e. single byte for byte type; units of 8 bytes
+ * for longs and so on)
  * 
  * @author Tatu Saloranta
  */
@@ -42,13 +46,13 @@ public abstract class Segment
         READING
         ;
     }
-    
+
     /**
      * Let's not allow using segments shorter than 8 bytes; partly
      * to ensure that length prefixes can not be split across more
      * than one segments.
      */
-    public final static int ABSOLUTE_MINIMUM_LENGTH = 8;
+    public final static int ABSOLUTE_MINIMUM_LENGTH = 8;    
 
     /*
     /**********************************************************************
@@ -57,10 +61,13 @@ public abstract class Segment
      */
 
     /**
-     * How many bytes can still fit within this segment?
+     * How many primitive values (of type segment contains) can still fit within this segment?
      */
     public abstract int availableForAppend();
 
+    /**
+     * How many primitive values (of type segment contains) could be read from this segment?
+     */
     public abstract int availableForReading();
     
     /*
@@ -120,7 +127,6 @@ public abstract class Segment
      * Accessor for getting the next segment in linked list.
      */
     public abstract Segment getNext();
-
     /*
     /**********************************************************************
     /* API: appending data

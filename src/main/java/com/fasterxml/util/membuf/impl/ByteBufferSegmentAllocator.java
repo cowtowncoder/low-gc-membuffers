@@ -5,7 +5,7 @@ import com.fasterxml.util.membuf.*;
 /**
  * {@link SegmentAllocator} that allocates {@link ByteBufferSegment}.
  */
-public class ByteBufferSegmentAllocator extends SegmentAllocator
+public class ByteBufferSegmentAllocator extends ByteSegmentAllocator
 {
     /*
     /**********************************************************************

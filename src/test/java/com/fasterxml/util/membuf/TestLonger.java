@@ -7,8 +7,7 @@ import java.util.*;
 import org.junit.Assert;
 
 import com.fasterxml.util.membuf.MemBuffer;
-import com.fasterxml.util.membuf.MemBuffers;
-import com.fasterxml.util.membuf.impl.MemBufferImpl;
+import com.fasterxml.util.membuf.impl.ByteMemBufferImpl;
 
 /**
  * Unit test that uses a sample file, sending all entries, one by
@@ -52,8 +51,7 @@ public class TestLonger extends MembufTestBase
          * be enough; use 11 buffers of 30k each (one more than
          * absolutely needed)
          */
-        MemBuffers bufs = createBuffers(aType, 30 * 1024, 2, 11);
-        MemBuffer buffer = bufs.createBuffer(8, 11);
+        MemBuffer buffer = createBuffers(aType, 30 * 1024, 2, 11).createBuffer(8, 11);
 
         // then append/remove multiple times
         appendAndRemove(rows, buffer);
@@ -74,8 +72,7 @@ public class TestLonger extends MembufTestBase
     public void _test12SegmentBuffer(Allocator aType) throws Exception
     {
         // 48kB, in 12 x 4kB segments
-        MemBuffers bufs = createBuffers(aType, 4 * 1024, 4, 12);
-        MemBuffer buffer = bufs.createBuffer(5, 12);
+        MemBuffer buffer = createBuffers(aType, 4 * 1024, 4, 12).createBuffer(5, 12);
 
         /* should have space for at least 11 * 4 == 44kB at any point;
          * but use uneven length to force boundary conditions.
@@ -84,7 +81,7 @@ public class TestLonger extends MembufTestBase
         final int initialCount = (11 * 4 * 1024) / 259;
         _write(buffer, chunk, initialCount); // 258 per entry due to 2-byte length prefix
 
-        final SegmentAllocator all = ((MemBufferImpl) buffer).getAllocator();
+        final SegmentAllocator<?> all = ((ByteMemBufferImpl) buffer).getAllocator();
         // should be close to full, so:
         assertEquals(11, buffer.getSegmentCount());
         assertEquals(11, all.getBufferOwnedSegmentCount());

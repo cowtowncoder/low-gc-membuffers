@@ -20,8 +20,7 @@ public class SimplePeekTest extends MembufTestBase
    private void _testSimplePeeks(Allocator aType) throws Exception
    {
        // 10 byte segments, max 4
-       final MemBuffers bufs = createBuffers(aType, 10, 1, 4);
-       final MemBuffer buffer = bufs.createBuffer(1, 4);
+       final MemBuffer buffer = createBuffers(aType, 10, 1, 4).createBuffer(1, 4);
 
        // append 6 segments
        for (int i = 1; i <= 6; ++i) {

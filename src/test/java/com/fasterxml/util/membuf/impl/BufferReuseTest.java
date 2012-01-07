@@ -1,7 +1,7 @@
 package com.fasterxml.util.membuf.impl;
 
+import com.fasterxml.util.membuf.ByteMemBuffers;
 import com.fasterxml.util.membuf.MemBuffer;
-import com.fasterxml.util.membuf.MemBuffers;
 import com.fasterxml.util.membuf.MembufTestBase;
 import com.fasterxml.util.membuf.SegmentAllocator;
 
@@ -9,9 +9,9 @@ public class BufferReuseTest extends MembufTestBase
 {
     public void testGlobalReuseWithReads() throws Exception
     {
-        MemBuffers bufs = new MemBuffers(20, 2, 10);
+        ByteMemBuffers bufs = new ByteMemBuffers(20, 2, 10);
         MemBuffer buffer = bufs.createBuffer(1, 3);
-        SegmentAllocator alloc = bufs.getAllocator();
+        SegmentAllocator<?> alloc = bufs.getAllocator();
 
         assertEquals(1, alloc.getBufferOwnedSegmentCount());
         assertEquals(0, alloc.getReusableSegmentCount());
@@ -37,9 +37,9 @@ public class BufferReuseTest extends MembufTestBase
 
     public void testGlobalReuseWithClear() throws Exception
     {
-        MemBuffers bufs = new MemBuffers(20, 2, 10);
+        ByteMemBuffers bufs = new ByteMemBuffers(20, 2, 10);
         MemBuffer buffer = bufs.createBuffer(1, 3);
-        SegmentAllocator alloc = bufs.getAllocator();
+        SegmentAllocator<?> alloc = bufs.getAllocator();
 
         assertEquals(1, alloc.getBufferOwnedSegmentCount());
         assertEquals(0, alloc.getReusableSegmentCount());

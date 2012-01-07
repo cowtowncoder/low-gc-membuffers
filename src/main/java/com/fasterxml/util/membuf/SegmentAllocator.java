@@ -10,15 +10,14 @@ package com.fasterxml.util.membuf;
  * of new {@link Segment} instances, as well as sharing of
  * shared segments (above and beyond simple reuse that individual
  * queues can do).
+ *<p>
+ * Note that a single allocator can allocate buffers of different
+ * underlying primitive types (as of 0.8.2), this to slightly
+ * reduce number of distinct classes we need, despite Java not
+ * allowing generics to be used for primitive types.
  */
-public abstract class SegmentAllocator
+public abstract class SegmentAllocator<T extends MemBuffer>
 {
-    /**
-     * As a sanity check, we will not allow segments shorter than 4 bytes;
-     * even that small makes little sense, but is useful for unit tests.
-     */
-    public final static int MIN_SEGMENT_LENGTH = 4;
-    
     /*
     /**********************************************************************
     /* Configuration
@@ -56,12 +55,6 @@ public abstract class SegmentAllocator
      */
     protected int _reusableSegmentCount;
     
-    /**
-     * And here we hold on to segments that have been returned by buffers
-     * after use.
-     */
-    protected Segment _firstReusableSegment;
-    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -87,9 +80,6 @@ public abstract class SegmentAllocator
      */
     public SegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
     {
-        if (segmentSize < MIN_SEGMENT_LENGTH) {
-            throw new IllegalArgumentException("segmentSize minimum is "+MIN_SEGMENT_LENGTH+" bytes");
-        }
         if (minSegmentsToRetain < 0 || minSegmentsToRetain > maxSegments) {
             throw new IllegalArgumentException("minSegmentsToRetain ("+minSegmentsToRetain
                     +") must be at least 0; can not exceed maxSegments ("+maxSegments+")");
@@ -102,7 +92,6 @@ public abstract class SegmentAllocator
 
         _bufferOwnedSegmentCount = 0;
         _reusableSegmentCount = 0;
-        _firstReusableSegment = null;
     }
 
     /*
@@ -111,11 +100,11 @@ public abstract class SegmentAllocator
     /**********************************************************************
      */
 
-    public int getSegmentSize() { return _segmentSize; }
+    public final int getSegmentSize() { return _segmentSize; }
 
     // Used by unit tests
-    public int getReusableSegmentCount() { return _reusableSegmentCount; }
-    public int getBufferOwnedSegmentCount() { return _bufferOwnedSegmentCount; }
+    public final int getReusableSegmentCount() { return _reusableSegmentCount; }
+    public final int getBufferOwnedSegmentCount() { return _bufferOwnedSegmentCount; }
     
     /**
      * Method that will try to allocate specified number of segments
@@ -129,51 +118,12 @@ public abstract class SegmentAllocator
      * @return Head of segment list (with newly allocated entries as first
      *    entries) if allocation succeeded; null if not
      */
-    public synchronized Segment allocateSegments(int count, Segment segmentList)
-    {
-        if (count < 1) {
-            throw new IllegalArgumentException("Must allocate at least one segment (count = "+count+")");
-        }
-        if (!_canAllocate(count)) {
-            return null;
-        }
-        for (int i = 0; i < count; ++i) {
-            segmentList = _allocateSegment().relink(segmentList);
-        }
-        return segmentList;
-    }
+    public abstract Segment allocateSegments(int count, Segment segmentList);
     
     /**
      * Method called by {@link MemBuffer} instances when they have consumed
      * contents of a segment and do not want to hold on to it for local
      * reuse.
      */
-    public synchronized void releaseSegment(Segment segToRelease)
-    {
-        if (--_bufferOwnedSegmentCount < 0) { // sanity check; not needed in perfect world
-            int count = _bufferOwnedSegmentCount;
-            _bufferOwnedSegmentCount = 0; // "fix"
-            throw new IllegalStateException("Bugger! Corruption Maximus: _bufferOwnedSegmentCount went below 0 ("
-                    +count+")");
-        }
-        // Can we reuse it?
-        if (_reusableSegmentCount < _maxReusableSegments) {
-            _firstReusableSegment = segToRelease.relink(_firstReusableSegment);
-            ++_reusableSegmentCount;
-        }
-    }
-
-    /*
-    /**********************************************************************
-    /* Internal methods
-    /**********************************************************************
-     */
-
-    protected abstract Segment _allocateSegment();
-    
-    protected boolean _canAllocate(int count)
-    {
-        int available = _reusableSegmentCount + (_maxSegmentsToAllocate - _bufferOwnedSegmentCount);
-        return (available >= count);
-    }
+    public abstract void releaseSegment(Segment segToRelease);
 }

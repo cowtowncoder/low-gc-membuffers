@@ -1,10 +1,5 @@
 package com.fasterxml.util.membuf;
 
-import java.util.*;
-
-import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
-import com.fasterxml.util.membuf.impl.MemBufferImpl;
-
 /*
  * Copyright Tatu Saloranta, 2011-
  */
@@ -19,20 +14,19 @@ import com.fasterxml.util.membuf.impl.MemBufferImpl;
  * use custom {@link SegmentAllocator}s, {@link Segment}s and/or {@link MemBuffer}s.
  * Default {@link MemBuffers} implementation will use default implementations
  * of other components.
+ *<p>
+ * Also note that while this object is the factory for {@link MemBuffer} instances,
+ * it does not keep references to instances created. Because of this, one
+ * has to explicitly close actual buffer instances.
  * 
  * @author Tatu Saloranta
  */
-public class MemBuffers
+public abstract class MemBuffers<T extends MemBuffer>
 {
     /**
-     * Allocated used by 
+     * Allocator used by buffers constructed by this object.
      */
-    protected final SegmentAllocator _segmentAllocator;
-
-    /**
-     * Queues that belong to this group
-     */
-    protected final ArrayList<MemBuffer> _queues;
+    protected final SegmentAllocator<T> _segmentAllocator;
 
     /*
     /**********************************************************************
@@ -41,32 +35,13 @@ public class MemBuffers
      */
 
     /**
-     * Constructor that will create a default {@link SegmentAllocator}
-     * instance with given arguments, and use that allocator for creating
-     * {@link MemBuffer} instances.
-     * 
-     * @param segmentSize Size of segments allocated for buffers
-     * @param segmentsToRetain Maximum number of segments allocator
-     *   may reuse
-     *   (see {@link SegmentAllocator} for details)
-     * @param maxSegments Maximum number of allocated (and not released) segments
-     *   allowed at any given point
-     *   (see {@link SegmentAllocator} for details)
-     */
-    public MemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
-    {
-        this(new ByteBufferSegmentAllocator(segmentSize, segmentsToRetain, maxSegments, true));
-    }
-
-    /**
      * Constructor that will pass specified {@link SegmentAllocator}
      * for {@link MemBuffer} instances it creates.
      * 
      * @param allocator Allocator to use for instantiated {@link MemBuffer}s.
      */
-    public MemBuffers(SegmentAllocator allocator) {
+    public MemBuffers(SegmentAllocator<T> allocator) {
         _segmentAllocator = allocator;
-        _queues = new ArrayList<MemBuffer>();
     }
 
     /*
@@ -75,7 +50,7 @@ public class MemBuffers
     /**********************************************************************
      */
 
-    public SegmentAllocator getAllocator() { return _segmentAllocator; }
+    public final SegmentAllocator<T> getAllocator() { return _segmentAllocator; }
     
     /**
      * Method that will try to create a {@link MemBuffer} with configured allocator,
@@ -83,9 +58,9 @@ public class MemBuffers
      * If construction fails (due to allocation limits),
      * a {@link IllegalStateException} will be thrown.
      */
-    public MemBuffer createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    public final T createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
-        MemBuffer buf = tryCreateBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
+        T buf = tryCreateBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
         if (buf == null) {
             throw new IllegalStateException("Failed to create a MemBuffer due to segment allocation limits");
         }
@@ -98,7 +73,7 @@ public class MemBuffers
      * If construction fails (due to allocation limits),
      * null will be returned.
      */
-    public MemBuffer tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    public final T tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
         Segment initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
         // may not be able to allocate segments; if so, need to fail
@@ -110,15 +85,10 @@ public class MemBuffers
 
     /*
     /**********************************************************************
-    /* Internal methods
+    /* Abstract methods for sub-classes
     /**********************************************************************
      */
 
-    protected MemBuffer _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
-            Segment initialSegments)
-    {
-        return new MemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
-                initialSegments);
-        
-    }
+    protected abstract T _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+            Segment initialSegments);
 }

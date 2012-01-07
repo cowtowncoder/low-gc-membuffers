@@ -7,7 +7,7 @@ import com.fasterxml.util.membuf.SegmentAllocator;
  * {@link SegmentAllocator} implementation that allocates
  * {@link ByteArraySegment}s, which are simple byte array backed segments.
  */
-public class ByteArraySegmentAllocator extends SegmentAllocator
+public class ByteArraySegmentAllocator extends ByteSegmentAllocator
 {
     /*
     /**********************************************************************

@@ -20,7 +20,7 @@ import com.fasterxml.util.membuf.*;
  * finalize() method is not implemented since it is both somewhat unreliable
  * (i.e. should not be counted on) and can add overhead for GC processing.
  */
-public class MemBufferImpl extends MemBuffer
+public class ByteMemBufferImpl extends ByteMemBuffer
 {
     private final static byte[] EMPTY_PAYLOAD = new byte[0];
     
@@ -34,7 +34,7 @@ public class MemBufferImpl extends MemBuffer
      * Object that is used for allocating physical segments, and to whom
      * segments are released after use.
      */
-    protected final SegmentAllocator _segmentAllocator;
+    protected final SegmentAllocator<ByteMemBuffer> _segmentAllocator;
     
     /**
      * Size of individual segments.
@@ -165,7 +165,7 @@ public class MemBufferImpl extends MemBuffer
      *   <code>_maxSegmentsForReuse</code> segments that are allocated to ensure
      *   that there is always specified minimum capacity available
      */
-    public MemBufferImpl(SegmentAllocator allocator,
+    public ByteMemBufferImpl(SegmentAllocator<ByteMemBuffer> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             Segment initialSegments)
     {
@@ -204,7 +204,7 @@ public class MemBufferImpl extends MemBuffer
     /**********************************************************************
      */
 
-    public SegmentAllocator getAllocator() { return _segmentAllocator; }
+    public SegmentAllocator<ByteMemBuffer> getAllocator() { return _segmentAllocator; }
     
     /*
     /**********************************************************************

@@ -1,17 +1,18 @@
 package com.fasterxml.util.membuf.impl;
 
-import com.fasterxml.util.membuf.MemBuffers;
-import com.fasterxml.util.membuf.MembufTestBase;
+import com.fasterxml.util.membuf.ByteMemBuffers;
 import com.fasterxml.util.membuf.SegmentAllocator;
-import com.fasterxml.util.membuf.impl.MemBufferImpl;
+import com.fasterxml.util.membuf.impl.ByteMemBufferImpl;
+
+import com.fasterxml.util.membuf.MembufTestBase;
 
 public class BufferCloseTest extends MembufTestBase
 {
     public void testClosing() throws Exception
     {
-        MemBuffers bufs = new MemBuffers(20, 4, 10);
-        MemBufferImpl buffer = (MemBufferImpl)bufs.createBuffer(2, 3);
-        SegmentAllocator alloc = bufs.getAllocator();
+        ByteMemBuffers bufs = new ByteMemBuffers(20, 4, 10);
+        ByteMemBufferImpl buffer = (ByteMemBufferImpl)bufs.createBuffer(2, 3);
+        SegmentAllocator<?> alloc = bufs.getAllocator();
 
         // min size 2, so will allocate 2 right away
         assertEquals(2, alloc.getBufferOwnedSegmentCount());
