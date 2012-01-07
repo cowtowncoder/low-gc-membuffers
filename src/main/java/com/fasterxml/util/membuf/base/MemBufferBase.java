@@ -180,7 +180,7 @@ public abstract class MemBufferBase<S extends Segment<S>>
     //public synchronized void clear()
 
     @Override // from Closeable -- note, does NOT throw IOException
-    public synchronized void close()
+    public synchronized final void close()
     {
         // first do regular cleanup
         clear();
@@ -199,6 +199,9 @@ public abstract class MemBufferBase<S extends Segment<S>>
             _segmentAllocator.releaseSegment(seg);
             seg = next;
         }
+        
+        // one more thing: wake up thread(s) that are blocked (if any)
+        this.notifyAll();
     }
 
     /*
@@ -233,16 +236,86 @@ public abstract class MemBufferBase<S extends Segment<S>>
             throw new IllegalStateException(error);
         }
     }
+
+    /**
+     * Helper method called when the current tail segment has been completely
+     * read, and we want to free or reuse it and start reading the next
+     * segment.
+     * Since throwing exceptions from this method could lead to corruption,
+     * we will only return error indicator for any problems.
+     */
+    protected final String _freeReadSegment(String prevError)
+    {
+        S old = _tail;
+        S next = old.finishReading();
+        --_usedSegmentsCount;
+        _tail = next.initForReading();
+        // how about freed segment? reuse?
+        if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
+            if (_firstFreeSegment == null) {
+                // sanity check: should never occur
+                if (_freeSegmentCount != 0) {
+                    if (prevError == null) {
+                        prevError = "_firstFreeSegment null; count "+_freeSegmentCount+" (should be 0)";
+                    }
+                    // but has happened in the past, so fix even then
+                    _freeSegmentCount = 0;                    
+                }
+                // this is enough; old.next has been set to null already:
+                _firstFreeSegment = old;
+                _freeSegmentCount = 1;
+            } else {
+                _firstFreeSegment = old.relink(_firstFreeSegment);
+                ++_freeSegmentCount;
+            }
+        } else { // if no reuse, see if allocator can share
+            _segmentAllocator.releaseSegment(old);
+        }
+        return prevError;
+    }
+
+    /**
+     * Helper method for reusing a segment from free-segments list.
+     * Caller must guarantee there is such a segment available; this is
+     * done in advance to achieve atomicity of multi-segment-allocation.
+     */
+    protected final S _reuseFree()
+    {
+        S freeSeg = _firstFreeSegment;
+        if (freeSeg == null) { // sanity check
+            throw new IllegalStateException("Internal error: no free segments available");
+        }
+        
+//int oldCount = count(_firstFreeSegment);
+        
+        _firstFreeSegment = freeSeg.getNext();
+        --_freeSegmentCount;        
+        _head = freeSeg;
+        ++_usedSegmentsCount;
+
+// optional sanity check, if we are tracking hard-to-find bugs...
+/*
+int count = count(_firstFreeSegment);
+System.err.print("[r="+oldCount+"->"+_freeSegmentCount+"(c="+count+")/u="+_usedSegmentsCount+"]");
+if (count != _freeSegmentCount) {
+ System.err.println("ERROR: free seg "+_freeSegmentCount+"; but saw "+count+" actual!");
+}
+*/
+        return freeSeg;
+    }
+    
+    /* Helper method called to throw an exception when an active method
+     * is called after buffer has been closed.
+     */
+    protected final void _reportClosed() {
+        throw new IllegalStateException("MemBuffer instance closed, can not use");
+    }
     
     /*
     /**********************************************************************
     /* Abstract methods for sub-classes to implement
     /**********************************************************************
      */
-
-    protected abstract String _freeReadSegment(String prevError);
-
-    protected abstract void _reportClosed();
 
     protected abstract void _clearPeeked();
     

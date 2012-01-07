@@ -198,8 +198,11 @@ public class ByteBufferLongsSegment extends LongsSegment
     @Override
     public int readLength()
     {
-        // !!! TBI
-        return -1;
+        if (availableForReading() < 1) {
+            return -1;
+        }
+        // we only store positive int lengths, so this is safe:
+        return (int) _readBuffer.get();
     }
 
     /*
@@ -237,6 +240,6 @@ public class ByteBufferLongsSegment extends LongsSegment
             LongsSegment segment = new ByteBufferLongsSegment(_segmentSize, _cfgAllocateNative);
             ++_bufferOwnedSegmentCount; 
             return segment;
-        }    }
-
+        }
+    }
 }

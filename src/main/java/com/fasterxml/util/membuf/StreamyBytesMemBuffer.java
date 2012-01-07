@@ -3,6 +3,13 @@ package com.fasterxml.util.membuf;
 import com.fasterxml.util.membuf.base.BytesSegment;
 import com.fasterxml.util.membuf.base.StreamyMemBufferBase;
 
+/**
+ * Byte-valued {@link StreamyMemBuffer}: memory buffer that stores sequence
+ * of bytes without preserving boundaries between different appends
+ * (that is, contents of a single append can be retrieved using multiple
+ * reads, as well as contents of multiple appends can be retrieved with
+ * a single read)
+ */
 public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSegment>
 {
     protected StreamyBytesMemBuffer(SegmentAllocator<BytesSegment> allocator,
@@ -11,18 +18,6 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
-    /*
-    /**********************************************************************
-    /* Public API, simple statistics (not data) accessors
-    /**********************************************************************
-     */
-
-    @Override
-    public synchronized boolean isEmpty() {
-        // !!! TODO
-        return true;
-    }
-    
     /*
     /**********************************************************************
     /* Public API, write (append)
@@ -67,11 +62,15 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
     /**********************************************************************
      */
 
+    /**
+     * Method for reading a single byte from the buffer: will block
+     * if no values are yet available.
+     */
     public abstract int read() throws InterruptedException;
     
     /**
      * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if succesful; or, if buffer does
+     * return length of the entry in bytes, if succesfull; or, if buffer does
      * not have enough space, return negative number as error code.
      * If no entry is available, will block to wait for more data.
      * 
@@ -198,10 +197,4 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
         }
     }    
     */
-
-    /*
-    /**********************************************************************
-    /* Abstract method implementations
-    /**********************************************************************
-     */
 }

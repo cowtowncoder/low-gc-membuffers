@@ -3,24 +3,19 @@ package com.fasterxml.util.membuf;
 import com.fasterxml.util.membuf.base.LongsSegment;
 import com.fasterxml.util.membuf.base.StreamyMemBufferBase;
 
+/**
+ * Long-valued {@link StreamyMemBuffer}: memory buffer that stores sequence
+ * of longs without preserving boundaries between different appends
+ * (that is, contents of a single append can be retrieved using multiple
+ * reads, as well as contents of multiple appends can be retrieved with
+ * a single read)
+ */
 public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSegment>
 {
     protected StreamyLongsMemBuffer(SegmentAllocator<LongsSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             LongsSegment initialSegments) {
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
-    }
-
-    /*
-    /**********************************************************************
-    /* Public API, simple statistics (not data) accessors
-    /**********************************************************************
-     */
-
-    @Override
-    public synchronized boolean isEmpty() {
-        // !!! TODO
-        return true;
     }
     
     /*

@@ -4,6 +4,7 @@ import com.fasterxml.util.membuf.base.BytesSegment;
 import com.fasterxml.util.membuf.base.MemBuffersBase;
 import com.fasterxml.util.membuf.impl.ByteBufferBytesSegment;
 import com.fasterxml.util.membuf.impl.ChunkyBytesMemBufferImpl;
+import com.fasterxml.util.membuf.impl.StreamyBytesMemBufferImpl;
 
 /**
  * Factory for creating {@link ChunkyBytesMemBuffer}s, memory buffers that
@@ -67,11 +68,8 @@ public class MemBuffersForBytes extends MemBuffersBase<
     protected StreamyBytesMemBuffer _createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             BytesSegment initialSegments)
     {
-        /*
-        return new BytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+        return new StreamyBytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
                 initialSegments);
-                */
-        return null;
     }
     
 }

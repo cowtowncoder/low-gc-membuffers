@@ -3,6 +3,7 @@ package com.fasterxml.util.membuf;
 import com.fasterxml.util.membuf.base.*;
 import com.fasterxml.util.membuf.impl.ByteBufferLongsSegment;
 import com.fasterxml.util.membuf.impl.ChunkyLongsMemBufferImpl;
+import com.fasterxml.util.membuf.impl.StreamyLongsMemBufferImpl;
 
 /**
  * Factory for creating {@link ChunkyBytesMemBuffer}s, memory buffers that
@@ -18,7 +19,6 @@ public class MemBuffersForLongs extends MemBuffersBase<
     StreamyLongsMemBuffer
 >
 {
-    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -67,11 +67,7 @@ public class MemBuffersForLongs extends MemBuffersBase<
     protected StreamyLongsMemBuffer _createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             LongsSegment initialSegments)
     {
-        /*
-        return new BytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+        return new StreamyLongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
                 initialSegments);
-                */
-        return null;
     }
-    
 }
