@@ -39,7 +39,7 @@ public class FullBufferTest extends MembufTestBase
     public void _testTryWriteToFull(Allocator aType) throws Exception
     {
         // up to 24 bytes of room (and 12 guaranteed)
-        final BytesMemBuffers bufs = createBytesBuffers(aType, 12, 1, 2);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 12, 1, 2);
         final BytesMemBuffer buffer = bufs.createBuffer(1, 2);
         byte[] data = new byte[16];
         Arrays.fill(data, (byte) 0xFF);
@@ -80,7 +80,7 @@ public class FullBufferTest extends MembufTestBase
     public void _testMaxBuffers(Allocator aType) throws Exception
     {
         // with max 5 segments, each buffer requiring at least two, can create two
-        final BytesMemBuffers bufs = createBytesBuffers(aType, 12, 1, 5);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 12, 1, 5);
         final BytesMemBuffer buf1 = bufs.createBuffer(2, 4);
         assertNotNull(buf1);
         BytesMemBuffer buf2 = bufs.createBuffer(2, 4);

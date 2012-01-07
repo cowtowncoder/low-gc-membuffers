@@ -13,7 +13,7 @@ import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
  * this can be overridden by specifying alternate
  * {@link SegmentAllocator} implementation.
  */
-public class BytesMemBuffers extends MemBuffersBase<BytesMemBuffer, BytesSegment>
+public class MemBuffersForBytes extends MemBuffersBase<BytesMemBuffer, BytesSegment>
 {
     /*
     /**********************************************************************
@@ -34,12 +34,12 @@ public class BytesMemBuffers extends MemBuffersBase<BytesMemBuffer, BytesSegment
      *   allowed at any given point
      *   (see {@link SegmentAllocator} for details)
      */
-    public BytesMemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
+    public MemBuffersForBytes(int segmentSize, int segmentsToRetain, int maxSegments)
     {
         this(new ByteBufferBytesSegmentAllocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
-    public BytesMemBuffers(SegmentAllocator<BytesSegment> allocator)
+    public MemBuffersForBytes(SegmentAllocator<BytesSegment> allocator)
     {
         super(allocator);
     }

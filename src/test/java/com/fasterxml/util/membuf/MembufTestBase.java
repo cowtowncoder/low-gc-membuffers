@@ -16,7 +16,7 @@ public abstract class MembufTestBase extends TestCase
         BYTE_ARRAY;
     }
 
-    protected BytesMemBuffers createBytesBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
+    protected MemBuffersForBytes createBytesBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
     {
         SegmentAllocator<BytesSegment> all;
         switch (a) {
@@ -32,7 +32,7 @@ public abstract class MembufTestBase extends TestCase
         default:
             throw new Error();
         }
-        return new BytesMemBuffers(all);
+        return new MemBuffersForBytes(all);
     }
     
     public byte[] buildBytesChunk(int length)

@@ -42,7 +42,7 @@ public class SimpleAppendReadTest extends MembufTestBase
     {
         // will use segments of size 10 bytes; only one segment per-allocator reuse
         // and maximum allocation of 4 segments per-allocator
-        final BytesMemBuffers bufs = createBytesBuffers(aType, 10, 1, 4);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
         // buffer will have similar limits
         final BytesMemBuffer buffer = bufs.createBuffer(1, 3);
 
@@ -107,7 +107,7 @@ public class SimpleAppendReadTest extends MembufTestBase
     // Test 'read' methods (where called hands buffer to use)
     private void _testSimpleAppendAndRead(Allocator aType) throws Exception
     {
-        final BytesMemBuffers bufs = createBytesBuffers(aType, 10, 1, 4);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
         final BytesMemBuffer buffer = bufs.createBuffer(1, 3);
 
         assertEquals(0, buffer.getEntryCount());
@@ -155,7 +155,7 @@ public class SimpleAppendReadTest extends MembufTestBase
      */
     private void _testEmptySegments(Allocator aType) throws Exception
     {
-        final BytesMemBuffers bufs = createBytesBuffers(aType, 10, 1, 3);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 3);
         final BytesMemBuffer buffer = bufs.createBuffer(1, 2);
         byte[] empty = new byte[0];
 

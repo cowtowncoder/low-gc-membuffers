@@ -12,7 +12,7 @@ import com.fasterxml.util.membuf.impl.LongsMemBufferImpl;
  * this can be overridden by specifying alternate
  * {@link SegmentAllocator} implementation.
  */
-public class LongsMemBuffers extends MemBuffersBase<LongsMemBuffer, LongsSegment>
+public class MemBuffersForLongs extends MemBuffersBase<LongsMemBuffer, LongsSegment>
 {
     
     /*
@@ -34,12 +34,12 @@ public class LongsMemBuffers extends MemBuffersBase<LongsMemBuffer, LongsSegment
      *   allowed at any given point
      *   (see {@link SegmentAllocator} for details)
      */
-    public LongsMemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
+    public MemBuffersForLongs(int segmentSize, int segmentsToRetain, int maxSegments)
     {
         this(new ByteBufferLongsSegmentAllocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
-    public LongsMemBuffers(SegmentAllocator<LongsSegment> allocator)
+    public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator)
     {
         super(allocator);
     }
