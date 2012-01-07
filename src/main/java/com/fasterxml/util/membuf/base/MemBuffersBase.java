@@ -1,8 +1,10 @@
 package com.fasterxml.util.membuf.base;
 
+import com.fasterxml.util.membuf.ChunkyMemBuffer;
 import com.fasterxml.util.membuf.MemBuffer;
 import com.fasterxml.util.membuf.Segment;
 import com.fasterxml.util.membuf.SegmentAllocator;
+import com.fasterxml.util.membuf.StreamyMemBuffer;
 
 /*
  * Copyright Tatu Saloranta, 2011-
@@ -25,7 +27,10 @@ import com.fasterxml.util.membuf.SegmentAllocator;
  * 
  * @author Tatu Saloranta
  */
-public abstract class MemBuffersBase<B extends MemBuffer, S extends Segment<S>>
+public abstract class MemBuffersBase<S extends Segment<S>,
+    CB extends ChunkyMemBuffer,
+    SB extends StreamyMemBuffer
+>
 {
     /**
      * Allocator used by buffers constructed by this object.
@@ -50,21 +55,27 @@ public abstract class MemBuffersBase<B extends MemBuffer, S extends Segment<S>>
 
     /*
     /**********************************************************************
-    /* API
+    /* API: config access
     /**********************************************************************
      */
 
     public final SegmentAllocator<S> getAllocator() { return _segmentAllocator; }
+
+    /*
+    /**********************************************************************
+    /* API: factory methods for "chunky" mem buffers
+    /**********************************************************************
+     */
     
     /**
-     * Method that will try to create a {@link MemBuffer} with configured allocator,
+     * Method that will try to create a {@link ChunkyMemBuffer} with configured allocator,
      * using specified arguments.
      * If construction fails (due to allocation limits),
      * a {@link IllegalStateException} will be thrown.
      */
-    public final B createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    public final CB createChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
-        B buf = tryCreateBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
+        CB buf = tryCreateChunkyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
         if (buf == null) {
             throw new IllegalStateException("Failed to create a MemBuffer due to segment allocation limits");
         }
@@ -72,27 +83,73 @@ public abstract class MemBuffersBase<B extends MemBuffer, S extends Segment<S>>
     }
 
     /**
-     * Method that will try to create a {@link MemBuffer} with configured allocator,
+     * Method that will try to create a {@link ChunkyMemBuffer} with configured allocator,
      * using specified arguments.
      * If construction fails (due to allocation limits),
      * null will be returned.
      */
-    public final B tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    public final CB tryCreateChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
         S initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
         // may not be able to allocate segments; if so, need to fail
         if (initialSegments == null) {
             return null;
         }
-        return _createChunkedBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+        return _createChunkyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
     }
 
+    /*
+    /**********************************************************************
+    /* API: factory methods for "streamy" mem buffers
+    /**********************************************************************
+     */
+    
+    /**
+     * Method that will try to create a {@link StreamyMemBuffer} with configured allocator,
+     * using specified arguments.
+     * If construction fails (due to allocation limits),
+     * a {@link IllegalStateException} will be thrown.
+     */
+    public final SB createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    {
+        SB buf = tryCreateStreamyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
+        if (buf == null) {
+            throw new IllegalStateException("Failed to create a MemBuffer due to segment allocation limits");
+        }
+        return buf;
+    }
+
+    /**
+     * Method that will try to create a {@link StreamyMemBuffer} with configured allocator,
+     * using specified arguments.
+     * If construction fails (due to allocation limits),
+     * null will be returned.
+     */
+    public final SB tryCreateStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    {
+        S initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
+        // may not be able to allocate segments; if so, need to fail
+        if (initialSegments == null) {
+            return null;
+        }
+        return _createStreamyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+    }
+    
     /*
     /**********************************************************************
     /* Abstract methods for sub-classes
     /**********************************************************************
      */
 
-    protected abstract B _createChunkedBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+    /**
+     * Internal factory method for creating type-specific "chunky" mem buffer instance
+     */
+    protected abstract CB _createChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+            S initialSegments);
+
+    /**
+     * Internal factory method for creating type-specific "streamy" mem buffer instance
+     */
+    protected abstract SB _createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             S initialSegments);
 }

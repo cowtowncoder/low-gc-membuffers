@@ -40,7 +40,7 @@ public class FullBufferTest extends MembufTestBase
     {
         // up to 24 bytes of room (and 12 guaranteed)
         final MemBuffersForBytes bufs = createBytesBuffers(aType, 12, 1, 2);
-        final BytesMemBuffer buffer = bufs.createBuffer(1, 2);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 2);
         byte[] data = new byte[16];
         Arrays.fill(data, (byte) 0xFF);
 
@@ -81,19 +81,19 @@ public class FullBufferTest extends MembufTestBase
     {
         // with max 5 segments, each buffer requiring at least two, can create two
         final MemBuffersForBytes bufs = createBytesBuffers(aType, 12, 1, 5);
-        final BytesMemBuffer buf1 = bufs.createBuffer(2, 4);
+        final ChunkyBytesMemBuffer buf1 = bufs.createChunkyBuffer(2, 4);
         assertNotNull(buf1);
-        BytesMemBuffer buf2 = bufs.createBuffer(2, 4);
+        ChunkyBytesMemBuffer buf2 = bufs.createChunkyBuffer(2, 4);
         assertNotNull(buf2);
 
         // and then we should fail:
         try {
-            bufs.createBuffer(2, 4);
+            bufs.createChunkyBuffer(2, 4);
             fail("Buffer creation should have failed");
         } catch (IllegalStateException e) {
             verifyException(e, "due to segment allocation limits");
         }
-        assertNull(bufs.tryCreateBuffer(2, 4));
+        assertNull(bufs.tryCreateChunkyBuffer(2, 4));
 
         // furthermore, should be able to extend one of buffers by one segment:
         buf1.appendEntry(new byte[32]); // needs 33 bytes

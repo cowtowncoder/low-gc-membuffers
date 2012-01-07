@@ -11,7 +11,7 @@ public class BufferCloseTest extends MembufTestBase
     public void testClosing() throws Exception
     {
         MemBuffersForBytes bufs = new MemBuffersForBytes(20, 4, 10);
-        BytesMemBufferImpl buffer = (BytesMemBufferImpl)bufs.createBuffer(2, 3);
+        BytesMemBufferImpl buffer = (BytesMemBufferImpl)bufs.createChunkyBuffer(2, 3);
         SegmentAllocator<?> alloc = bufs.getAllocator();
 
         // min size 2, so will allocate 2 right away

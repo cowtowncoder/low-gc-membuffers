@@ -1,5 +1,14 @@
 package com.fasterxml.util.membuf;
 
+/**
+ * Generic type for {@link MemBuffer}s that store data as chunks:
+ * sequences of primitive types with length, so that each read
+ * will read exact sequence of values that was appended.
+ *<p>
+ * Note that most actual read and append methods are defined in
+ * type-specific subtypes (such as {@link ChunkyBytesMemBuffer}),
+ * since Java does not have a way to define generic primitive types.
+ */
 public interface ChunkyMemBuffer
     extends MemBuffer
 {
@@ -33,5 +42,4 @@ public interface ChunkyMemBuffer
      *   was empty
      */
     public abstract int skipNextEntry();
-
 }

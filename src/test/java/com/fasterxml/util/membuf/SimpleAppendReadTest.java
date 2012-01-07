@@ -44,7 +44,7 @@ public class SimpleAppendReadTest extends MembufTestBase
         // and maximum allocation of 4 segments per-allocator
         final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
         // buffer will have similar limits
-        final BytesMemBuffer buffer = bufs.createBuffer(1, 3);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
 
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
@@ -108,7 +108,7 @@ public class SimpleAppendReadTest extends MembufTestBase
     private void _testSimpleAppendAndRead(Allocator aType) throws Exception
     {
         final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
-        final BytesMemBuffer buffer = bufs.createBuffer(1, 3);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
 
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
@@ -156,7 +156,7 @@ public class SimpleAppendReadTest extends MembufTestBase
     private void _testEmptySegments(Allocator aType) throws Exception
     {
         final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 3);
-        final BytesMemBuffer buffer = bufs.createBuffer(1, 2);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 2);
         byte[] empty = new byte[0];
 
         assertEquals(0, buffer.getEntryCount());
@@ -185,7 +185,7 @@ public class SimpleAppendReadTest extends MembufTestBase
      */
     private void _testTryReadFromEmpty(Allocator aType) throws Exception
     {
-        final BytesMemBuffer buffer = createBytesBuffers(aType, 1000, 1, 100).createBuffer(1, 2);
+        final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 1000, 1, 100).createChunkyBuffer(1, 2);
         
         byte[] data = buffer.getNextEntryIfAvailable();
         assertNull(data);

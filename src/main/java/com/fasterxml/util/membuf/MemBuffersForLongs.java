@@ -5,14 +5,18 @@ import com.fasterxml.util.membuf.impl.ByteBufferLongsSegmentAllocator;
 import com.fasterxml.util.membuf.impl.LongsMemBufferImpl;
 
 /**
- * Factory for creating {@link BytesMemBuffer}s, memory buffers that
+ * Factory for creating {@link ChunkyBytesMemBuffer}s, memory buffers that
  * contain byte sequences.
  *<p>
  * Default segments use {@link java.nio.ByteBuffer} for store byte sequences;
  * this can be overridden by specifying alternate
  * {@link SegmentAllocator} implementation.
  */
-public class MemBuffersForLongs extends MemBuffersBase<LongsMemBuffer, LongsSegment>
+public class MemBuffersForLongs extends MemBuffersBase<
+    LongsSegment,
+    ChunkyLongsMemBuffer,
+    StreamyLongsMemBuffer
+>
 {
     
     /*
@@ -51,7 +55,7 @@ public class MemBuffersForLongs extends MemBuffersBase<LongsMemBuffer, LongsSegm
      */
 
     @Override
-    protected LongsMemBuffer _createChunkedBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+    protected ChunkyLongsMemBuffer _createChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             LongsSegment initialSegments)
     {
         return new LongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
@@ -59,4 +63,15 @@ public class MemBuffersForLongs extends MemBuffersBase<LongsMemBuffer, LongsSegm
         
     }
 
+    @Override
+    protected StreamyLongsMemBuffer _createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+            LongsSegment initialSegments)
+    {
+        /*
+        return new BytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+                initialSegments);
+                */
+        return null;
+    }
+    
 }

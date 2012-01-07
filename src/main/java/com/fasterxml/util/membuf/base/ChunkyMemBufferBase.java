@@ -2,6 +2,12 @@ package com.fasterxml.util.membuf.base;
 
 import com.fasterxml.util.membuf.*;
 
+/**
+ * Intermediate mem buffer base class used for building type-specifc
+ * "chunky" buffers, buffers where sequences of primitive values
+ * are grouped into distinct entries such that all appends and reads
+ * are entry by entry in FIFO order.
+ */
 public abstract class ChunkyMemBufferBase<S extends Segment<S>>
     extends MemBufferBase<S>
     implements ChunkyMemBuffer
