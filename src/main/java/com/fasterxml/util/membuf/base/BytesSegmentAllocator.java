@@ -1,4 +1,4 @@
-package com.fasterxml.util.membuf.impl;
+package com.fasterxml.util.membuf.base;
 
 import com.fasterxml.util.membuf.*;
 
@@ -7,7 +7,7 @@ import com.fasterxml.util.membuf.*;
  * that construct {@link Segment}s that store byte sequences.
  */
 public abstract class BytesSegmentAllocator
-    extends SegmentAllocator<BytesMemBuffer>
+    extends SegmentAllocator<BytesSegment>
 {
     /**
      * As a sanity check, we will not allow segments shorter than 4 bytes;
@@ -25,7 +25,7 @@ public abstract class BytesSegmentAllocator
      * And here we hold on to segments that have been returned by buffers
      * after use.
      */
-    protected Segment _firstReusableSegment;
+    protected BytesSegment _firstReusableSegment;
     
     /*
     /**********************************************************************
@@ -77,7 +77,7 @@ public abstract class BytesSegmentAllocator
      * @return Head of segment list (with newly allocated entries as first
      *    entries) if allocation succeeded; null if not
      */
-    public synchronized Segment allocateSegments(int count, Segment segmentList)
+    public synchronized BytesSegment allocateSegments(int count, BytesSegment segmentList)
     {
         if (count < 1) {
             throw new IllegalArgumentException("Must allocate at least one segment (count = "+count+")");
@@ -96,7 +96,7 @@ public abstract class BytesSegmentAllocator
      * contents of a segment and do not want to hold on to it for local
      * reuse.
      */
-    public synchronized void releaseSegment(Segment segToRelease)
+    public synchronized void releaseSegment(BytesSegment segToRelease)
     {
         if (--_bufferOwnedSegmentCount < 0) { // sanity check; not needed in perfect world
             int count = _bufferOwnedSegmentCount;
@@ -117,7 +117,7 @@ public abstract class BytesSegmentAllocator
     /**********************************************************************
      */
 
-    protected abstract Segment _allocateSegment();
+    protected abstract BytesSegment _allocateSegment();
     
     protected boolean _canAllocate(int count)
     {

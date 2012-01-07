@@ -1,11 +1,12 @@
-package com.fasterxml.util.membuf.impl;
+package com.fasterxml.util.membuf.base;
 
 import com.fasterxml.util.membuf.Segment;
 
 /**
  * Shared base class for {@link Segment} implementations
  */
-public abstract class SegmentBase extends Segment
+public abstract class SegmentBase<S extends Segment<S>>
+    extends Segment<S>
 {
     /*
     /**********************************************************************
@@ -24,7 +25,7 @@ public abstract class SegmentBase extends Segment
     /**
      * Next segment in the segment chain
      */
-    protected Segment _nextSegment;
+    protected S _nextSegment;
 
     /*
     /**********************************************************************
@@ -36,7 +37,7 @@ public abstract class SegmentBase extends Segment
     {
         _state = State.FREE;        
     }
-
+    
     /*
     /**********************************************************************
     /* Partial API implementation: state changes
@@ -44,28 +45,28 @@ public abstract class SegmentBase extends Segment
      */
 
     @Override
-    public Segment initForWriting()
+    public S initForWriting()
     {
         if (_state != State.FREE) {
             throw new IllegalStateException("Trying to initForWriting segment, state "+_state);
         }
         _state = State.WRITING;
-        return this;
+        return _this();
     }
 
     @Override
-    public Segment finishWriting()
+    public S finishWriting()
     {
         if (_state != State.WRITING && _state != State.READING_AND_WRITING) {
             throw new IllegalStateException("Trying to finishWriting segment, state "+_state);
         }
         _state = State.READING;
         // Let's not yet create wrapper buffer for reading until it is actually needed
-        return this;
+        return _this();
     }
 
     @Override
-    public Segment initForReading()
+    public S initForReading()
     {
         if (_state == State.WRITING) {
             _state = State.READING_AND_WRITING;
@@ -74,17 +75,17 @@ public abstract class SegmentBase extends Segment
         } else {
             throw new IllegalStateException("Trying to initForReading segment, state "+_state);
         }
-        return this;
+        return _this();
     }
 
     @Override
-    public Segment finishReading()
+    public S finishReading()
     {
         if (_state != State.READING) {
             throw new IllegalStateException("Trying to finishReading, state "+_state);
         }
         _state = State.FREE;
-        Segment result = _nextSegment;
+        S result = _nextSegment;
         relink(null);
         return result;
     }
@@ -112,18 +113,18 @@ public abstract class SegmentBase extends Segment
      */
 
     @Override
-    public Segment relink(Segment next)
+    public S relink(S next)
     {
         // sanity check; should be possible to remove in future
         if (next == this) {
             throw new IllegalStateException("trying to set cyclic link");
         }
         _nextSegment = next;
-        return this;
+        return _this();
     }
 
     @Override
-    public Segment getNext() {
+    public S getNext() {
         return _nextSegment;
     }
 
@@ -147,5 +148,10 @@ public abstract class SegmentBase extends Segment
 
     //public int tryAppend(byte[] src, int offset, int length)
     
+    // Silly work-around for generics problem:
+    @SuppressWarnings("unchecked")
+    private final S _this() {
+        return (S) this;
+    }
 }
 

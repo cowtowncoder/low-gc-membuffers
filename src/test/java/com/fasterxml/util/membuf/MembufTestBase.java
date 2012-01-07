@@ -2,6 +2,7 @@ package com.fasterxml.util.membuf;
 
 import java.util.Arrays;
 
+import com.fasterxml.util.membuf.base.BytesSegment;
 import com.fasterxml.util.membuf.impl.BytesArraySegmentAllocator;
 import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
 
@@ -17,7 +18,7 @@ public abstract class MembufTestBase extends TestCase
 
     protected BytesMemBuffers createBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
     {
-        SegmentAllocator<BytesMemBuffer> all;
+        SegmentAllocator<BytesSegment> all;
         switch (a) {
         case BYTE_BUFFER_DIRECT:
             all = new ByteBufferSegmentAllocator(segLen, minSegs, maxSegs, true);

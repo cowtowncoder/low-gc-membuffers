@@ -21,12 +21,12 @@ package com.fasterxml.util.membuf;
  * 
  * @author Tatu Saloranta
  */
-public abstract class MemBuffers<T extends MemBuffer>
+public abstract class MemBuffers<B extends MemBuffer, S extends Segment<S>>
 {
     /**
      * Allocator used by buffers constructed by this object.
      */
-    protected final SegmentAllocator<T> _segmentAllocator;
+    protected final SegmentAllocator<S> _segmentAllocator;
 
     /*
     /**********************************************************************
@@ -40,7 +40,7 @@ public abstract class MemBuffers<T extends MemBuffer>
      * 
      * @param allocator Allocator to use for instantiated {@link MemBuffer}s.
      */
-    public MemBuffers(SegmentAllocator<T> allocator) {
+    public MemBuffers(SegmentAllocator<S> allocator) {
         _segmentAllocator = allocator;
     }
 
@@ -50,7 +50,7 @@ public abstract class MemBuffers<T extends MemBuffer>
     /**********************************************************************
      */
 
-    public final SegmentAllocator<T> getAllocator() { return _segmentAllocator; }
+    public final SegmentAllocator<S> getAllocator() { return _segmentAllocator; }
     
     /**
      * Method that will try to create a {@link MemBuffer} with configured allocator,
@@ -58,9 +58,9 @@ public abstract class MemBuffers<T extends MemBuffer>
      * If construction fails (due to allocation limits),
      * a {@link IllegalStateException} will be thrown.
      */
-    public final T createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    public final B createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
-        T buf = tryCreateBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
+        B buf = tryCreateBuffer(minSegmentsForBuffer, maxSegmentsForBuffer);
         if (buf == null) {
             throw new IllegalStateException("Failed to create a MemBuffer due to segment allocation limits");
         }
@@ -73,9 +73,9 @@ public abstract class MemBuffers<T extends MemBuffer>
      * If construction fails (due to allocation limits),
      * null will be returned.
      */
-    public final T tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
+    public final B tryCreateBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
-        Segment initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
+        S initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
         // may not be able to allocate segments; if so, need to fail
         if (initialSegments == null) {
             return null;
@@ -89,6 +89,6 @@ public abstract class MemBuffers<T extends MemBuffer>
     /**********************************************************************
      */
 
-    protected abstract T _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
-            Segment initialSegments);
+    protected abstract B _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+            S initialSegments);
 }

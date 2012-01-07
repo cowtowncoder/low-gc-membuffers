@@ -13,10 +13,13 @@ package com.fasterxml.util.membuf;
  * All lengths are in units of fundamental primitive value
  * (i.e. single byte for byte-valued segments; units of 8 bytes
  * for long-valued and so on)
+ *<p>
+ * Type parameter is recursive due to having to return 'this' for
+ * call chaining.
  * 
  * @author Tatu Saloranta
  */
-public abstract class Segment
+public abstract class Segment<S extends Segment<S>>
 {
     /**
      * Enumeration listing usual states a segment can be in.
@@ -83,21 +86,21 @@ public abstract class Segment
      *<p>
      * This state transition must occur from {@link State#FREE}.
      */
-    public abstract Segment initForWriting();
+    public abstract S initForWriting();
 
     /**
      * Method called when writes to this segment have been completed,
      * which occurs when segment is full, more content is to be written,
      * and another segment is becoming the active write-segment.
      */
-    public abstract Segment finishWriting();
+    public abstract S finishWriting();
     
     /**
      * Method called when the segment becomes the active read segment.
      * Its state may or may not change, but we do need to create the
      * reader-wrapper for ByteBuffer
      */
-    public abstract Segment initForReading();
+    public abstract S initForReading();
 
     /**
      * Method called when all contents has been read from this segment.
@@ -105,7 +108,7 @@ public abstract class Segment
      * 
      * @return Next segment after this segment (before clearing link)
      */
-    public abstract Segment finishReading();
+    public abstract S finishReading();
 
     /**
      * Method that will erase any content segment may have and reset
@@ -123,12 +126,12 @@ public abstract class Segment
     /**
      * Method for defining next segment in linked list
      */
-    public abstract Segment relink(Segment next);
+    public abstract S relink(S next);
 
     /**
      * Accessor for getting the next segment in linked list.
      */
-    public abstract Segment getNext();
+    public abstract S getNext();
     /*
     /**********************************************************************
     /* API: appending data
@@ -149,20 +152,4 @@ public abstract class Segment
      * @return Number of bytes actually appended
      */
     public abstract int tryAppend(byte[] src, int offset, int length);
-
-    /*
-    /**********************************************************************
-    /* API: reading data
-    /**********************************************************************
-     */
-
-    public abstract int readLength();
-
-    public abstract int readSplitLength(int partial);
-
-    public abstract void read(byte[] buffer, int offset, int length);
-
-    public abstract int tryRead(byte[] buffer, int offset, int length);
-
-    public abstract int skip(int length);
 }

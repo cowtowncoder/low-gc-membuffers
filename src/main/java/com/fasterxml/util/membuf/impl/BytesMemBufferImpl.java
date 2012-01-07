@@ -1,6 +1,7 @@
 package com.fasterxml.util.membuf.impl;
 
 import com.fasterxml.util.membuf.*;
+import com.fasterxml.util.membuf.base.BytesSegment;
 
 /**
  * Default {@link MemBuffer} implementation, which implements buffer
@@ -34,7 +35,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      * Object that is used for allocating physical segments, and to whom
      * segments are released after use.
      */
-    protected final SegmentAllocator<BytesMemBuffer> _segmentAllocator;
+    protected final SegmentAllocator<BytesSegment> _segmentAllocator;
     
     /**
      * Size of individual segments.
@@ -69,7 +70,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      * It may be same as <code>_tail</code>.
      * Note that this is the end of the logical chain starting from <code>_tail</code>.
      */
-    protected Segment _head;
+    protected BytesSegment _head;
 
     /**
      * Tail refers to the segment from which read are done, which is the
@@ -77,7 +78,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      * It may be same as <code>_head</code>.
      * Can be used for traversing all in-use segments.
      */
-    protected Segment _tail;
+    protected BytesSegment _tail;
 
     /**
      * Number of segments reachable via linked list starting from
@@ -125,7 +126,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      * Only up to {@link #_maxSegmentsForReuse} may be stored for reuse; others
      * will be handed back to the allocator.
      */
-    protected Segment _firstFreeSegment;
+    protected BytesSegment _firstFreeSegment;
 
     /**
      * Number of segments reachable via {@link #_firstFreeSegment};
@@ -165,9 +166,9 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      *   <code>_maxSegmentsForReuse</code> segments that are allocated to ensure
      *   that there is always specified minimum capacity available
      */
-    public BytesMemBufferImpl(SegmentAllocator<BytesMemBuffer> allocator,
+    public BytesMemBufferImpl(SegmentAllocator<BytesSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            Segment initialSegments)
+            BytesSegment initialSegments)
     {
         _segmentAllocator = allocator;
         _segmentSize = allocator.getSegmentSize();
@@ -204,7 +205,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
     /**********************************************************************
      */
 
-    public SegmentAllocator<BytesMemBuffer> getAllocator() { return _segmentAllocator; }
+    public SegmentAllocator<BytesSegment> getAllocator() { return _segmentAllocator; }
     
     /*
     /**********************************************************************
@@ -295,12 +296,12 @@ public class BytesMemBufferImpl extends BytesMemBuffer
         _head = _tail = null;
         // and any locally recycled buffers as well
         
-        Segment seg = _firstFreeSegment;
+        BytesSegment seg = _firstFreeSegment;
         _firstFreeSegment = null;
         _freeSegmentCount = 0;
         
         while (seg != null) {
-            Segment next = seg.getNext();
+            BytesSegment next = seg.getNext();
             _segmentAllocator.releaseSegment(seg);
             seg = next;
         }
@@ -358,7 +359,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
                     return false;
                 }
                 // if we are, let's try allocate: will be added to "free" segments first, then used
-                Segment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
+                BytesSegment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
                 if (newFree == null) {
                     return false;
                 }
@@ -383,7 +384,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
         if (length < 1) {
             return;
         }
-        Segment seg = _head;
+        BytesSegment seg = _head;
         while (true) {
             int actual = seg.tryAppend(buffer, offset, length);
             offset += actual;
@@ -394,7 +395,7 @@ public class BytesMemBufferImpl extends BytesMemBuffer
             // otherwise, need another segment, so complete current write
             seg.finishWriting();
             // and allocate, init-for-writing new one:
-            Segment newSeg = _reuseFree().initForWriting();
+            BytesSegment newSeg = _reuseFree().initForWriting();
             seg.relink(newSeg);
             _head = seg = newSeg;
         }
@@ -628,9 +629,9 @@ public class BytesMemBufferImpl extends BytesMemBuffer
      * Caller must guarantee there is such a segment available; this is
      * done in advance to achieve atomicity of multi-segment-allocation.
      */
-    protected final Segment _reuseFree()
+    protected final BytesSegment _reuseFree()
     {
-        Segment freeSeg = _firstFreeSegment;
+        BytesSegment freeSeg = _firstFreeSegment;
         if (freeSeg == null) { // sanity check
             throw new IllegalStateException("Internal error: no free segments available");
         }
@@ -793,8 +794,8 @@ if (count != _freeSegmentCount) {
      */
     private String _freeReadSegment(String prevError)
     {
-        Segment old = _tail;
-        Segment next = old.finishReading();
+        BytesSegment old = _tail;
+        BytesSegment next = old.finishReading();
         --_usedSegmentsCount;
         _tail = next.initForReading();
         // how about freed segment? reuse?
@@ -802,7 +803,6 @@ if (count != _freeSegmentCount) {
             if (_firstFreeSegment == null) {
                 // sanity check: should never occur
                 if (_freeSegmentCount != 0) {
-// !!! TEST                    
                     if (prevError == null) {
                         prevError = "_firstFreeSegment null; count "+_freeSegmentCount+" (should be 0)";
                     }
@@ -813,18 +813,8 @@ if (count != _freeSegmentCount) {
                 _firstFreeSegment = old;
                 _freeSegmentCount = 1;
             } else {
-//int oldCount = count(_firstFreeSegment);
-                
                 _firstFreeSegment = old.relink(_firstFreeSegment);
                 ++_freeSegmentCount;
-// sanity check as well:
-/*
-int count = count(_firstFreeSegment);
-System.err.print("[F:("+_entryCount+")"+oldCount+"->"+_freeSegmentCount+"("+count+")/u="+_usedSegmentsCount+"]");
-if (count != _freeSegmentCount) {
- System.err.println("ERROR: free seg "+_freeSegmentCount+"; but saw "+count+" actual!");
-}
-*/
             }
         } else { // if no reuse, see if allocator can share
             _segmentAllocator.releaseSegment(old);
@@ -872,15 +862,5 @@ if (count != _freeSegmentCount) {
      */
     protected void _reportClosed() {
         throw new IllegalStateException("MemBuffer instance closed, can not use");
-    }
-
-    @SuppressWarnings("unused")
-    private final static int count(Segment s) {
-        int count = 0;
-        while (s != null) {
-            ++count;
-            s = s.getNext();
-        }
-        return count;
     }
 }

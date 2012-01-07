@@ -16,7 +16,7 @@ package com.fasterxml.util.membuf;
  * reduce number of distinct classes we need, despite Java not
  * allowing generics to be used for primitive types.
  */
-public abstract class SegmentAllocator<T extends MemBuffer>
+public abstract class SegmentAllocator<T extends Segment<T>>
 {
     /*
     /**********************************************************************
@@ -118,12 +118,12 @@ public abstract class SegmentAllocator<T extends MemBuffer>
      * @return Head of segment list (with newly allocated entries as first
      *    entries) if allocation succeeded; null if not
      */
-    public abstract Segment allocateSegments(int count, Segment segmentList);
+    public abstract T allocateSegments(int count, T segmentList);
     
     /**
      * Method called by {@link MemBuffer} instances when they have consumed
      * contents of a segment and do not want to hold on to it for local
      * reuse.
      */
-    public abstract void releaseSegment(Segment segToRelease);
+    public abstract void releaseSegment(T segToRelease);
 }

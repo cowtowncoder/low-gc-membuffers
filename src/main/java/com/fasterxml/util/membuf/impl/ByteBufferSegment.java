@@ -3,6 +3,7 @@ package com.fasterxml.util.membuf.impl;
 import java.nio.ByteBuffer;
 
 import com.fasterxml.util.membuf.*;
+import com.fasterxml.util.membuf.base.BytesSegment;
 
 /**
  * {@link Segment} implementation that uses {@link ByteBuffer}s for
@@ -13,7 +14,7 @@ import com.fasterxml.util.membuf.*;
  * 
  * @author Tatu Saloranta
  */
-public class ByteBufferSegment extends SegmentBase
+public class ByteBufferSegment extends BytesSegment
 {
     /*
     /**********************************************************************
@@ -57,7 +58,7 @@ public class ByteBufferSegment extends SegmentBase
     //public Segment finishWriting()
     
     @Override
-    public Segment initForReading()
+    public BytesSegment initForReading()
     {
         super.initForReading();
         _readBuffer = _buffer.asReadOnlyBuffer();
@@ -66,9 +67,9 @@ public class ByteBufferSegment extends SegmentBase
     }
 
     @Override
-    public Segment finishReading()
+    public BytesSegment finishReading()
     {
-        Segment result = super.finishReading();
+        BytesSegment result = super.finishReading();
         // clear write pointer for further reuse
         _buffer.clear();
         // and drop reference to read-wrapper:
