@@ -1,4 +1,4 @@
-package com.fasterxml.util.membuf.bytes;
+package com.fasterxml.util.membuf.longs;
 
 import java.util.Arrays;
 
@@ -40,11 +40,11 @@ public class FullBufferTest extends MembufTestBase
      */
     public void _testTryWriteToFull(SegType aType) throws Exception
     {
-        // up to 24 bytes of room (and 12 guaranteed)
-        final MemBuffersForBytes bufs = createBytesBuffers(aType, 12, 1, 2);
-        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 2);
-        byte[] data = new byte[16];
-        Arrays.fill(data, (byte) 0xFF);
+        // up to 24 values (and 12 guaranteed)
+        final MemBuffersForLongs bufs = createLongsBuffers(aType, 12, 1, 2);
+        final ChunkyLongsMemBuffer buffer = bufs.createChunkyBuffer(1, 2);
+        long[] data = new long[16];
+        Arrays.fill(data, -1L);
 
         buffer.appendEntry(data);
         assertEquals(1, buffer.getEntryCount());
@@ -63,7 +63,7 @@ public class FullBufferTest extends MembufTestBase
         }
 
         // state should be fine however:
-        byte[] result = buffer.getNextEntry();
+        long[] result = buffer.getNextEntry();
         Assert.assertArrayEquals(data, result);
         
         assertEquals(0, buffer.getEntryCount());
@@ -82,10 +82,10 @@ public class FullBufferTest extends MembufTestBase
     public void _testMaxBuffers(SegType aType) throws Exception
     {
         // with max 5 segments, each buffer requiring at least two, can create two
-        final MemBuffersForBytes bufs = createBytesBuffers(aType, 12, 1, 5);
-        final ChunkyBytesMemBuffer buf1 = bufs.createChunkyBuffer(2, 4);
+        final MemBuffersForLongs bufs = createLongsBuffers(aType, 12, 1, 5);
+        final ChunkyLongsMemBuffer buf1 = bufs.createChunkyBuffer(2, 4);
         assertNotNull(buf1);
-        ChunkyBytesMemBuffer buf2 = bufs.createChunkyBuffer(2, 4);
+        ChunkyLongsMemBuffer buf2 = bufs.createChunkyBuffer(2, 4);
         assertNotNull(buf2);
 
         // and then we should fail:
@@ -98,22 +98,22 @@ public class FullBufferTest extends MembufTestBase
         assertNull(bufs.tryCreateChunkyBuffer(2, 4));
 
         // furthermore, should be able to extend one of buffers by one segment:
-        buf1.appendEntry(new byte[32]); // needs 33 bytes
+        buf1.appendEntry(new long[32]); // needs 33
         // but not with additional expansion
-        assertFalse(buf1.tryAppendEntry(new byte[4]));
+        assertFalse(buf1.tryAppendEntry(new long[4]));
 
-        // and for second buffer can full up to 24 bytes:
-        buf2.appendEntry(new byte[23]);
+        // and for second buffer can full up to 24 values:
+        buf2.appendEntry(new long[23]);
         // but not for more
         try {
-            buf2.appendEntry(new byte[5]);
+            buf2.appendEntry(new long[5]);
             fail("Append should have failed");
         } catch (IllegalStateException e) {
             verifyException(e, "can't allocate");
         }
 
         // and should be able to get out entries as well:
-        byte[] data = buf1.getNextEntry();
+        long[] data = buf1.getNextEntry();
         assertEquals(32, data.length);
 
         data = buf2.getNextEntry();

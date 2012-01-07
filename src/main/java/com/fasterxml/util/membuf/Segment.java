@@ -52,13 +52,6 @@ public abstract class Segment<S extends Segment<S>>
         ;
     }
 
-    /**
-     * Let's not allow using segments shorter than 8 bytes; partly
-     * to ensure that length prefixes can not be split across more
-     * than one segments.
-     */
-    public final static int ABSOLUTE_MINIMUM_LENGTH = 8;    
-
     /*
     /**********************************************************************
     /* API for accessors

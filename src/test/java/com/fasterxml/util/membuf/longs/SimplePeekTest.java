@@ -1,9 +1,8 @@
-package com.fasterxml.util.membuf.bytes;
+package com.fasterxml.util.membuf.longs;
 
 import org.junit.Assert;
 
-import com.fasterxml.util.membuf.ChunkyBytesMemBuffer;
-import com.fasterxml.util.membuf.MembufTestBase;
+import com.fasterxml.util.membuf.*;
 
 public class SimplePeekTest extends MembufTestBase
 {
@@ -23,44 +22,44 @@ public class SimplePeekTest extends MembufTestBase
    private void _testSimplePeeks(SegType aType) throws Exception
    {
        // 10 byte segments, max 4
-       final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createChunkyBuffer(1, 4);
+       final ChunkyLongsMemBuffer buffer = createLongsBuffers(aType, 10, 1, 4).createChunkyBuffer(1, 4);
 
        // append 6 segments
        for (int i = 1; i <= 6; ++i) {
-           buffer.appendEntry(buildBytesChunk(i));
+           buffer.appendEntry(buildLongsChunk(i));
        }
        assertEquals(6, buffer.getEntryCount());
        assertEquals(21, buffer.getTotalPayloadLength());
        assertFalse(buffer.isEmpty());
 
        // then peek, read/skip
-       byte[] chunk = buffer.peekNextEntry();
-       Assert.assertArrayEquals(buildBytesChunk(1), chunk);
+       long[] chunk = buffer.peekNextEntry();
+       Assert.assertArrayEquals(buildLongsChunk(1), chunk);
        assertEquals(1, buffer.skipNextEntry());
 
        assertEquals(2, buffer.getNextEntryLength());
        chunk = buffer.peekNextEntry();
-       Assert.assertArrayEquals(buildBytesChunk(2), chunk);
+       Assert.assertArrayEquals(buildLongsChunk(2), chunk);
        assertEquals(2, buffer.getNextEntryLength());
-       byte[] gotten = buffer.getNextEntryIfAvailable();
+       long[] gotten = buffer.getNextEntryIfAvailable();
        Assert.assertArrayEquals(chunk, gotten);
 
        chunk = buffer.getNextEntryIfAvailable();
-       Assert.assertArrayEquals(buildBytesChunk(3), chunk);
+       Assert.assertArrayEquals(buildLongsChunk(3), chunk);
 
        chunk = buffer.peekNextEntry();
-       Assert.assertArrayEquals(buildBytesChunk(4), chunk);
+       Assert.assertArrayEquals(buildLongsChunk(4), chunk);
        // should be idempotent
-       byte[] chunk2 = buffer.peekNextEntry();
+       long[] chunk2 = buffer.peekNextEntry();
        Assert.assertArrayEquals(chunk, chunk2);
        assertEquals(4, buffer.skipNextEntry());
        
        assertEquals(5, buffer.skipNextEntry());
 
        chunk = buffer.peekNextEntry();
-       Assert.assertArrayEquals(buildBytesChunk(6), chunk);
+       Assert.assertArrayEquals(buildLongsChunk(6), chunk);
        assertEquals(6, buffer.getNextEntryLength());
-       byte[] buf = new byte[6];
+       long[] buf = new long[6];
        assertEquals(6, buffer.readNextEntry(buf, 0));
        Assert.assertArrayEquals(chunk, buf);
 

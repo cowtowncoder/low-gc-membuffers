@@ -8,6 +8,13 @@ import com.fasterxml.util.membuf.Segment;
 public abstract class SegmentBase<S extends Segment<S>>
     extends Segment<S>
 {
+    /**
+     * Let's not allow using segments shorter than 8 values; partly
+     * to ensure that length prefixes can not be split across more
+     * than one segments even for smallest data types (bytes)
+     */
+    public final static int ABSOLUTE_MINIMUM_LENGTH = 8;    
+    
     /*
     /**********************************************************************
     /* State

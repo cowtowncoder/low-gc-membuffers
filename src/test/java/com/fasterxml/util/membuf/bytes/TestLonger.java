@@ -20,16 +20,16 @@ public class TestLonger extends MembufTestBase
 
     public void testShakespeareLineByLine() throws Exception
     {
-        _testShakespeareLineByLine(Allocator.BYTE_BUFFER_DIRECT);
-        _testShakespeareLineByLine(Allocator.BYTE_BUFFER_FAKE);
-        _testShakespeareLineByLine(Allocator.BYTE_ARRAY);
+        _testShakespeareLineByLine(SegType.BYTE_BUFFER_DIRECT);
+        _testShakespeareLineByLine(SegType.BYTE_BUFFER_FAKE);
+        _testShakespeareLineByLine(SegType.BYTE_ARRAY);
     }
 
     public void test12SegmentBuffer() throws Exception
     {
-        _test12SegmentBuffer(Allocator.BYTE_BUFFER_DIRECT);
-        _test12SegmentBuffer(Allocator.BYTE_BUFFER_FAKE);
-        _test12SegmentBuffer(Allocator.BYTE_ARRAY);
+        _test12SegmentBuffer(SegType.BYTE_BUFFER_DIRECT);
+        _test12SegmentBuffer(SegType.BYTE_BUFFER_FAKE);
+        _test12SegmentBuffer(SegType.BYTE_ARRAY);
     }
     
     /*
@@ -38,7 +38,7 @@ public class TestLonger extends MembufTestBase
     /**********************************************************************
      */
     
-    private void _testShakespeareLineByLine(Allocator aType) throws Exception
+    private void _testShakespeareLineByLine(SegType aType) throws Exception
     {
         // First, read the data
         BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -69,7 +69,7 @@ public class TestLonger extends MembufTestBase
     }
 
     // And then a more mechanical test:
-    public void _test12SegmentBuffer(Allocator aType) throws Exception
+    public void _test12SegmentBuffer(SegType aType) throws Exception
     {
         // 48kB, in 12 x 4kB segments
         ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 4 * 1024, 4, 12).createChunkyBuffer(5, 12);

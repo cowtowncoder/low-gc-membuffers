@@ -10,13 +10,13 @@ import junit.framework.TestCase;
 
 public abstract class MembufTestBase extends TestCase
 {
-    public enum Allocator {
+    public enum SegType {
         BYTE_BUFFER_DIRECT,
         BYTE_BUFFER_FAKE,
         BYTE_ARRAY;
     }
 
-    protected MemBuffersForBytes createBytesBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
+    protected MemBuffersForBytes createBytesBuffers(SegType a, int segLen, int minSegs, int maxSegs)
     {
         SegmentAllocator<BytesSegment> all;
         switch (a) {
@@ -35,7 +35,7 @@ public abstract class MembufTestBase extends TestCase
         return new MemBuffersForBytes(all);
     }
 
-    protected MemBuffersForLongs createLongBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
+    protected MemBuffersForLongs createLongsBuffers(SegType a, int segLen, int minSegs, int maxSegs)
     {
         SegmentAllocator<LongsSegment> all;
         switch (a) {
@@ -63,7 +63,24 @@ public abstract class MembufTestBase extends TestCase
         return result;
     }
 
+    public long[] buildLongsChunk(int length)
+    {
+        long[] result = new long[length];
+        for (int i = 0; i < length; ++i) {
+            result[i] = (long) i;
+        }
+        return result;
+    }
+    
     public void verifyChunk(byte[] chunk, int expLength)
+    {
+        if (chunk.length != expLength) {
+            fail("Failure for block: length is "+chunk.length+", expected "+expLength);
+        }
+        verifyChunk(chunk);
+    }
+
+    public void verifyChunk(long[] chunk, int expLength)
     {
         if (chunk.length != expLength) {
             fail("Failure for block: length is "+chunk.length+", expected "+expLength);
@@ -83,6 +100,18 @@ public abstract class MembufTestBase extends TestCase
         }
     }
 
+    public void verifyChunk(long[] chunk)
+    {
+        for (int i = 0, length = chunk.length; i < length; ++i) {
+            long act = chunk[i];
+            long exp = i;
+            if (act != exp) {
+                fail("Failure for block of length "+length+"; byte #"+i+" not 0x"+Long.toHexString(exp)
+                        +" as expected but 0x"+Long.toHexString(act));
+            }
+        }
+    }
+    
     protected void verifyException(Throwable e, String... matches)
     {
         String msg = e.getMessage();
