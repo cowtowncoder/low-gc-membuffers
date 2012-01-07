@@ -20,7 +20,7 @@ import com.fasterxml.util.membuf.base.LongsSegment;
  * finalize() method is not implemented since it is both somewhat unreliable
  * (i.e. should not be counted on) and can add overhead for GC processing.
  */
-public class LongsMemBufferImpl extends ChunkyLongsMemBuffer
+public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
 {
     private final static long[] EMPTY_PAYLOAD = new long[0];
 
@@ -43,7 +43,7 @@ public class LongsMemBufferImpl extends ChunkyLongsMemBuffer
      *   <code>_maxSegmentsForReuse</code> segments that are allocated to ensure
      *   that there is always specified minimum capacity available
      */
-    public LongsMemBufferImpl(SegmentAllocator<LongsSegment> allocator,
+    public ChunkyLongsMemBufferImpl(SegmentAllocator<LongsSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             LongsSegment initialSegments)
     {

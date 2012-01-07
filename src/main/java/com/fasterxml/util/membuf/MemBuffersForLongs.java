@@ -2,7 +2,7 @@ package com.fasterxml.util.membuf;
 
 import com.fasterxml.util.membuf.base.*;
 import com.fasterxml.util.membuf.impl.ByteBufferLongsSegment;
-import com.fasterxml.util.membuf.impl.LongsMemBufferImpl;
+import com.fasterxml.util.membuf.impl.ChunkyLongsMemBufferImpl;
 
 /**
  * Factory for creating {@link ChunkyBytesMemBuffer}s, memory buffers that
@@ -58,7 +58,7 @@ public class MemBuffersForLongs extends MemBuffersBase<
     protected ChunkyLongsMemBuffer _createChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             LongsSegment initialSegments)
     {
-        return new LongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+        return new ChunkyLongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
                 initialSegments);
         
     }

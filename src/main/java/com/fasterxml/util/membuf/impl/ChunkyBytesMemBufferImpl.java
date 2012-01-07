@@ -20,7 +20,7 @@ import com.fasterxml.util.membuf.base.BytesSegment;
  * finalize() method is not implemented since it is both somewhat unreliable
  * (i.e. should not be counted on) and can add overhead for GC processing.
  */
-public class BytesMemBufferImpl extends ChunkyBytesMemBuffer
+public class ChunkyBytesMemBufferImpl extends ChunkyBytesMemBuffer
 {
     private final static byte[] EMPTY_PAYLOAD = new byte[0];
     
@@ -56,7 +56,7 @@ public class BytesMemBufferImpl extends ChunkyBytesMemBuffer
      *   <code>_maxSegmentsForReuse</code> segments that are allocated to ensure
      *   that there is always specified minimum capacity available
      */
-    public BytesMemBufferImpl(SegmentAllocator<BytesSegment> allocator,
+    public ChunkyBytesMemBufferImpl(SegmentAllocator<BytesSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             BytesSegment initialSegments)
     {
