@@ -7,10 +7,12 @@ package com.fasterxml.util.membuf;
 /**
  * Core definition of containers for individual segments that form physical
  * storage level of the logical queue.
- * Note that at this level we don't yet know physical primitive type
- * used under the hood (from byte to long): all lengths are in these
- * fundamental units (i.e. single byte for byte type; units of 8 bytes
- * for longs and so on)
+ * Note that at this level we don't yet know either physical primitive type
+ * used under the hood (from byte to long) or underlying storage
+ * method (array, {@link ByteBuffer}).  
+ * All lengths are in units of fundamental primitive value
+ * (i.e. single byte for byte-valued segments; units of 8 bytes
+ * for long-valued and so on)
  * 
  * @author Tatu Saloranta
  */

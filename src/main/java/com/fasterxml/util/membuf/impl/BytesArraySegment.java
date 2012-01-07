@@ -2,7 +2,7 @@ package com.fasterxml.util.membuf.impl;
 
 import com.fasterxml.util.membuf.Segment;
 
-public class ByteArraySegment extends SegmentBase
+public class BytesArraySegment extends SegmentBase
 {
     protected final byte[] _buffer;
 
@@ -16,7 +16,7 @@ public class ByteArraySegment extends SegmentBase
     /**********************************************************************
      */
     
-    public ByteArraySegment(int size)
+    public BytesArraySegment(int size)
     {
         _buffer = new byte[size];
     }

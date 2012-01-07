@@ -1,9 +1,9 @@
 package com.fasterxml.util.membuf;
 
 import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
-import com.fasterxml.util.membuf.impl.ByteMemBufferImpl;
+import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
 
-public class ByteMemBuffers extends MemBuffers<ByteMemBuffer>
+public class BytesMemBuffers extends MemBuffers<BytesMemBuffer>
 {
     /*
     /**********************************************************************
@@ -24,12 +24,12 @@ public class ByteMemBuffers extends MemBuffers<ByteMemBuffer>
      *   allowed at any given point
      *   (see {@link SegmentAllocator} for details)
      */
-    public ByteMemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
+    public BytesMemBuffers(int segmentSize, int segmentsToRetain, int maxSegments)
     {
         this(new ByteBufferSegmentAllocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
-    public ByteMemBuffers(SegmentAllocator<ByteMemBuffer> allocator)
+    public BytesMemBuffers(SegmentAllocator<BytesMemBuffer> allocator)
     {
         super(allocator);
     }
@@ -41,10 +41,10 @@ public class ByteMemBuffers extends MemBuffers<ByteMemBuffer>
      */
 
     @Override
-    protected ByteMemBuffer _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
+    protected BytesMemBuffer _createBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
             Segment initialSegments)
     {
-        return new ByteMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
+        return new BytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
                 initialSegments);
         
     }

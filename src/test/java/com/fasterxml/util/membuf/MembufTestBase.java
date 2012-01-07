@@ -2,7 +2,7 @@ package com.fasterxml.util.membuf;
 
 import java.util.Arrays;
 
-import com.fasterxml.util.membuf.impl.ByteArraySegmentAllocator;
+import com.fasterxml.util.membuf.impl.BytesArraySegmentAllocator;
 import com.fasterxml.util.membuf.impl.ByteBufferSegmentAllocator;
 
 import junit.framework.TestCase;
@@ -15,9 +15,9 @@ public abstract class MembufTestBase extends TestCase
         BYTE_ARRAY;
     }
 
-    protected ByteMemBuffers createBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
+    protected BytesMemBuffers createBuffers(Allocator a, int segLen, int minSegs, int maxSegs)
     {
-        SegmentAllocator<ByteMemBuffer> all;
+        SegmentAllocator<BytesMemBuffer> all;
         switch (a) {
         case BYTE_BUFFER_DIRECT:
             all = new ByteBufferSegmentAllocator(segLen, minSegs, maxSegs, true);
@@ -26,12 +26,12 @@ public abstract class MembufTestBase extends TestCase
             all = new ByteBufferSegmentAllocator(segLen, minSegs, maxSegs, false);
             break;
         case BYTE_ARRAY:
-            all = new ByteArraySegmentAllocator(segLen, minSegs, maxSegs);
+            all = new BytesArraySegmentAllocator(segLen, minSegs, maxSegs);
             break;
         default:
             throw new Error();
         }
-        return new ByteMemBuffers(all);
+        return new BytesMemBuffers(all);
     }
     
     public byte[] buildChunk(int length)

@@ -1,8 +1,8 @@
 package com.fasterxml.util.membuf.impl;
 
-import com.fasterxml.util.membuf.ByteMemBuffers;
+import com.fasterxml.util.membuf.BytesMemBuffers;
 import com.fasterxml.util.membuf.SegmentAllocator;
-import com.fasterxml.util.membuf.impl.ByteMemBufferImpl;
+import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
 
 import com.fasterxml.util.membuf.MembufTestBase;
 
@@ -10,8 +10,8 @@ public class BufferCloseTest extends MembufTestBase
 {
     public void testClosing() throws Exception
     {
-        ByteMemBuffers bufs = new ByteMemBuffers(20, 4, 10);
-        ByteMemBufferImpl buffer = (ByteMemBufferImpl)bufs.createBuffer(2, 3);
+        BytesMemBuffers bufs = new BytesMemBuffers(20, 4, 10);
+        BytesMemBufferImpl buffer = (BytesMemBufferImpl)bufs.createBuffer(2, 3);
         SegmentAllocator<?> alloc = bufs.getAllocator();
 
         // min size 2, so will allocate 2 right away

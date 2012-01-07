@@ -6,8 +6,8 @@ import com.fasterxml.util.membuf.*;
  * Intermediate base class for {@link SegmentAllocator}s
  * that construct {@link Segment}s that store byte sequences.
  */
-public abstract class ByteSegmentAllocator
-    extends SegmentAllocator<ByteMemBuffer>
+public abstract class BytesSegmentAllocator
+    extends SegmentAllocator<BytesMemBuffer>
 {
     /**
      * As a sanity check, we will not allow segments shorter than 4 bytes;
@@ -50,7 +50,7 @@ public abstract class ByteSegmentAllocator
      *   strictly limits maximum memory usage by all {@link MemBuffer}s that
      *   use this allocator.
      */
-    public ByteSegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
+    public BytesSegmentAllocator(int segmentSize, int minSegmentsToRetain, int maxSegments)
     {
         super(segmentSize, minSegmentsToRetain, maxSegments);
         if (segmentSize < MIN_SEGMENT_LENGTH) {

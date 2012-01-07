@@ -7,7 +7,7 @@ import java.util.*;
 import org.junit.Assert;
 
 import com.fasterxml.util.membuf.MemBuffer;
-import com.fasterxml.util.membuf.impl.ByteMemBufferImpl;
+import com.fasterxml.util.membuf.impl.BytesMemBufferImpl;
 
 /**
  * Unit test that uses a sample file, sending all entries, one by
@@ -81,7 +81,7 @@ public class TestLonger extends MembufTestBase
         final int initialCount = (11 * 4 * 1024) / 259;
         _write(buffer, chunk, initialCount); // 258 per entry due to 2-byte length prefix
 
-        final SegmentAllocator<?> all = ((ByteMemBufferImpl) buffer).getAllocator();
+        final SegmentAllocator<?> all = ((BytesMemBufferImpl) buffer).getAllocator();
         // should be close to full, so:
         assertEquals(11, buffer.getSegmentCount());
         assertEquals(11, all.getBufferOwnedSegmentCount());
