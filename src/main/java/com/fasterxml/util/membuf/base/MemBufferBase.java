@@ -130,6 +130,34 @@ public abstract class MemBufferBase<S extends Segment<S>>
 
     /*
     /**********************************************************************
+    /* Public API, waiting
+    /**********************************************************************
+     */
+
+    @Override
+    public final synchronized void waitUntilNotEmpty() throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (isEmpty()) {
+            this.wait();
+        }
+    }
+
+    @Override
+    public final synchronized void waitUntilNotEmpty(long maxWaitMsecs) throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (isEmpty()) {
+            this.wait(maxWaitMsecs);
+        }
+    }    
+    
+    /*
+    /**********************************************************************
     /* Extended API (for testing)
     /**********************************************************************
      */

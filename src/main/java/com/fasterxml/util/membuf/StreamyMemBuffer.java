@@ -18,4 +18,12 @@ public interface StreamyMemBuffer
      * but will skip between 0 and 'skipCount' entries.
      */
     public int skip(int skipCount);
+
+    /**
+     * Method for checking maximum length of data that can be read from buffer
+     * without blocking.
+     * 
+     * @return Number of values available, if any (0 if buffer is empty)
+     */
+    public long available();
 }

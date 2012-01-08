@@ -53,16 +53,16 @@ public interface MemBuffer
 
     /**
      * Method for checking what would be the maximum available space
-     * available for appending more entries. Since there is per-entry
+     * available for appending more entries. Since there may be per-entry
      * overhead (length prefix of at least one and at most five bytes),
-     * this is not all available for entries, but gives an approximate
-     * idea of that amount.
+     * this is not necesssarily all available for payload, but gives
+     * maximum estimate.
      */
     public abstract long getMaximumAvailableSpace();
 
     /**
      * Method for checking total amount of payload buffered in this buffer.
-     * This does not include entry metadata (length prefixes).
+     * This does not include entry metadata (length prefixes), if any.
      */
     public abstract long getTotalPayloadLength();
 
@@ -74,7 +74,7 @@ public interface MemBuffer
 
     /**
      * Method that will discard contents of this buffer; functionally similar
-     * to just reading all contents, but is more efficient and guaranteed
+     * to just skipping all contents, but is more efficient and guaranteed
      * to be atomic operation.
      */
     public abstract void clear();
@@ -95,8 +95,8 @@ public interface MemBuffer
      */
     
     /**
-     * Method that can be called to wait until there is at least one
-     * entry available for reading.
+     * Method that can be called to wait until buffer is not empty, that is,
+     * it has some data (entry or value sequence) to read.
      *<p>
      * Note that it is possible to have a race condition if there are
      * multiple readers, such that even if this method returns, following
@@ -105,11 +105,12 @@ public interface MemBuffer
      * used to guarantee data for single-threaded reads, although it may
      * work as an optimization for multiple reader case as well.
      */
-    public abstract void waitForNextEntry() throws InterruptedException;
+    public abstract void waitUntilNotEmpty() throws InterruptedException;
 
     /**
-     * Method that can be called to wait until there is at least one
-     * entry available for reading; but to only wait up until specified
+     * Method that can be called to wait until buffer is not empty, that is,
+     * it has some data (entry or value sequence) to read,
+     * but to only wait up until specified
      * time has elapsed. Note that wait time is lower-bound and actual
      * wait may be longer, depending on things like timer resolution;
      * this depends on how accurately {@link Object#wait(long)} limits
@@ -122,5 +123,5 @@ public interface MemBuffer
      * used to guarantee data for single-threaded reads, although it may
      * work as an optimization for multiple reader case as well.
      */
-    public abstract void waitForNextEntry(long maxWaitMsecs) throws InterruptedException;
+    public abstract void waitUntilNotEmpty(long maxWaitMsecs) throws InterruptedException;
 }

@@ -38,43 +38,49 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
 
     @Override
     public synchronized boolean isEmpty() {
-// not correct: tail can be empty...        
-//        return _tail.availableForReading() > 0;
-        return false;
+        return _totalPayloadLength > 0L;
     }
 
+    @Override
+    public synchronized long available() {
+        return _totalPayloadLength;
+    }
+    
     /*
     /**********************************************************************
     /* Public API, appending
     /**********************************************************************
      */
+
+    @Override
+    public synchronized void append(byte value) {
+        // TODO Auto-generated method stub
+    }
     
     @Override
-    public void append(byte value) {
+    public synchronized void append(byte[] data) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public synchronized void append(byte[] data, int dataOffset, int dataLength) {
         // TODO Auto-generated method stub
         
     }
 
     @Override
-    public void append(byte[] data) {
-        // TODO Auto-generated method stub
-        
+    public synchronized boolean tryAppend(byte value) {
+        return false;
     }
-
+    
     @Override
-    public void append(byte[] data, int dataOffset, int dataLength) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public boolean tryAppend(byte[] data) {
+    public synchronized boolean tryAppend(byte[] data) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean tryAppend(byte[] data, int dataOffset, int dataLength) {
+    public synchronized boolean tryAppend(byte[] data, int dataOffset, int dataLength) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -86,47 +92,29 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
      */
     
     @Override
-    public int read() throws InterruptedException {
+    public synchronized int read() throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int read(byte[] buffer, int offset, int length)
+    public synchronized int read(byte[] buffer, int offset, int length)
             throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int readIfAvailable(byte[] buffer, int offset, int length) {
+    public synchronized int readIfAvailable(byte[] buffer, int offset, int length) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int read(long timeoutMsecs, byte[] buffer, int offset, int length)
+    public synchronized int read(long timeoutMsecs, byte[] buffer, int offset, int length)
             throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;
-    }
-
-    /*
-    /**********************************************************************
-    /* Public API, waiting
-    /**********************************************************************
-     */
-
-    @Override
-    public void waitForNextEntry() throws InterruptedException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void waitForNextEntry(long maxWaitMsecs) throws InterruptedException {
-        // TODO Auto-generated method stub
-        
     }
 
     /*

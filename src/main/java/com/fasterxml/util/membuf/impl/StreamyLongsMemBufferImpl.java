@@ -33,10 +33,14 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
 
     @Override
     public synchronized boolean isEmpty() {
-        // !!! TODO
-        return true;
+        return _totalPayloadLength > 0L;
     }
 
+    @Override
+    public synchronized long available() {
+        return _totalPayloadLength;
+    }
+    
     /*
     /**********************************************************************
     /* Public API, appending
@@ -103,24 +107,6 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
             throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;
-    }
-
-    /*
-    /**********************************************************************
-    /* Public API, waiting
-    /**********************************************************************
-     */
-
-    @Override
-    public void waitForNextEntry() throws InterruptedException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void waitForNextEntry(long maxWaitMsecs) throws InterruptedException {
-        // TODO Auto-generated method stub
-        
     }
     
     /*

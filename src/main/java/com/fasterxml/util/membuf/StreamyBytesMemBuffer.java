@@ -43,15 +43,22 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
     public abstract void append(byte[] data, int dataOffset, int dataLength);
 
     /**
-     * Method that tries to append data in buffer if there is enough room;
+     * Method that tries to append byte value in buffer if there is enough room;
      * if there is, data appended and 'true' returned; otherwise no changes
+     * are made and 'false' is returned.
+     */
+    public abstract boolean tryAppend(byte value);
+    
+    /**
+     * Method that tries to append data in buffer if there is enough room;
+     * if there is, data is appended and 'true' returned; otherwise no changes
      * are made and 'false' is returned.
      */
     public abstract boolean tryAppend(byte[] data);
     
     /**
      * Method that tries to append data in buffer if there is enough room;
-     * if there is, data appended and 'true' returned; otherwise no changes
+     * if there is, data is appended and 'true' returned; otherwise no changes
      * are made and 'false' is returned.
      */
     public abstract boolean tryAppend(byte[] data, int dataOffset, int dataLength);

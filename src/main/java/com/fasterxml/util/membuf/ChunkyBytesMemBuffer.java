@@ -212,28 +212,6 @@ public abstract class ChunkyBytesMemBuffer extends ChunkyMemBufferBase<BytesSegm
         return segLen;
     }
     
-    @Override
-    public synchronized void waitForNextEntry() throws InterruptedException
-    {
-        if (_head == null) {
-            _reportClosed();
-        }
-        if (_entryCount == 0 && _peekedEntry == null) {
-            this.wait();
-        }
-    }
-
-    @Override
-    public synchronized void waitForNextEntry(long maxWaitMsecs) throws InterruptedException
-    {
-        if (_head == null) {
-            _reportClosed();
-        }
-        if (_entryCount == 0 && _peekedEntry == null) {
-            this.wait(maxWaitMsecs);
-        }
-    }    
-    
     /**
      * Method that will read, and return (but NOT remove) the next entry,
      * if one is available; or return null if none available.
