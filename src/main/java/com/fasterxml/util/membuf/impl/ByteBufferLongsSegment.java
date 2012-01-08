@@ -47,9 +47,11 @@ public class ByteBufferLongsSegment extends LongsSegment
         if (size < ABSOLUTE_MINIMUM_LENGTH) {
             size = ABSOLUTE_MINIMUM_LENGTH;
         }
-        // long buffers are direct iff wrapping a direct byte buffer, so:
+        /* long buffers are direct iff wrapping a direct byte buffer.
+         * Note: sizes are in units of primitive values; need to adjust:
+         */
         if (useDirect) {
-            _buffer = ByteBuffer.allocateDirect(size).asLongBuffer();
+            _buffer = ByteBuffer.allocateDirect(size << 3).asLongBuffer(); // * 8 since it's bytes
         } else {
             _buffer = LongBuffer.allocate(size);
         }
