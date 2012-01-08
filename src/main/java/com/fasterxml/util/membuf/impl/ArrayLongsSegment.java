@@ -141,7 +141,8 @@ public class ArrayLongsSegment extends LongsSegment
         if (availableForReading() < 1) {
             return -1;
         }
-        return (int) _buffer[_readPtr++];
+        long l = _buffer[_readPtr++];
+        return (int) l;
     }
     
     @Override

@@ -131,7 +131,11 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
             LongsSegment newSeg = _reuseFree().initForWriting();
             seg.relink(newSeg);
             _head = newSeg;
+            if (!_head.tryAppend(length)) {
+                throw new IllegalStateException();
+            }
         }
+        // then payload
         if (length > 0) {
             LongsSegment seg = _head;
             while (true) {
