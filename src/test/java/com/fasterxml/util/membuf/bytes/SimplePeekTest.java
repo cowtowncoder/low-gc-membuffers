@@ -7,11 +7,11 @@ import com.fasterxml.util.membuf.MembufTestBase;
 
 public class SimplePeekTest extends MembufTestBase
 {
-   public void testSimplePeeks() throws Exception
+   public void testChunkyPeeks() throws Exception
    {
-       _testSimplePeeks(SegType.BYTE_BUFFER_DIRECT);
-       _testSimplePeeks(SegType.BYTE_BUFFER_FAKE);
-       _testSimplePeeks(SegType.BYTE_ARRAY);
+       _testChunkyPeeks(SegType.BYTE_BUFFER_DIRECT);
+       _testChunkyPeeks(SegType.BYTE_BUFFER_FAKE);
+       _testChunkyPeeks(SegType.BYTE_ARRAY);
    }
 
    /*
@@ -20,7 +20,7 @@ public class SimplePeekTest extends MembufTestBase
    /**********************************************************************
     */
 
-   private void _testSimplePeeks(SegType aType) throws Exception
+   private void _testChunkyPeeks(SegType aType) throws Exception
    {
        // 10 byte segments, max 4
        final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createChunkyBuffer(1, 4);

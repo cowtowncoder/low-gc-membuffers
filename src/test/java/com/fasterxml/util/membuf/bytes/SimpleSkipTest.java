@@ -7,32 +7,32 @@ public class SimpleSkipTest extends MembufTestBase
 {
     public void testSimpleSkips() throws Exception
     {
-        _testSimpleSkips(SegType.BYTE_BUFFER_DIRECT);
-        _testSimpleSkips(SegType.BYTE_BUFFER_FAKE);
-        _testSimpleSkips(SegType.BYTE_ARRAY);
+        _testChunkySkips(SegType.BYTE_BUFFER_DIRECT);
+        _testChunkySkips(SegType.BYTE_BUFFER_FAKE);
+        _testChunkySkips(SegType.BYTE_ARRAY);
     }
     
-    public void testSimpleSkipAndRead() throws Exception
+    public void testChunkySkipAndRead() throws Exception
     {
-        _testSimpleSkipAndRead(SegType.BYTE_BUFFER_DIRECT);
-        _testSimpleSkipAndRead(SegType.BYTE_BUFFER_FAKE);
-        _testSimpleSkipAndRead(SegType.BYTE_ARRAY);
+        _testChunkySkipAndRead(SegType.BYTE_BUFFER_DIRECT);
+        _testChunkySkipAndRead(SegType.BYTE_BUFFER_FAKE);
+        _testChunkySkipAndRead(SegType.BYTE_ARRAY);
     }
 
-    public void testLongerSkip() throws Exception
+    public void testChunkyLongerSkip() throws Exception
     {
-        _testLongerSkip(SegType.BYTE_BUFFER_DIRECT);
-        _testLongerSkip(SegType.BYTE_BUFFER_FAKE);
-        _testLongerSkip(SegType.BYTE_ARRAY);
+        _testChunkyLongerSkip(SegType.BYTE_BUFFER_DIRECT);
+        _testChunkyLongerSkip(SegType.BYTE_BUFFER_FAKE);
+        _testChunkyLongerSkip(SegType.BYTE_ARRAY);
     }
 
     /*
     /**********************************************************************
-    /* Actual test impls
+    /* Actual test impls for chunky buffers
     /**********************************************************************
      */
 
-    private void _testSimpleSkips(SegType aType) throws Exception
+    private void _testChunkySkips(SegType aType) throws Exception
     {
         // will use segments of size 10 bytes; only one segment per-allocator reuse
         // and maximum allocation of 4 segments per-allocator
@@ -62,7 +62,7 @@ public class SimpleSkipTest extends MembufTestBase
         assertTrue(buffer.isEmpty());
     }
 
-    private void _testSimpleSkipAndRead(SegType aType) throws Exception
+    private void _testChunkySkipAndRead(SegType aType) throws Exception
     {
         final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createChunkyBuffer(1, 3);
 
@@ -87,7 +87,7 @@ public class SimpleSkipTest extends MembufTestBase
     }
 
     // Test to verify that skip works across buffer boundaries
-    private void _testLongerSkip(SegType aType) throws Exception
+    private void _testChunkyLongerSkip(SegType aType) throws Exception
     {
         final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createChunkyBuffer(1, 3);
         // maximum: 29 data bytes, 1 for length
@@ -95,4 +95,10 @@ public class SimpleSkipTest extends MembufTestBase
         assertEquals(29, buffer.skipNextEntry());
         assertEquals(-1, buffer.skipNextEntry());
     }
+
+    /*
+    /**********************************************************************
+    /* Actual test impls for streamy buffers
+    /**********************************************************************
+     */
 }

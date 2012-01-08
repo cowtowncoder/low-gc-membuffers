@@ -9,7 +9,7 @@ import com.fasterxml.util.membuf.*;
 /**
  * Tests to verify handling of case where memory buffers are filled up.
  */
-public class FullBufferTest extends MembufTestBase
+public class FullChunkyBufferTest extends MembufTestBase
 {
     public void testTryWriteToFull() throws Exception
     {

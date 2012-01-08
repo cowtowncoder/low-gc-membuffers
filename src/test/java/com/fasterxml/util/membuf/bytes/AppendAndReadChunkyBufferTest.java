@@ -4,7 +4,7 @@ import org.junit.Assert;
 
 import com.fasterxml.util.membuf.*;
 
-public class SimpleAppendReadTest extends MembufTestBase
+public class AppendAndReadChunkyBufferTest extends MembufTestBase
 {
     public void testSimpleAppendAndGet() throws Exception
     {
