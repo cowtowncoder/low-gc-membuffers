@@ -8,9 +8,9 @@ public class SimplePeekTest extends MembufTestBase
 {
    public void testSimplePeeks() throws Exception
    {
-       _testSimplePeeks(SegType.BYTE_BUFFER_DIRECT);
-       _testSimplePeeks(SegType.BYTE_BUFFER_FAKE);
        _testSimplePeeks(SegType.BYTE_ARRAY);
+       _testSimplePeeks(SegType.BYTE_BUFFER_FAKE);
+       _testSimplePeeks(SegType.BYTE_BUFFER_DIRECT);
    }
 
    /*

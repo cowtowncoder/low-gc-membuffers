@@ -6,23 +6,23 @@ public class SimpleSkipTest extends MembufTestBase
 {
     public void testSimpleSkips() throws Exception
     {
-        _testSimpleSkips(SegType.BYTE_BUFFER_DIRECT);
-        _testSimpleSkips(SegType.BYTE_BUFFER_FAKE);
         _testSimpleSkips(SegType.BYTE_ARRAY);
+        _testSimpleSkips(SegType.BYTE_BUFFER_FAKE);
+        _testSimpleSkips(SegType.BYTE_BUFFER_DIRECT);
     }
     
     public void testSimpleSkipAndRead() throws Exception
     {
-        _testSimpleSkipAndRead(SegType.BYTE_BUFFER_DIRECT);
-        _testSimpleSkipAndRead(SegType.BYTE_BUFFER_FAKE);
         _testSimpleSkipAndRead(SegType.BYTE_ARRAY);
+        _testSimpleSkipAndRead(SegType.BYTE_BUFFER_FAKE);
+        _testSimpleSkipAndRead(SegType.BYTE_BUFFER_DIRECT);
     }
 
     public void testLongerSkip() throws Exception
     {
-        _testLongerSkip(SegType.BYTE_BUFFER_DIRECT);
-        _testLongerSkip(SegType.BYTE_BUFFER_FAKE);
         _testLongerSkip(SegType.BYTE_ARRAY);
+        _testLongerSkip(SegType.BYTE_BUFFER_FAKE);
+        _testLongerSkip(SegType.BYTE_BUFFER_DIRECT);
     }
 
     /*

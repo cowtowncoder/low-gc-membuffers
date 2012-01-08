@@ -87,7 +87,9 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         int totalLength = (dataLength + 1);
         // First, simple case: can fit it in the current buffer?
         if (freeInCurrent >= totalLength) {
-            _head.tryAppend(dataLength);
+            if (!_head.tryAppend(dataLength)) { // sanity check, should never occur as per earlier test
+                throw new IllegalStateException();
+            }
             _head.append(data, dataOffset, dataLength);
         } else {
             // if not, must check whether we could allocate enough segments to fit in
@@ -123,10 +125,11 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
     {
         // first: append length prefix
         if (!_head.tryAppend(length)) {
-            _head.finishWriting();
+            final LongsSegment seg = _head;
+            seg.finishWriting();
             // and allocate, init-for-writing new one:
             LongsSegment newSeg = _reuseFree().initForWriting();
-            _head.relink(newSeg);
+            seg.relink(newSeg);
             _head = newSeg;
         }
         if (length > 0) {

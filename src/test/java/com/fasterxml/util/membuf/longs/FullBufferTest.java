@@ -13,9 +13,9 @@ public class FullBufferTest extends MembufTestBase
 {
     public void testTryWriteToFull() throws Exception
     {
-        _testTryWriteToFull(SegType.BYTE_BUFFER_DIRECT);
-        _testTryWriteToFull(SegType.BYTE_BUFFER_FAKE);
         _testTryWriteToFull(SegType.BYTE_ARRAY);
+        _testTryWriteToFull(SegType.BYTE_BUFFER_FAKE);
+        _testTryWriteToFull(SegType.BYTE_BUFFER_DIRECT);
     }
 
     /**
@@ -24,9 +24,9 @@ public class FullBufferTest extends MembufTestBase
      */
     public void testMaxBuffers() throws Exception
     {
-        _testMaxBuffers(SegType.BYTE_BUFFER_DIRECT);
-        _testMaxBuffers(SegType.BYTE_BUFFER_FAKE);
         _testMaxBuffers(SegType.BYTE_ARRAY);
+        _testMaxBuffers(SegType.BYTE_BUFFER_FAKE);
+        _testMaxBuffers(SegType.BYTE_BUFFER_DIRECT);
     }
     
     /*
