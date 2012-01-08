@@ -186,28 +186,4 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
         */
         return 0;
     }
-
-    /*
-    @Override
-    public synchronized void waitForNextEntry() throws InterruptedException
-    {
-        if (_head == null) {
-            _reportClosed();
-        }
-        if (_entryCount == 0 && _peekedEntry == null) {
-            this.wait();
-        }
-    }
-
-    @Override
-    public synchronized void waitForNextEntry(long maxWaitMsecs) throws InterruptedException
-    {
-        if (_head == null) {
-            _reportClosed();
-        }
-        if (_entryCount == 0 && _peekedEntry == null) {
-            this.wait(maxWaitMsecs);
-        }
-    }    
-    */
 }

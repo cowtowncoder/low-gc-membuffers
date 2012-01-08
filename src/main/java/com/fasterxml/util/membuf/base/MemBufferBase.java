@@ -331,6 +331,32 @@ if (count != _freeSegmentCount) {
 */
         return freeSeg;
     }
+
+    /**
+     * Method sub-classes call when the current thread should block
+     * until more data is available
+     */
+    protected final void _waitForData() throws InterruptedException {
+        this.wait();
+    }
+
+    /**
+     * Method sub-classes call when the current thread should block
+     * up to specified time interval, or until more data is available,
+     * whichever occurs sooner.
+     */
+    protected final void _waitForData(long timeoutMsecs) throws InterruptedException {
+        this.wait(timeoutMsecs);
+    }
+    
+    /**
+     * Method sub-classes call when they need to wake up any threads
+     * that are blocked on trying to read content: typically this occurs
+     * when adding entry or data to an empty buffer.
+     */
+    protected final void _wakeBlockedReaders() {
+        this.notifyAll();
+    }
     
     /* Helper method called to throw an exception when an active method
      * is called after buffer has been closed.

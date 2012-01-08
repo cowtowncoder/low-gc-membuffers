@@ -90,11 +90,6 @@ public class ArrayBytesSegment extends BytesSegment
     /**********************************************************************
      */
     
-    /**
-     * Append operation that appends specified data; caller must ensure
-     * that it will actually fit (if it can't, it should instead call
-     * {@link #tryAppend}).
-     */
     @Override
     public void append(byte[] src, int offset, int length) {
         int dst = _appendPtr;
@@ -102,12 +97,17 @@ public class ArrayBytesSegment extends BytesSegment
         System.arraycopy(src, offset, _buffer, dst, length);
     }
 
-    /**
-     * Append operation that tries to append as much of input data as
-     * possible, and returns number of bytes that were copied
-     * 
-     * @return Number of bytes actually appended
-     */
+
+    @Override
+    public boolean tryAppend(byte value)
+    {
+        if (availableForAppend() < 1) {
+            return false;
+        }
+        _buffer[_appendPtr++] = value;
+        return true;
+    }
+    
     @Override
     public int tryAppend(byte[] src, int offset, int length)
     {

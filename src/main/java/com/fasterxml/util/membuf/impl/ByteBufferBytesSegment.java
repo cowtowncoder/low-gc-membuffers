@@ -126,22 +126,11 @@ public class ByteBufferBytesSegment extends BytesSegment
     /**********************************************************************
      */
     
-    /**
-     * Append operation that appends specified data; caller must ensure
-     * that it will actually fit (if it can't, it should instead call
-     * {@link #tryAppend}).
-     */
     @Override
     public void append(byte[] src, int offset, int length) {
         _buffer.put(src, offset, length);
     }
 
-    /**
-     * Append operation that tries to append as much of input data as
-     * possible, and returns number of bytes that were copied
-     * 
-     * @return Number of bytes actually appended
-     */
     @Override
     public int tryAppend(byte[] src, int offset, int length)
     {
@@ -152,6 +141,16 @@ public class ByteBufferBytesSegment extends BytesSegment
         return actualLen;
     }
 
+    @Override
+    public boolean tryAppend(byte value)
+    {
+        if (availableForAppend() > 0) {
+            _buffer.put(value);
+            return true;
+        }
+        return false;
+    }
+    
     /*
     /**********************************************************************
     /* Reading data
@@ -159,14 +158,10 @@ public class ByteBufferBytesSegment extends BytesSegment
      */
 
     @Override
-    public void read(byte[] buffer, int offset, int length)
-    {
+    public void read(byte[] buffer, int offset, int length) {
         _readBuffer.get(buffer, offset, length);
     }
 
-    /**
-     * @return Number of bytes actually read
-     */
     @Override
     public int tryRead(byte[] buffer, int offset, int length)
     {
@@ -185,12 +180,6 @@ public class ByteBufferBytesSegment extends BytesSegment
         return length;
     }
 
-    /**
-     * Method for reading as much of the length prefix as possible from
-     * the current pointer in this segment. This will be from 0 to 5 bytes,
-     * depending on length of prefix, and whether it resides completely in
-     * this segment or not.
-     */
     @Override
     public int readLength()
     {
