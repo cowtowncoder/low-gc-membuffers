@@ -57,24 +57,10 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
     /**********************************************************************
      */
 
-    @Override
-    public final void appendEntry(long[] data) {
-        appendEntry(data, 0, data.length);
-    }
-
-    @Override
-    public void appendEntry(long[] data, int dataOffset, int dataLength)
-    {
-        if (!tryAppendEntry(data, dataOffset, dataLength)) {
-            throw new IllegalStateException("Not enough room in buffer to append entry of "+dataLength
-                    +" (can't allocate enough new segments)");
-        }
-    }
-
-    @Override
-    public final boolean tryAppendEntry(long[] data) {
-        return tryAppendEntry(data, 0, data.length);
-    }
+    // from base class:
+    //public final void appendEntry(long[] data);
+    //public void appendEntry(long[] data, int dataOffset, int dataLength);
+    //public final boolean tryAppendEntry(long[] data);
 
     @Override
     public synchronized boolean tryAppendEntry(long[] data, int dataOffset, int dataLength)

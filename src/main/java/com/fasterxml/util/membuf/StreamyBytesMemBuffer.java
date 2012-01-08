@@ -28,19 +28,30 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
      * Method that tries to append value in buffer and returning;
      * if there is no room, a {@link IllegalStateException} is thrown.
      */
-    public abstract void append(byte value);
+    public final void append(byte value) {
+        if (!tryAppend(value)) {
+            throw new IllegalStateException("Not enough room in buffer to append a single value (can't allocate enough new segments)");
+        }
+    }
     
     /**
      * Method that tries to append data in buffer and returning;
      * if there is no room, a {@link IllegalStateException} is thrown.
      */
-    public abstract void append(byte[] data);
+    public final void append(byte[] data) {
+        append(data, 0, data.length);
+    }
 
     /**
      * Method that tries to append data in buffer and returning;
      * if there is no room, a {@link IllegalStateException} is thrown.
      */
-    public abstract void append(byte[] data, int dataOffset, int dataLength);
+    public final void append(byte[] data, int dataOffset, int dataLength) {
+        if (!tryAppend(data, dataOffset, dataLength)) {
+            throw new IllegalStateException("Not enough room in buffer to append entry of "+dataLength
+                    +" (can't allocate enough new segments)");
+        }
+    }
 
     /**
      * Method that tries to append byte value in buffer if there is enough room;
@@ -54,7 +65,9 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
      * if there is, data is appended and 'true' returned; otherwise no changes
      * are made and 'false' is returned.
      */
-    public abstract boolean tryAppend(byte[] data);
+    public final boolean tryAppend(byte[] data) {
+        return tryAppend(data, 0, data.length);
+    }
     
     /**
      * Method that tries to append data in buffer if there is enough room;
@@ -76,60 +89,53 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
     public abstract int read() throws InterruptedException;
     
     /**
-     * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if succesfull; or, if buffer does
-     * not have enough space, return negative number as error code.
-     * If no entry is available, will block to wait for more data.
+     * Method for reading and removing up to specified number of values from buffer
+     * and return length of data read.
      * 
-     * @param buffer Buffer in which entry is to be read: must have enough space
-     *  for read to succeed
+     * If no data is available, will block to wait for more data.
+     * 
+     * @param buffer Buffer in which entry is to be read
      * @param offset Offset in buffer to use for storing results
+     * @param length Maximum number of values to read
      *
-     * @return Length of the entry (non-negative) if read succeeds;
-     *   or, negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
-     *   and entry length was 6, would return -6.
+     * @return Length of the read (in number of values); at least one is always
+     *   read if buffer has enough room (special case being 0, in which case call
+     *   may or may not block)
      */
     public abstract int read(byte[] buffer, int offset, int length) throws InterruptedException;
 
     /**
-     * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if successful; or, if buffer does
-     * not have enough space, return negative number as error code.
-     * If no entry is available, will return {@link Integer.MIN_VALUE}.
+     * Method for reading and removing up to specified number of values from buffer
+     * and return length of data read.
      * 
-     * @param buffer Buffer in which entry is to be read: must have enough space
-     *  for read to succeed
+     * If no data is available, will immediately return 0.
+     * 
+     * @param buffer Buffer in which entry is to be read
      * @param offset Offset in buffer to use for storing results
+     * @param length Maximum number of values to read
      *
-     * @return {@link Integer#MIN_VALUE} if no entry was available,
-     *   length of the entry (non-negative) read if read succeeds,
-     *   or negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
-     *   and entry length was 6, would return -6.
+     * @return Length of the read (in number of values) if data was available,
+     *   or 0 if no data was available
      */
     public abstract int readIfAvailable(byte[] buffer, int offset, int length);
     
     /**
-     * Method for reading and removing next entry from the buffer, if one
-     * is available.
+     * Method for reading and removing up to specified number of values from buffer
+     * and return length of data read.
+     * 
      * If buffer is empty, may wait up to specified amount of time for new data to arrive.
-     * If no entry is available after timeout, will return {@link Integer.MIN_VALUE}.
-     * If length of entry exceeds available buffer space, will return negative number
-     * that indicates length of the entry that would have been copied.
+     * If no entry is available after timeout, will return 0; otherwise returns number
+     * of values read
      * 
      * @param timeoutMsecs Amount of time to wait for more data if
      *   buffer is empty, if non-zero positive number; if zero or
      *   negative number, will return immediately
-     * @param buffer Buffer in which entry is to be read: must have enough space
-     *  for read to succeed
+     * @param buffer Buffer in which entry is to be read
      * @param offset Offset in buffer to use for storing results
+     * @param length Maximum number of values to read
      *
-     * @return {@link Integer#MIN_VALUE} if no entry was available,
-     *   length of the entry (non-negative) read if read succeeds,
-     *   or negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
-     *   and entry length was 6, would return -6.
+     * @return Length of the read (in number of values) if data was available,
+     *   or 0 if no data was available
      */
     public abstract int read(long timeoutMsecs, byte[] buffer, int offset, int length)
         throws InterruptedException;

@@ -48,11 +48,9 @@ public abstract class LongsSegment extends SegmentBase<LongsSegment>
     public abstract int tryAppend(long[] src, int offset, int length);
 
     /**
-     * Append operation that tries to append given long value in this
-     * segment.
+     * Append operation that tries to append a single value in this segment.
      * 
-     * @return True if there was room and append succeeded; false if segment
-     *    is full
+     * @return True if there was room and append succeeded; false if segment is full
      */
     public abstract boolean tryAppend(long value);
 }

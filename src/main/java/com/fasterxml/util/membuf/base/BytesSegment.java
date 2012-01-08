@@ -48,4 +48,11 @@ public abstract class BytesSegment extends SegmentBase<BytesSegment>
      * @return Number of bytes actually appended
      */
     public abstract int tryAppend(byte[] src, int offset, int length);
+
+    /**
+     * Append operation that tries to append a single value in this segment.
+     * 
+     * @return True if there was room and append succeeded; false if segment is full
+     */
+    public abstract boolean tryAppend(byte value);
 }

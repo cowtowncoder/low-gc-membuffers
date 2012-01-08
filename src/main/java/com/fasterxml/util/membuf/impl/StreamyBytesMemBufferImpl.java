@@ -73,37 +73,83 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
     /**********************************************************************
      */
 
+    // from base class:
+    //public void append(byte[] data);
+    //public void append(byte[] data, int offset, int length);
+    //public boolean tryAppend(byte[] data);
+    //public void append(byte value);
+
     @Override
-    public synchronized void append(byte value) {
-        // TODO Auto-generated method stub
+    public synchronized boolean tryAppend(byte value)
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (!_head.tryAppend(value)) {
+        }
     }
+
+    @Override
+    public synchronized boolean tryAppend(byte[] data, int dataOffset, int dataLength)
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        int freeInCurrent = _head.availableForAppend();
+        // First, simple case: can fit it in the current buffer?
+        if (freeInCurrent >= dataLength) {
+            _head.append(data, dataOffset, dataLength);
+        } else {
+            // if not, must check whether we could allocate enough segments to fit in
+            int neededSegments = ((dataLength - freeInCurrent) + (_segmentSize-1)) / _segmentSize;
     
-    @Override
-    public synchronized void append(byte[] data) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public synchronized void append(byte[] data, int dataOffset, int dataLength) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public synchronized boolean tryAppend(byte value) {
-        return false;
-    }
+            // Which may need reusing local segments, or allocating new ones via allocates
+            int segmentsToAlloc = neededSegments - _freeSegmentCount;
+            if (segmentsToAlloc > 0) { // nope: need more
+                // ok, but are allowed to grow that big?
+                if ((_usedSegmentsCount + _freeSegmentCount + segmentsToAlloc) > _maxSegmentsToAllocate) {
+                    return false;
+                }
+                // if we are, let's try allocate: will be added to "free" segments first, then used
+                BytesSegment newFree = _segmentAllocator.allocateSegments(segmentsToAlloc, _firstFreeSegment);
+                if (newFree == null) {
+                    return false;
+                }
+                _freeSegmentCount += segmentsToAlloc;
+                _firstFreeSegment = newFree;
+            }
     
-    @Override
-    public synchronized boolean tryAppend(byte[] data) {
-        // TODO Auto-generated method stub
-        return false;
+            // and if we got this far, it's just simple matter of writing pieces into segments
+            _doAppendChunked(data, dataOffset, dataLength);
+        }
+        boolean wasEmpty = (_totalPayloadLength == 0);
+        _totalPayloadLength += dataLength;        
+        if (wasEmpty) {
+            this.notifyAll();
+        }
+        return true;
     }
 
-    @Override
-    public synchronized boolean tryAppend(byte[] data, int dataOffset, int dataLength) {
-        // TODO Auto-generated method stub
-        return false;
+    protected void _doAppendChunked(byte[] buffer, int offset, int length)
+    {
+        if (length < 1) {
+            return;
+        }
+        BytesSegment seg = _head;
+        while (true) {
+            int actual = seg.tryAppend(buffer, offset, length);
+            offset += actual;
+            length -= actual;
+            if (length == 0) { // complete, can leave
+                return;
+            }
+            // otherwise, need another segment, so complete current write
+            seg.finishWriting();
+            // and allocate, init-for-writing new one:
+            BytesSegment newSeg = _reuseFree().initForWriting();
+            seg.relink(newSeg);
+            _head = seg = newSeg;
+        }
     }
 
     /*
