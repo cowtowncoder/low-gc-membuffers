@@ -179,7 +179,7 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         }        
         // first: must have something to return
         while (_entryCount == 0) {
-            this.wait();
+            _waitForData();
         }
         return _doGetNext();
     }
@@ -218,7 +218,7 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         long now = System.currentTimeMillis();
         long end = now + timeoutMsecs;
         while (now < end) {
-            wait(end - now);
+            _waitForData(end - now);
             if (_entryCount > 0) {
                 return _doGetNext();
             }
@@ -239,7 +239,7 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         
         // first: must have something to return
         while (_entryCount == 0) {
-            this.wait();
+            _waitForData();
         }
         return _doReadNext(buffer, offset);
     }
@@ -269,7 +269,7 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         long now = System.currentTimeMillis();
         long end = now + timeoutMsecs;
         while (now < end) {
-            wait(end - now);
+            _waitForData(end - now);
             if (_entryCount > 0) {
                 return _doReadNext(buffer, offset);
             }

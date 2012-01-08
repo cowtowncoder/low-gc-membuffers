@@ -93,6 +93,21 @@ public abstract class MemBufferBase<S extends Segment<S>>
      * less than equal to {@link #_maxSegmentsToAllocate}.
      */
     protected int _freeSegmentCount;
+
+    /*
+    /**********************************************************************
+    /* Support for synchronization
+    /**********************************************************************
+     */
+
+    /**
+     * Number of threads currently blocked and waiting for more data.
+     * Used for reducing unnecessary calls to 'this.notifyAll();'.
+     *<p>
+     * Since it is only updated from synchronized blocks we do not
+     * need to use <code>AtomicInteger</code> (or mark volatile).
+     */
+    private int _readBlockedCount;
     
     /*
     /**********************************************************************
@@ -331,12 +346,15 @@ if (count != _freeSegmentCount) {
 */
         return freeSeg;
     }
-
+    
     /**
      * Method sub-classes call when the current thread should block
-     * until more data is available
+     * until more data is available.
+     * Note that caller MUST have lock on 'this', that is call must
+     * come from within synchronized block.
      */
     protected final void _waitForData() throws InterruptedException {
+        ++_readBlockedCount; // ok since we are calling from sync block
         this.wait();
     }
 
@@ -344,8 +362,11 @@ if (count != _freeSegmentCount) {
      * Method sub-classes call when the current thread should block
      * up to specified time interval, or until more data is available,
      * whichever occurs sooner.
+     * Note that caller MUST have lock on 'this', that is call must
+     * come from within synchronized block.
      */
     protected final void _waitForData(long timeoutMsecs) throws InterruptedException {
+        ++_readBlockedCount;
         this.wait(timeoutMsecs);
     }
     
@@ -353,9 +374,14 @@ if (count != _freeSegmentCount) {
      * Method sub-classes call when they need to wake up any threads
      * that are blocked on trying to read content: typically this occurs
      * when adding entry or data to an empty buffer.
+     * Note that caller MUST have lock on 'this', that is call must
+     * come from within synchronized block.
      */
     protected final void _wakeBlockedReaders() {
-        this.notifyAll();
+        if (_readBlockedCount != 0) {
+            _readBlockedCount = 0;
+            this.notifyAll();
+        }
     }
     
     /* Helper method called to throw an exception when an active method
