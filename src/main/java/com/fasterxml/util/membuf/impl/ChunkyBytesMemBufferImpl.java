@@ -4,8 +4,11 @@ import com.fasterxml.util.membuf.*;
 import com.fasterxml.util.membuf.base.BytesSegment;
 
 /**
- * {@link MemBuffer} implementation used for storing entries
- * that are sequences of byte values.
+ * {@link ChunkyBytesMemBuffer} implementation used for storing entries
+ * that are sequences of byte values, and are stored as distinct entries
+ * with definite size (as per {@link ChunkyMemBuffer}).
+ * This means that entries that are read in order they were appended
+ * and have exact same contents (including length).
  *<p>
  * Access to queue is fully synchronized -- meaning that all methods are
  * synchronized by implementations as necessary, and caller should not need

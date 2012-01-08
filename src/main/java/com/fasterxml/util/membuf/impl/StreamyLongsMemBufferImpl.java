@@ -1,9 +1,32 @@
 package com.fasterxml.util.membuf.impl;
 
 import com.fasterxml.util.membuf.SegmentAllocator;
+import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
 import com.fasterxml.util.membuf.StreamyLongsMemBuffer;
+import com.fasterxml.util.membuf.StreamyMemBuffer;
 import com.fasterxml.util.membuf.base.LongsSegment;
 
+/**
+ * {@link StreamyBytesMemBuffer} implementation used for storing a sequence
+ * of long values in a single long sequence which does not retain
+ * boundaries implied by appends (as per {@link StreamyMemBuffer}).
+ * This means that ordering of longs appended is retained on long-by-long
+ * basis, but there are no discrete grouping of sub-sequences (entries);
+ * all content is seen as sort of stream.
+ *<p>
+ * Access to queue is fully synchronized -- meaning that all methods are
+ * synchronized by implementations as necessary, and caller should not need
+ * to use external synchronization -- since parts will have to be anyway
+ * (updating of stats, pointers), and since all real-world use cases will
+ * need some level of synchronization anyway, even with just single producer
+ * and consumer. If it turns out that there are bottlenecks that could be
+ * avoided with more granular (or external) locking, this design can be
+ * revisited.
+ *<p>
+ * Note that if instances are discarded, they <b>MUST</b> be closed:
+ * finalize() method is not implemented since it is both somewhat unreliable
+ * (i.e. should not be counted on) and can add overhead for GC processing.
+ */
 public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
 {
     /**
@@ -60,19 +83,19 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
     }
 
     @Override
-    public void append(byte[] data, int dataOffset, int dataLength) {
+    public void append(long[] data, int dataOffset, int dataLength) {
         // TODO Auto-generated method stub
         
     }
 
     @Override
-    public boolean tryAppend(byte[] data) {
+    public boolean tryAppend(long[] data) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean tryAppend(byte[] data, int dataOffset, int dataLength) {
+    public boolean tryAppend(long[] data, int dataOffset, int dataLength) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -84,26 +107,26 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
      */
     
     @Override
-    public int read() throws InterruptedException {
+    public long read() throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int read(byte[] buffer, int offset, int length)
+    public int read(long[] buffer, int offset, int length)
             throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int readIfAvailable(byte[] buffer, int offset, int length) {
+    public int readIfAvailable(long[] buffer, int offset, int length) {
         // TODO Auto-generated method stub
         return 0;
     }
 
     @Override
-    public int read(long timeoutMsecs, byte[] buffer, int offset, int length)
+    public int read(long timeoutMsecs, long[] buffer, int offset, int length)
             throws InterruptedException {
         // TODO Auto-generated method stub
         return 0;

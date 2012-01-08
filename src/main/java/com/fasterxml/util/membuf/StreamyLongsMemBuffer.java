@@ -40,21 +40,21 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
      * Method that tries to append data in buffer and returning;
      * if there is no room, a {@link IllegalStateException} is thrown.
      */
-    public abstract void append(byte[] data, int dataOffset, int dataLength);
+    public abstract void append(long[] data, int dataOffset, int dataLength);
 
     /**
      * Method that tries to append data in buffer if there is enough room;
      * if there is, data appended and 'true' returned; otherwise no changes
      * are made and 'false' is returned.
      */
-    public abstract boolean tryAppend(byte[] data);
+    public abstract boolean tryAppend(long[] data);
     
     /**
      * Method that tries to append data in buffer if there is enough room;
      * if there is, data appended and 'true' returned; otherwise no changes
      * are made and 'false' is returned.
      */
-    public abstract boolean tryAppend(byte[] data, int dataOffset, int dataLength);
+    public abstract boolean tryAppend(long[] data, int dataOffset, int dataLength);
 
     /*
     /**********************************************************************
@@ -62,11 +62,11 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
     /**********************************************************************
      */
 
-    public abstract int read() throws InterruptedException;
+    public abstract long read() throws InterruptedException;
     
     /**
      * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if succesful; or, if buffer does
+     * return length of the entry in longs, if succesful; or, if buffer does
      * not have enough space, return negative number as error code.
      * If no entry is available, will block to wait for more data.
      * 
@@ -76,14 +76,14 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
      *
      * @return Length of the entry (non-negative) if read succeeds;
      *   or, negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
+     *   of failures: for example, if buffer only had space for 4 longs,
      *   and entry length was 6, would return -6.
      */
-    public abstract int read(byte[] buffer, int offset, int length) throws InterruptedException;
+    public abstract int read(long[] buffer, int offset, int length) throws InterruptedException;
 
     /**
      * Method for reading and removing next available entry from buffer and
-     * return length of the entry in bytes, if successful; or, if buffer does
+     * return length of the entry in longs, if successful; or, if buffer does
      * not have enough space, return negative number as error code.
      * If no entry is available, will return {@link Integer.MIN_VALUE}.
      * 
@@ -94,10 +94,10 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
      * @return {@link Integer#MIN_VALUE} if no entry was available,
      *   length of the entry (non-negative) read if read succeeds,
      *   or negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
+     *   of failures: for example, if buffer only had space for 4 longs,
      *   and entry length was 6, would return -6.
      */
-    public abstract int readIfAvailable(byte[] buffer, int offset, int length);
+    public abstract int readIfAvailable(long[] buffer, int offset, int length);
     
     /**
      * Method for reading and removing next entry from the buffer, if one
@@ -117,10 +117,10 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
      * @return {@link Integer#MIN_VALUE} if no entry was available,
      *   length of the entry (non-negative) read if read succeeds,
      *   or negative number that indicates length of the entry in case
-     *   of failures: for example, if buffer only had space for 4 bytes,
+     *   of failures: for example, if buffer only had space for 4 longs,
      *   and entry length was 6, would return -6.
      */
-    public abstract int read(long timeoutMsecs, byte[] buffer, int offset, int length)
+    public abstract int read(long timeoutMsecs, long[] buffer, int offset, int length)
         throws InterruptedException;
 
     /*
