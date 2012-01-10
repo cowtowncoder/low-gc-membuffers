@@ -85,8 +85,35 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         if (_head == null) {
             _reportClosed();
         }
-        if (!_head.tryAppend(value)) {
+        if (_head.tryAppend(value)) {
+            ++_totalPayloadLength;
+            return true;
         }
+        // need to allocate a new segment, possible?
+        if (_freeSegmentCount > 0) { // got a local segment to reuse:
+            final BytesSegment seg = _head;
+            seg.finishWriting();
+            // and allocate, init-for-writing new one:
+            BytesSegment newSeg = _reuseFree().initForWriting();
+            seg.relink(newSeg);
+            _head = newSeg;
+        } else { // no locally reusable segments, need to ask allocator
+            if (_usedSegmentsCount >= _maxSegmentsToAllocate) { // except we are maxed out
+                return false;
+            }
+            // if we are, let's try allocate: will be added to "free" segments first, then used
+            BytesSegment newFree = _segmentAllocator.allocateSegments(1, _firstFreeSegment);
+            if (newFree == null) {
+                return false;
+            }
+            _freeSegmentCount += 1;
+            _firstFreeSegment = newFree;
+        }
+        if (!_head.tryAppend(value)) {
+            throw new IllegalStateException();
+        }
+        ++_totalPayloadLength;
+        return true;
     }
 
     @Override
@@ -159,63 +186,102 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
      */
     
     @Override
-    public synchronized int read() throws InterruptedException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public synchronized int read(byte[] buffer, int offset, int length)
-            throws InterruptedException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public synchronized int readIfAvailable(byte[] buffer, int offset, int length) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public synchronized int read(long timeoutMsecs, byte[] buffer, int offset, int length)
-            throws InterruptedException {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public synchronized int skip(int skipCount)
+    public synchronized int read() throws InterruptedException
     {
         if (_head == null) {
             _reportClosed();
         }
-        
-        // !!! TODO
-        
-        /*
-        if (_entryCount < 1) {
-            return -1;
+        // first: must have something to return
+        while (_totalPayloadLength == 0L) {
+            _waitForData();
         }
-        if (_peekedEntry != null) {
-            int len = _peekedEntry.length;
-            _peekedEntry = null;
-            return len;
+        if (_head.availableForReading() == 0) {
+            String error = _freeReadSegment(null);
+            if (error != null) {
+                throw new IllegalStateException(error);
+            }
         }
-        
-        final int segLen = getNextEntryLength();
-        // ensure lengthh indicator gets reset for chunk after this one
-        _nextEntryLength = -1;
-        // and reduce entry count as well
-        --_entryCount;
-        _totalPayloadLength -= segLen;
+        return _head.read();
+    }
 
-        // a trivial case; marker entry (no payload)
-        int remaining = segLen;
+    @Override
+    public synchronized int read(byte[] buffer, int offset, int length) throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        // first: must have something to return
+        while (_totalPayloadLength == 0L) {
+            _waitForData();
+        }
+        return _doRead(buffer, offset, length);
+    }
+
+    @Override
+    public synchronized int readIfAvailable(byte[] buffer, int offset, int length) {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_totalPayloadLength == 0L) {
+            return 0;
+        }
+        return _doRead(buffer, offset, length);
+    }
+
+    @Override
+    public synchronized int read(long timeoutMsecs, byte[] buffer, int offset, int length)
+            throws InterruptedException
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (_totalPayloadLength > 0L) {
+            return _doRead(buffer, offset, length);
+        }
+        long now = System.currentTimeMillis();
+        long end = now + timeoutMsecs;
+        while (now < end) {
+            _waitForData(end - now);
+            if (_totalPayloadLength > 0L) {
+                return _doRead(buffer, offset, length);
+            }
+            now = System.currentTimeMillis();
+        }
+        return 0;
+    }
+
+    private final int _doRead(byte[] buffer, int offset, int length)
+    {
+        if (length < 1) {
+            return 0;
+        }
+        final int end = buffer.length;
+        if (offset >= end || offset < 0) {
+            throw new IllegalArgumentException("Illegal offset ("+offset+"): allowed values [0, "+end+"[");
+        }
+        if ((offset + length) > end) {
+            throw new IllegalArgumentException("Illegal length ("+length+"): offset ("+offset
+                    +") + length end past end of buffer ("+end+")");
+        }
+        // also, can't read more than what is available
+        if (length > _totalPayloadLength) {
+            length = (int) _totalPayloadLength;
+        }
+        // ok: simple case; all data available from within current segment
+        int avail = _tail.availableForReading();
+        if (avail >= length) {
+            _totalPayloadLength -= length;
+            _tail.read(buffer, offset, length);
+            return length;
+        }
+        // otherwise need to do segmented read...
         String error = null;
-        while (remaining > 0) {
-            remaining -= _tail.skip(remaining);
-            if (remaining == 0) { // all skipped?
+        while (true) {
+            int actual = _tail.tryRead(buffer, offset, length);
+            _totalPayloadLength -= actual;
+            offset += actual;
+            length -= actual;
+            if (length == 0) { // complete, can leave
                 break;
             }
             error = _freeReadSegment(error);
@@ -223,11 +289,9 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         if (error != null) {
             throw new IllegalStateException(error);
         }
-        return segLen;
-        */
-        return 0;
+        return length;
     }
-    
+
     /*
     /**********************************************************************
     /* Abstract method impls

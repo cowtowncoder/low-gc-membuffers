@@ -19,6 +19,8 @@ public abstract class LongsSegment extends SegmentBase<LongsSegment>
 
     public abstract void read(long[] buffer, int offset, int length);
 
+    public abstract long read();
+    
     public abstract int tryRead(long[] buffer, int offset, int length);
 
     /**

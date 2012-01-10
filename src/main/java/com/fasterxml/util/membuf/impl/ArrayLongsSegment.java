@@ -144,6 +144,11 @@ public class ArrayLongsSegment extends LongsSegment
         long l = _buffer[_readPtr++];
         return (int) l;
     }
+
+    @Override
+    public long read() { // caller must check bounds; otherwise it'll get out-of-bounds
+        return _buffer[_readPtr++];
+    }
     
     @Override
     public void read(long[] buffer, int offset, int length)

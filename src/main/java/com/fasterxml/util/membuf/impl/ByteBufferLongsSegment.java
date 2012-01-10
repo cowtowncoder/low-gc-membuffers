@@ -165,8 +165,12 @@ public class ByteBufferLongsSegment extends LongsSegment
      */
 
     @Override
-    public void read(long[] buffer, int offset, int length)
-    {
+    public long read() { // caller must check bounds; otherwise it'll get out-of-bounds
+        return _readBuffer.get();
+    }
+    
+    @Override
+    public void read(long[] buffer, int offset, int length) {
         _readBuffer.get(buffer, offset, length);
     }
 

@@ -127,6 +127,11 @@ public class ArrayBytesSegment extends BytesSegment
      */
 
     @Override
+    public byte read() { // caller must check bounds; otherwise it'll get out-of-bounds
+        return _buffer[_readPtr++];
+    }
+    
+    @Override
     public void read(byte[] buffer, int offset, int length)
     {
         int src = _readPtr;

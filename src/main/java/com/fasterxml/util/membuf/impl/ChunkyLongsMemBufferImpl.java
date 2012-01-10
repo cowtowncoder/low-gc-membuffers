@@ -378,7 +378,6 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         _nextEntryLength = -1;
         // and reduce entry count as well
         --_entryCount;
-        _totalPayloadLength -= segLen;
 
         // a trivial case; marker entry (no payload)
         if (segLen == 0) {
@@ -386,6 +385,7 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
         }
 
         // ok: simple case; all data available from within current segment
+        _totalPayloadLength -= segLen;
         int avail = _tail.availableForReading();
         if (avail >= segLen) {
             _tail.read(buffer, offset, segLen);
@@ -400,7 +400,7 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
      * Helper method that handles append when contents may need to be split
      * across multiple segments.
      */
-    protected void _doReadChunked(long[] buffer, int offset, int length)
+    private final void _doReadChunked(long[] buffer, int offset, int length)
     {
         String error = null;
         while (true) {

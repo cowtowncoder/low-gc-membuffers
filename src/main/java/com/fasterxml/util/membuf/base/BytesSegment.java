@@ -26,6 +26,8 @@ public abstract class BytesSegment extends SegmentBase<BytesSegment>
 
     public abstract void read(byte[] buffer, int offset, int length);
 
+    public abstract byte read();
+    
     public abstract int tryRead(byte[] buffer, int offset, int length);
 
     /*

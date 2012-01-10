@@ -28,6 +28,7 @@ public abstract class StreamyMemBufferBase<S extends Segment<S>>
     {
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
+
     /*
     /**********************************************************************
     /* Public API, state changes
@@ -42,4 +43,39 @@ public abstract class StreamyMemBufferBase<S extends Segment<S>>
     
     // from base class:
     //public synchronized void close()
+
+    /*
+    /**********************************************************************
+    /* Public API, skipping
+    /**********************************************************************
+     */
+    
+    @Override
+    public synchronized final int skip(int skipCount)
+    {
+        if (_head == null) {
+            _reportClosed();
+        }
+        if (skipCount > _totalPayloadLength) {
+            skipCount = (int) _totalPayloadLength;
+        }
+        int remaining = skipCount;
+        String error = null;
+        if (remaining > 0) {
+            while (true) {
+                int count = _tail.skip(remaining);
+                remaining -= count;
+                _totalPayloadLength -= count;
+                if (remaining == 0) { // all skipped?
+                    break;
+                }
+                error = _freeReadSegment(error);
+            }
+        }
+        if (error != null) {
+            throw new IllegalStateException(error);
+        }
+        return skipCount;
+    }
+
 }

@@ -158,6 +158,11 @@ public class ByteBufferBytesSegment extends BytesSegment
      */
 
     @Override
+    public byte read() { // caller must check bounds; otherwise it'll get out-of-bounds
+        return _readBuffer.get();
+    }
+    
+    @Override
     public void read(byte[] buffer, int offset, int length) {
         _readBuffer.get(buffer, offset, length);
     }

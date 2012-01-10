@@ -190,7 +190,7 @@ public abstract class ChunkyBytesMemBuffer extends ChunkyMemBufferBase<BytesSegm
         }
         
         final int segLen = getNextEntryLength();
-        // ensure lengthh indicator gets reset for chunk after this one
+        // ensure length indicator gets reset for chunk after this one
         _nextEntryLength = -1;
         // and reduce entry count as well
         --_entryCount;
