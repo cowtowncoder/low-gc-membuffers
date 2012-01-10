@@ -5,7 +5,10 @@ import org.junit.Assert;
 import com.fasterxml.util.membuf.ChunkyBytesMemBuffer;
 import com.fasterxml.util.membuf.MembufTestBase;
 
-public class SimplePeekTest extends MembufTestBase
+/**
+ * Test for peeking contets of a chunky buffer.
+ */
+public class PeekChunkyBytesTest extends MembufTestBase
 {
    public void testChunkyPeeks() throws Exception
    {

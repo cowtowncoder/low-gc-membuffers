@@ -4,7 +4,7 @@ import org.junit.Assert;
 
 import com.fasterxml.util.membuf.*;
 
-public class SimplePeekTest extends MembufTestBase
+public class PeekChunkyLongsTest extends MembufTestBase
 {
    public void testSimplePeeks() throws Exception
    {

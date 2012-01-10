@@ -9,7 +9,7 @@ import com.fasterxml.util.membuf.*;
  * one (buffering all), then reading one-by-one and verifying
  * results.
  */
-public class TestLonger extends MembufTestBase
+public class LongerChunkyLongsTest extends MembufTestBase
 {
     public void test12SegmentBuffer() throws Exception
     {

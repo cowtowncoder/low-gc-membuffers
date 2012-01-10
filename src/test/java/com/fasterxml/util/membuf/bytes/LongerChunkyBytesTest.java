@@ -14,7 +14,7 @@ import com.fasterxml.util.membuf.impl.ChunkyBytesMemBufferImpl;
  * one (buffering all), then reading one-by-one and verifying
  * results.
  */
-public class LongerChunkyBufferTest extends MembufTestBase
+public class LongerChunkyBytesTest extends MembufTestBase
 {
     final Charset ENCODING = Charset.forName("ISO-8859-1");
 

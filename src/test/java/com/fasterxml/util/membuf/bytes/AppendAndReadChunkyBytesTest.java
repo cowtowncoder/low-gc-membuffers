@@ -1,10 +1,10 @@
-package com.fasterxml.util.membuf.longs;
+package com.fasterxml.util.membuf.bytes;
 
 import org.junit.Assert;
 
 import com.fasterxml.util.membuf.*;
 
-public class SimpleAppendReadTest extends MembufTestBase
+public class AppendAndReadChunkyBytesTest extends MembufTestBase
 {
     public void testSimpleAppendAndGet() throws Exception
     {
@@ -44,9 +44,9 @@ public class SimpleAppendReadTest extends MembufTestBase
     {
         // will use segments of size 10 bytes; only one segment per-allocator reuse
         // and maximum allocation of 4 segments per-allocator
-        final MemBuffersForLongs bufs = createLongsBuffers(aType, 10, 1, 4);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
         // buffer will have similar limits
-        final ChunkyLongsMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
 
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
@@ -57,7 +57,7 @@ public class SimpleAppendReadTest extends MembufTestBase
 
         assertNull(buffer.getNextEntryIfAvailable());
         
-        long[] chunk3 = buildLongsChunk(3);
+        byte[] chunk3 = buildBytesChunk(3);
         buffer.appendEntry(chunk3);
         // should take 4 bytes (length, payload)
         assertEquals(1, buffer.getEntryCount());
@@ -66,12 +66,12 @@ public class SimpleAppendReadTest extends MembufTestBase
         assertEquals(26, buffer.getMaximumAvailableSpace());
 
         // and then let's just read it off
-        long[] actual = buffer.getNextEntry();
+        byte[] actual = buffer.getNextEntry();
         assertNotNull(actual);
         verifyChunk(actual, chunk3.length);
 
         // but then append two 7 byte segments
-        long[] chunk7 = buildLongsChunk(7);
+        byte[] chunk7 = buildBytesChunk(7);
         buffer.appendEntry(chunk7);
         buffer.appendEntry(chunk7);
         assertEquals(2, buffer.getEntryCount());
@@ -109,43 +109,43 @@ public class SimpleAppendReadTest extends MembufTestBase
     // Test 'read' methods (where called hands buffer to use)
     private void _testSimpleAppendAndRead(SegType aType) throws Exception
     {
-        final MemBuffersForLongs bufs = createLongsBuffers(aType, 10, 1, 4);
-        final ChunkyLongsMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
 
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
         assertTrue(buffer.isEmpty());
         // first, reads from empty buffer should fail as usual
-        assertEquals(Integer.MIN_VALUE, buffer.readNextEntryIfAvailable(new long[1], 0));
+        assertEquals(Integer.MIN_VALUE, buffer.readNextEntryIfAvailable(new byte[1], 0));
 
         // then append a 2-byte segment
-        long[] data = { 1, 2 };
+        byte[] data = { 1, 2 };
         buffer.appendEntry(data);
         assertEquals(1, buffer.getEntryCount());
         assertEquals(2, buffer.getTotalPayloadLength());
         assertFalse(buffer.isEmpty());
 
         // and try read; first with unsufficient buffer
-        assertEquals(-2, buffer.readNextEntryIfAvailable(new long[1], 0));
-        long[] result = new long[2];
+        assertEquals(-2, buffer.readNextEntryIfAvailable(new byte[1], 0));
+        byte[] result = new byte[2];
         assertEquals(-2, buffer.readNextEntryIfAvailable(result, 1));
 
         // but succeed with enough space
         assertEquals(2, buffer.readNextEntryIfAvailable(result, 0));
-        assertEquals(1L, result[0]);
-        assertEquals(2L, result[1]);
+        assertEquals((byte) 1, result[0]);
+        assertEquals((byte) 2, result[1]);
         assertEquals(0, buffer.getEntryCount());
         assertEquals(0, buffer.getTotalPayloadLength());
         assertTrue(buffer.isEmpty());
 
         // then verify that split read works too
-        data = new long[25];
+        data = new byte[25];
         for (int i = 0; i < data.length; ++i) {
             data[i] = (byte) i;
         }
         buffer.appendEntry(data);
         
-        result = new long[25];
+        result = new byte[25];
         assertEquals(25, buffer.readNextEntry(10L, result, 0));
         Assert.assertArrayEquals(data, result);
     }
@@ -157,9 +157,9 @@ public class SimpleAppendReadTest extends MembufTestBase
      */
     private void _testEmptySegments(SegType aType) throws Exception
     {
-        final MemBuffersForLongs bufs = createLongsBuffers(aType, 10, 1, 3);
-        final ChunkyLongsMemBuffer buffer = bufs.createChunkyBuffer(1, 2);
-        long[] empty = new long[0];
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 3);
+        final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 2);
+        byte[] empty = new byte[0];
 
         assertEquals(0, buffer.getEntryCount());
         assertEquals(1, buffer.getSegmentCount());
@@ -173,7 +173,7 @@ public class SimpleAppendReadTest extends MembufTestBase
         assertEquals(2, buffer.getSegmentCount());
 
         for (int i = 0; i < 20; ++i) {
-            long[] data = buffer.getNextEntry();
+            byte[] data = buffer.getNextEntry();
             assertEquals(0, data.length);
         }
         assertEquals(0, buffer.getEntryCount());
@@ -187,9 +187,9 @@ public class SimpleAppendReadTest extends MembufTestBase
      */
     private void _testTryReadFromEmpty(SegType aType) throws Exception
     {
-        final ChunkyLongsMemBuffer buffer = createLongsBuffers(aType, 1000, 1, 100).createChunkyBuffer(1, 2);
+        final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 1000, 1, 100).createChunkyBuffer(1, 2);
         
-        long[] data = buffer.getNextEntryIfAvailable();
+        byte[] data = buffer.getNextEntryIfAvailable();
         assertNull(data);
         data = buffer.getNextEntry(10L); // 10 msecs delay
         assertNull(data);
