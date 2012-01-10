@@ -122,6 +122,10 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
      *   or 0 if no data was available
      */
     public abstract int readIfAvailable(byte[] buffer, int offset, int length);
+
+    public final int readIfAvailable(byte[] buffer) {
+        return readIfAvailable(buffer, 0, buffer.length);
+    }
     
     /**
      * Method for reading and removing up to specified number of values from buffer

@@ -32,7 +32,24 @@ public class AppendReadChunkyLongsTest extends MembufTestBase
         _testTryReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
         _testTryReadFromEmpty(SegType.BYTE_BUFFER_FAKE);
         _testTryReadFromEmpty(SegType.BYTE_ARRAY);
-    }    
+    }
+
+    // And similarly for streamy buffer; note that not all are applicable
+    // (no empty segments; another test is redundant)
+
+    public void testStreamyAppendAndGet() throws Exception
+    {
+        _testStreamyAppendAndGet(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyAppendAndGet(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyAppendAndGet(SegType.BYTE_ARRAY);
+    }
+
+    public void testStreamyReadFromEmpty() throws Exception
+    {
+        _testStreamyReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyReadFromEmpty(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyReadFromEmpty(SegType.BYTE_ARRAY);
+    }
     
     /*
     /**********************************************************************
@@ -193,5 +210,88 @@ public class AppendReadChunkyLongsTest extends MembufTestBase
         assertNull(data);
         data = buffer.getNextEntry(10L); // 10 msecs delay
         assertNull(data);
+    }
+
+    /*
+    /**********************************************************************
+    /* Actual test impls, streamy
+    /**********************************************************************
+     */
+
+    private void _testStreamyAppendAndGet(SegType aType) throws Exception
+    {
+        // will use segments of size 10 longs; only one segment per-allocator reuse
+        // and maximum allocation of 4 segments per-allocator
+        final MemBuffersForLongs bufs = createLongsBuffers(aType, 10, 1, 4);
+        // buffer will have similar limits
+        final StreamyLongsMemBuffer buffer = bufs.createStreamyBuffer(1, 3);
+
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+        // no content, beginning of buffer, all 30 longs available...
+        assertEquals(30, buffer.getMaximumAvailableSpace());
+        assertEquals(0, buffer.available());
+
+        long[] b = new long[4];
+        assertEquals(0, buffer.readIfAvailable(b));
+        
+        long[] chunk3 = buildLongsChunk(3);
+        buffer.append(chunk3);
+        assertEquals(1, buffer.getSegmentCount());
+        assertEquals(3, buffer.getTotalPayloadLength());
+        assertEquals(27, buffer.getMaximumAvailableSpace());
+
+        // and then let's just read it off
+        assertEquals(3, buffer.read(b));
+        verifyChunkPrefix(b, chunk3.length);
+
+        // no more data; but not all is freed either
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertEquals(27, buffer.getMaximumAvailableSpace());
+        
+        // but then append two 7 long segments
+        long[] chunk7 = buildLongsChunk(7);
+        buffer.append(chunk7);
+        buffer.append(chunk7);
+        assertEquals(14, buffer.getTotalPayloadLength());
+
+        // and third one as well
+        buffer.append(chunk7);
+        assertEquals(21, buffer.getTotalPayloadLength());
+
+        // then read them all; first separately
+        b = new long[8];
+        assertEquals(7, buffer.read(b, 0, 7));
+        verifyChunkPrefix(b, 7);
+        assertEquals(14, buffer.getTotalPayloadLength());
+        // then rest as longer read
+        b = new long[100];
+        assertEquals(14, buffer.read(b));
+        verifyChunkPrefix(b, 0, 7);
+        verifyChunkPrefix(b, 7, 7);
+
+        // and now we should be empty...
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+        // including holding on to just one segment
+        assertEquals(1, buffer.getSegmentCount());
+
+        // and shouldn't find anything else, for now
+        assertEquals(0, buffer.readIfAvailable(b));
+    }
+
+    /**
+     * Unit test that verifies that read from empty buffer
+     * works but won't return any data
+     */
+    private void _testStreamyReadFromEmpty(SegType aType) throws Exception
+    {
+        final StreamyLongsMemBuffer buffer = createLongsBuffers(aType, 1000, 1, 100).createStreamyBuffer(1, 2);
+        
+        long[] b = new long[4];
+        // first, non-blocking version
+        assertEquals(0, buffer.readIfAvailable(b));
+        // then one with short timeout
+        assertEquals(0, buffer.read(10L, b, 0, b.length));
     }
 }

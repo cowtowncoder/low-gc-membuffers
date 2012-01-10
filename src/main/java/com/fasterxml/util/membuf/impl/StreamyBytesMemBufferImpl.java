@@ -210,6 +210,9 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         if (_head == null) {
             _reportClosed();
         }
+        if (length < 1) {
+            return 0;
+        }
         // first: must have something to return
         while (_totalPayloadLength == 0L) {
             _waitForData();
@@ -276,12 +279,13 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         }
         // otherwise need to do segmented read...
         String error = null;
+        int remaining = length;
         while (true) {
-            int actual = _tail.tryRead(buffer, offset, length);
+            int actual = _tail.tryRead(buffer, offset, remaining);
             _totalPayloadLength -= actual;
             offset += actual;
-            length -= actual;
-            if (length == 0) { // complete, can leave
+            remaining -= actual;
+            if (remaining == 0) { // complete, can leave
                 break;
             }
             error = _freeReadSegment(error);

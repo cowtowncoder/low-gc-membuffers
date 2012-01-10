@@ -16,6 +16,12 @@ public abstract class MembufTestBase extends TestCase
         BYTE_ARRAY;
     }
 
+    /*
+    /**********************************************************************
+    /* Factory methods
+    /**********************************************************************
+     */
+    
     protected MemBuffersForBytes createBytesBuffers(SegType a, int segLen, int minSegs, int maxSegs)
     {
         SegmentAllocator<BytesSegment> all;
@@ -71,6 +77,17 @@ public abstract class MembufTestBase extends TestCase
         }
         return result;
     }
+
+    /*
+    /**********************************************************************
+    /* Data chunk verification
+    /**********************************************************************
+     */
+    
+    public void verifyChunk(byte[] chunk)
+    {
+        verifyChunkPrefix(chunk, chunk.length);
+    }
     
     public void verifyChunk(byte[] chunk, int expLength)
     {
@@ -80,21 +97,19 @@ public abstract class MembufTestBase extends TestCase
         verifyChunk(chunk);
     }
 
-    public void verifyChunk(long[] chunk, int expLength)
+    public void verifyChunkPrefix(byte[] chunk, int prefixLength)
     {
-        if (chunk.length != expLength) {
-            fail("Failure for block: length is "+chunk.length+", expected "+expLength);
-        }
-        verifyChunk(chunk);
+        verifyChunkPrefix(chunk, 0, prefixLength);
     }
-    
-    public void verifyChunk(byte[] chunk)
+
+    public void verifyChunkPrefix(byte[] chunk, int offset, int prefixLength)
     {
-        for (int i = 0, length = chunk.length; i < length; ++i) {
-            int act = chunk[i] & 0xFF;
+        for (int i = 0; i < prefixLength; ++i) {
+            int index = offset+i;
+            int act = chunk[index] & 0xFF;
             int exp = i & 0xFF;
             if (act != exp) {
-                fail("Failure for block of length "+length+"; byte #"+i+" not 0x"+Integer.toHexString(exp)
+                fail("Failure for block of length "+prefixLength+"; byte #"+index+" not 0x"+Integer.toHexString(exp)
                         +" as expected but 0x"+Integer.toHexString(act));
             }
         }
@@ -102,15 +117,40 @@ public abstract class MembufTestBase extends TestCase
 
     public void verifyChunk(long[] chunk)
     {
-        for (int i = 0, length = chunk.length; i < length; ++i) {
-            long act = chunk[i];
+        verifyChunkPrefix(chunk, chunk.length);
+    }
+    
+    public void verifyChunk(long[] chunk, int expLength)
+    {
+        if (chunk.length != expLength) {
+            fail("Failure for block: length is "+chunk.length+", expected "+expLength);
+        }
+        verifyChunk(chunk);
+    }
+
+    public void verifyChunkPrefix(long[] chunk, int prefixLength)
+    {
+        verifyChunkPrefix(chunk, 0, prefixLength);
+    }
+
+    public void verifyChunkPrefix(long[] chunk, int offset, int prefixLength)
+    {
+        for (int i = 0; i < prefixLength; ++i) {
+            int index = offset+i;
+            long act = chunk[index];
             long exp = i;
             if (act != exp) {
-                fail("Failure for block of length "+length+"; byte #"+i+" not 0x"+Long.toHexString(exp)
+                fail("Failure for block of length "+prefixLength+"; long #"+index+" not 0x"+Long.toHexString(exp)
                         +" as expected but 0x"+Long.toHexString(act));
             }
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Verifying exceptions
+    /**********************************************************************
+     */
     
     protected void verifyException(Throwable e, String... matches)
     {

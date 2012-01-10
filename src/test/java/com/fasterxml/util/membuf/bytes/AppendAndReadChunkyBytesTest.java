@@ -6,18 +6,18 @@ import com.fasterxml.util.membuf.*;
 
 public class AppendAndReadChunkyBytesTest extends MembufTestBase
 {
-    public void testSimpleAppendAndGet() throws Exception
+    public void testChunkyAppendAndGet() throws Exception
     {
-        _testSimpleAppendAndGet(SegType.BYTE_BUFFER_DIRECT);
-        _testSimpleAppendAndGet(SegType.BYTE_BUFFER_FAKE);
-        _testSimpleAppendAndGet(SegType.BYTE_ARRAY);
+        _testChunkyAppendAndGet(SegType.BYTE_BUFFER_DIRECT);
+        _testChunkyAppendAndGet(SegType.BYTE_BUFFER_FAKE);
+        _testChunkyAppendAndGet(SegType.BYTE_ARRAY);
     }
 
-    public void testSimpleAppendAndRead() throws Exception
+    public void testChunkyAppendAndRead() throws Exception
     {
-        _testSimpleAppendAndRead(SegType.BYTE_BUFFER_DIRECT);
-        _testSimpleAppendAndRead(SegType.BYTE_BUFFER_FAKE);
-        _testSimpleAppendAndRead(SegType.BYTE_ARRAY);
+        _testChunkyAppendAndRead(SegType.BYTE_BUFFER_DIRECT);
+        _testChunkyAppendAndRead(SegType.BYTE_BUFFER_FAKE);
+        _testChunkyAppendAndRead(SegType.BYTE_ARRAY);
     }    
 
     public void testEmptySegments() throws Exception
@@ -27,20 +27,37 @@ public class AppendAndReadChunkyBytesTest extends MembufTestBase
         _testEmptySegments(SegType.BYTE_ARRAY);
     }
 
-    public void testTryReadFromEmpty() throws Exception
+    public void testChunkyReadFromEmpty() throws Exception
     {
-        _testTryReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
-        _testTryReadFromEmpty(SegType.BYTE_BUFFER_FAKE);
-        _testTryReadFromEmpty(SegType.BYTE_ARRAY);
-    }    
+        _testChunkyReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
+        _testChunkyReadFromEmpty(SegType.BYTE_BUFFER_FAKE);
+        _testChunkyReadFromEmpty(SegType.BYTE_ARRAY);
+    }
+
+    // And similarly for streamy buffer; note that not all are applicable
+    // (no empty segments; another test is redundant)
+
+    public void testStreamyAppendAndGet() throws Exception
+    {
+        _testStreamyAppendAndGet(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyAppendAndGet(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyAppendAndGet(SegType.BYTE_ARRAY);
+    }
+
+    public void testStreamyReadFromEmpty() throws Exception
+    {
+        _testStreamyReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyReadFromEmpty(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyReadFromEmpty(SegType.BYTE_ARRAY);
+    }
     
     /*
     /**********************************************************************
-    /* Actual test impls
+    /* Actual test impls, chunky
     /**********************************************************************
      */
 
-    private void _testSimpleAppendAndGet(SegType aType) throws Exception
+    private void _testChunkyAppendAndGet(SegType aType) throws Exception
     {
         // will use segments of size 10 bytes; only one segment per-allocator reuse
         // and maximum allocation of 4 segments per-allocator
@@ -107,7 +124,7 @@ public class AppendAndReadChunkyBytesTest extends MembufTestBase
     }
 
     // Test 'read' methods (where called hands buffer to use)
-    private void _testSimpleAppendAndRead(SegType aType) throws Exception
+    private void _testChunkyAppendAndRead(SegType aType) throws Exception
     {
         final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
         final ChunkyBytesMemBuffer buffer = bufs.createChunkyBuffer(1, 3);
@@ -125,7 +142,7 @@ public class AppendAndReadChunkyBytesTest extends MembufTestBase
         assertEquals(2, buffer.getTotalPayloadLength());
         assertFalse(buffer.isEmpty());
 
-        // and try read; first with unsufficient buffer
+        // and try read; first with insufficient buffer
         assertEquals(-2, buffer.readNextEntryIfAvailable(new byte[1], 0));
         byte[] result = new byte[2];
         assertEquals(-2, buffer.readNextEntryIfAvailable(result, 1));
@@ -185,7 +202,7 @@ public class AppendAndReadChunkyBytesTest extends MembufTestBase
      * Unit test that verifies that read from empty buffer
      * would block; use timeout as verification
      */
-    private void _testTryReadFromEmpty(SegType aType) throws Exception
+    private void _testChunkyReadFromEmpty(SegType aType) throws Exception
     {
         final ChunkyBytesMemBuffer buffer = createBytesBuffers(aType, 1000, 1, 100).createChunkyBuffer(1, 2);
         
@@ -193,5 +210,88 @@ public class AppendAndReadChunkyBytesTest extends MembufTestBase
         assertNull(data);
         data = buffer.getNextEntry(10L); // 10 msecs delay
         assertNull(data);
+    }
+
+    /*
+    /**********************************************************************
+    /* Actual test impls, streamy
+    /**********************************************************************
+     */
+
+    private void _testStreamyAppendAndGet(SegType aType) throws Exception
+    {
+        // will use segments of size 10 bytes; only one segment per-allocator reuse
+        // and maximum allocation of 4 segments per-allocator
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
+        // buffer will have similar limits
+        final StreamyBytesMemBuffer buffer = bufs.createStreamyBuffer(1, 3);
+
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+        // no content, beginning of buffer, all 30 bytes available...
+        assertEquals(30, buffer.getMaximumAvailableSpace());
+        assertEquals(0, buffer.available());
+
+        byte[] b = new byte[4];
+        assertEquals(0, buffer.readIfAvailable(b));
+        
+        byte[] chunk3 = buildBytesChunk(3);
+        buffer.append(chunk3);
+        assertEquals(1, buffer.getSegmentCount());
+        assertEquals(3, buffer.getTotalPayloadLength());
+        assertEquals(27, buffer.getMaximumAvailableSpace());
+
+        // and then let's just read it off
+        assertEquals(3, buffer.read(b));
+        verifyChunkPrefix(b, chunk3.length);
+
+        // no more data; but not all is freed either
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertEquals(27, buffer.getMaximumAvailableSpace());
+        
+        // but then append two 7 byte segments
+        byte[] chunk7 = buildBytesChunk(7);
+        buffer.append(chunk7);
+        buffer.append(chunk7);
+        assertEquals(14, buffer.getTotalPayloadLength());
+
+        // and third one as well
+        buffer.append(chunk7);
+        assertEquals(21, buffer.getTotalPayloadLength());
+
+        // then read them all; first separately
+        b = new byte[8];
+        assertEquals(7, buffer.read(b, 0, 7));
+        verifyChunkPrefix(b, 7);
+        assertEquals(14, buffer.getTotalPayloadLength());
+        // then rest as longer read
+        b = new byte[100];
+        assertEquals(14, buffer.read(b));
+        verifyChunkPrefix(b, 0, 7);
+        verifyChunkPrefix(b, 7, 7);
+
+        // and now we should be empty...
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+        // including holding on to just one segment
+        assertEquals(1, buffer.getSegmentCount());
+
+        // and shouldn't find anything else, for now
+        assertEquals(0, buffer.readIfAvailable(b));
+    }
+
+    /**
+     * Unit test that verifies that read from empty buffer
+     * works but won't return any data
+     */
+    private void _testStreamyReadFromEmpty(SegType aType) throws Exception
+    {
+        final StreamyBytesMemBuffer buffer = createBytesBuffers(aType, 1000, 1, 100).createStreamyBuffer(1, 2);
+        
+        byte[] b = new byte[4];
+        // first, non-blocking version
+        assertEquals(0, buffer.readIfAvailable(b));
+        // then one with short timeout
+        assertEquals(0, buffer.read(10L, b, 0, b.length));
     }
 }

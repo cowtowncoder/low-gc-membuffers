@@ -53,7 +53,7 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
 
     @Override
     public synchronized boolean isEmpty() {
-        return _totalPayloadLength > 0L;
+        return _totalPayloadLength == 0L;
     }
 
     @Override
@@ -175,7 +175,7 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
      */
     
     @Override
-    public long read() throws InterruptedException
+    public synchronized long read() throws InterruptedException
     {
         if (_head == null) {
             _reportClosed();
@@ -194,10 +194,13 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
     }
 
     @Override
-    public int read(long[] buffer, int offset, int length) throws InterruptedException
+    public synchronized int read(long[] buffer, int offset, int length) throws InterruptedException
     {
         if (_head == null) {
             _reportClosed();
+        }
+        if (length < 1) {
+            return 0;
         }
         // first: must have something to return
         while (_totalPayloadLength == 0L) {
@@ -207,7 +210,7 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
     }
 
     @Override
-    public int readIfAvailable(long[] buffer, int offset, int length)
+    public synchronized int readIfAvailable(long[] buffer, int offset, int length)
     {
         if (_head == null) {
             _reportClosed();
@@ -219,7 +222,7 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
     }
 
     @Override
-    public int read(long timeoutMsecs, long[] buffer, int offset, int length)
+    public synchronized int read(long timeoutMsecs, long[] buffer, int offset, int length)
             throws InterruptedException
     {
         if (_head == null) {
@@ -266,12 +269,13 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
         }
         // otherwise need to do segmented read...
         String error = null;
+        int remaining = length;
         while (true) {
-            int actual = _tail.tryRead(buffer, offset, length);
+            int actual = _tail.tryRead(buffer, offset, remaining);
             _totalPayloadLength -= actual;
             offset += actual;
-            length -= actual;
-            if (length == 0) { // complete, can leave
+            remaining -= actual;
+            if (remaining == 0) { // complete, can leave
                 break;
             }
             error = _freeReadSegment(error);
