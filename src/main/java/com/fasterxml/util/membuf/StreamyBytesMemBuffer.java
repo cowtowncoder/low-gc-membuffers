@@ -104,6 +104,10 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
      */
     public abstract int read(byte[] buffer, int offset, int length) throws InterruptedException;
 
+    public final int read(byte[] buffer) throws InterruptedException {
+        return read(buffer, 0, buffer.length);
+    }
+    
     /**
      * Method for reading and removing up to specified number of values from buffer
      * and return length of data read.

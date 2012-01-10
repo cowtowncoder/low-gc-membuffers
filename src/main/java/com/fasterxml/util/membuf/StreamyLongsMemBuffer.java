@@ -104,6 +104,10 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
      */
     public abstract int read(long[] buffer, int offset, int length) throws InterruptedException;
 
+    public final int read(long[] buffer) throws InterruptedException {
+        return read(buffer, 0, buffer.length);
+    }
+    
     /**
      * Method for reading and removing up to specified number of values from buffer
      * and return length of data read.

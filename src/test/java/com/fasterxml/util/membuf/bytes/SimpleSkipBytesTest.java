@@ -1,11 +1,12 @@
 package com.fasterxml.util.membuf.bytes;
 
 import com.fasterxml.util.membuf.ChunkyBytesMemBuffer;
+import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
 import com.fasterxml.util.membuf.MembufTestBase;
 
-public class SimpleSkipTest extends MembufTestBase
+public class SimpleSkipBytesTest extends MembufTestBase
 {
-    public void testSimpleSkips() throws Exception
+    public void testChunkySkips() throws Exception
     {
         _testChunkySkips(SegType.BYTE_BUFFER_DIRECT);
         _testChunkySkips(SegType.BYTE_BUFFER_FAKE);
@@ -26,6 +27,29 @@ public class SimpleSkipTest extends MembufTestBase
         _testChunkyLongerSkip(SegType.BYTE_ARRAY);
     }
 
+    // "Streamy" tests
+    
+    public void testStreamySkips() throws Exception
+    {
+        _testStreamySkips(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamySkips(SegType.BYTE_BUFFER_FAKE);
+        _testStreamySkips(SegType.BYTE_ARRAY);
+    }
+    
+    public void testStreamySkipAndRead() throws Exception
+    {
+        _testStreamySkipAndRead(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamySkipAndRead(SegType.BYTE_BUFFER_FAKE);
+        _testStreamySkipAndRead(SegType.BYTE_ARRAY);
+    }
+
+    public void testStreamyLongerSkip() throws Exception
+    {
+        _testStreamyLongerSkip(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyLongerSkip(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyLongerSkip(SegType.BYTE_ARRAY);
+    }
+    
     /*
     /**********************************************************************
     /* Actual test impls for chunky buffers
@@ -101,4 +125,60 @@ public class SimpleSkipTest extends MembufTestBase
     /* Actual test impls for streamy buffers
     /**********************************************************************
      */
+
+    private void _testStreamySkips(SegType aType) throws Exception
+    {
+        final StreamyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createStreamyBuffer(1, 3);
+
+        // append bytes in 5 pieces
+        for (int i = 5; i >= 0; --i) {
+            buffer.append(new byte[i]);
+        }
+        assertEquals(15, buffer.getTotalPayloadLength());
+        assertFalse(buffer.isEmpty());
+
+        // then skip all of it, in different order
+        int left = 15;
+        for (int i = 0; i <= 5; ++i) {
+            assertEquals(i, buffer.skip(i));
+            left -= i;
+            assertEquals(left, buffer.getTotalPayloadLength());
+        }
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+
+        // and when empty, nothing more:
+        assertEquals(0, buffer.skip(100));
+        assertTrue(buffer.isEmpty());
+    }
+
+    private void _testStreamySkipAndRead(SegType aType) throws Exception
+    {
+        final StreamyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createStreamyBuffer(1, 3);
+
+        for (int i = 5; i > 0; --i) { // 5, 4, 3, 2, 1 segments
+            buffer.append(new byte[i]);
+        }
+        assertEquals(15, buffer.getTotalPayloadLength());
+        assertFalse(buffer.isEmpty());
+
+        // then skip all of it
+        assertEquals(5, buffer.skip(5));
+        byte[] b = new byte[4];
+        assertEquals(4, buffer.read(b));
+        assertEquals(6, buffer.getTotalPayloadLength());
+        assertEquals(6, buffer.skip(100));
+        assertEquals(0, buffer.skip(100));
+        assertTrue(buffer.isEmpty());
+    }
+
+    // Test to verify that skip works across buffer boundaries
+    private void _testStreamyLongerSkip(SegType aType) throws Exception
+    {
+        final StreamyBytesMemBuffer buffer = createBytesBuffers(aType, 10, 1, 4).createStreamyBuffer(1, 3);
+        buffer.append(new byte[30]);
+        assertEquals(30, buffer.skip(32));
+        assertEquals(0, buffer.skip(1));
+        assertTrue(buffer.isEmpty());
+    }
 }

@@ -59,7 +59,7 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
 
     @Override
     public synchronized boolean isEmpty() {
-        return _totalPayloadLength > 0L;
+        return _totalPayloadLength == 0L;
     }
 
     @Override
