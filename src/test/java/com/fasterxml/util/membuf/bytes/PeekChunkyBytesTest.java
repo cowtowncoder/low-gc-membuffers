@@ -6,7 +6,8 @@ import com.fasterxml.util.membuf.ChunkyBytesMemBuffer;
 import com.fasterxml.util.membuf.MembufTestBase;
 
 /**
- * Test for peeking contets of a chunky buffer.
+ * Test for peeking contents of a chunky byte-valued buffer.
+ * Note: no matching functionality for streamy buffers
  */
 public class PeekChunkyBytesTest extends MembufTestBase
 {

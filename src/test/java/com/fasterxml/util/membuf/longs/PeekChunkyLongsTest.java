@@ -4,6 +4,10 @@ import org.junit.Assert;
 
 import com.fasterxml.util.membuf.*;
 
+/**
+ * Test for peeking contents of a chunky long-valued buffer.
+ * Note: no matching functionality for streamy buffers
+ */
 public class PeekChunkyLongsTest extends MembufTestBase
 {
    public void testSimplePeeks() throws Exception
