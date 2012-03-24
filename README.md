@@ -1,18 +1,19 @@
 # Overview
 
-This project aims at creating a simple efficient building block for "Big Data" libraries, applications and frameworks; thing that can be used as an in-memory, bounded queue with opaque values (sequence of JDK primitive values): insertions at tail, removal from head, single entry peeks), and that has minimal garbage collection overhead. Insertions and removals are using entries, which are sub-sequences of the full buffer.
+This project aims at creating a simple efficient building block for "Big Data" libraries, applications and frameworks; thing that can be used as an in-memory, bounded queue with opaque values (sequence of JDK primitive values): insertions at tail, removal from head, single entry peeks), and that has minimal garbage collection overhead. Insertions and removals are as individual entries, which are sub-sequences of the full buffer.
 
 GC overhead minimization is achieved by use of direct `ByteBuffer`s (memory allocated outside of GC-prone heap); and bounded nature by only supporting storage of simple primitive value (`byte`, `long') sequences where size is explicitly known.
 
-Conceptually memory buffers are just simple circular buffers (ring buffers) that holds a sequence of primitive values, bit like arrays, but in a way that allows dynamic automatic resizings of the underlying storage.
-Kibrary supports efficient reusing and sharing of underlying segments for sets of buffers, although for many use cases a single buffer suffices.
+Conceptually memory buffers are just simple circular buffers (ring buffers) that hold a sequence of primitive values, bit like arrays, but in a way that allows dynamic automatic resizings of the underlying storage.
+Library supports efficient reusing and sharing of underlying segments for sets of buffers, although for many use cases a single buffer suffices.
 
-There are two dimensions in which buffers vary:
+Buffers vary in two dimensions:
 
 1. Type of primitive value contained: currently `byte` and `long` variants are implemente, but others (like `int` or `char`) will be easy to add as needed
 2. Whether sequences are "chunky" -- sequences consists of 'chunks' created by distinct `appendEntry()` calls (and retrieved in exactly same sized chunks with `getNextEntry()`) -- or "streamy", meaning that values are coalesced and form a logical stream (so multiple `appendEntry()` calls may be coalesced into just one entry returned by `getNextEntry()`).
 
-Since Java has no support for "generic primitives", there are separate classes for all combinations: currently meaning there are 4 flavors of buffers:
+Since Java has no support for "generic primitives", there are separate classes for all combinations.
+This means that there are currently 4 flavors of buffers:
 
 * for `byte` (using `MemBuffersForBytes`)
 ** `ChunkyBytesMemBuffer` (from `Chunky
@@ -24,10 +25,12 @@ Since Java has no support for "generic primitives", there are separate classes f
 ## Fancier stuff: multiple buffers
 
 Although having individual buffers is useful as is, this is just the beginning.
-Library defines "buffer groups", owned by a factory (like `MemBuffersForBytes`): each group consists of zero or more actual buffers (like `ChunkyBytesMemBuffer`).
-All buffers of a group share the same segment allocator (`com.fasterxml.util.membuf.SegmentAllocator`); which makes it possible to share set of reusable underlying `ByteBuffer` instances.
+Conceptually library supports "buffer groups", sets of similary-valued buffer instances owned by a single factory (like `MemBuffersForBytes`) that share same segment allocator (`com.fasterxml.util.membuf.SegmentAllocator`).
+This makes it possible to share set of reusable underlying `ByteBuffer` instances for buffers in the same group.
 
 This ability to share underlying segments between buffers, with strict memory bounds makes it possible to use library as basic buffer manager; for example to buffer input and/or output of a web server (byte-based "streamy" buffers), or as simplistic event queues (usually using "chunky" buffers).
+
+To have multiple buffer groups simply construct multiple factory instances.
 
 ## Thread-safety
 
