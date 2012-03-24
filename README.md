@@ -4,7 +4,22 @@ This project aims at creating a simple efficient building block for "Big Data" l
 
 GC overhead minimization is achieved by use of direct ByteBuffers (memory allocated outside of GC-prone heap); and bounded nature by only supporting storage of simple byte sequences where size is explicitly known.
 
-Conceptually memory buffers are just simple circular buffers (ring buffers); library supports efficient reusing and sharing of underlying segments for sets of buffers, although for many use cases single buffer suffices.
+Conceptually memory buffers are just simple circular buffers (ring buffers) that holds a sequence of primitive values, bit like arrays, but in a way that allows dynamic automatic resizings of the underlying storage.
+Kibrary supports efficient reusing and sharing of underlying segments for sets of buffers, although for many use cases a single buffer suffices.
+
+There are two dimensions in which buffers vary:
+
+1. Type of primitive value contained: currently `byte` and `long` variants are implemente, but others (like `int` or `char`) will be easy to add as needed
+2. Whether sequences are "chunky" -- sequences consists of 'chunks' created by distinct `appendEntry()` calls (and retrieved in exactly same sized chunks with `getNextEntry()`) -- or "streamy", meaning that values are coalesced and form a logical stream (so multiple `appendEntry()` calls may be coalesced into just one entry returned by `getNextEntry()`).
+
+Since Java has no support for "generic primitives", there are separate classes for all combinations: currently meaning there are 4 flavors of buffers:
+
+* for `byte` (using `MemBuffersForBytes`)
+** `ChunkyBytesMemBuffer` (from `Chunky
+** `StreamyBytesMemBuffer`
+* for `long` (using `MemBuffersForLongs`)
+** `ChunkyLongsMemBuffer`
+** `StreamyLongsMemBuffer`
 
 ## Fancier stuff: multiple buffers
 
@@ -18,7 +33,8 @@ All pieces are designed to be used by multiple threads (often just 2, producer/c
 
 In addition, locking is done using buffer instances, so it may occasionally make sense to synchronize on buffer instance since this allows you to create atomic sequences of operations, like so:
 
-    MemBuffer buffer = ...
+    MemBuffersForBytes factory = new MemBuffersForBytes(...);
+    ChunkyBytesMemBuffer buffer = factory.createChunkyBuffer(...);
     synchronized (buffer) {
       // read latest, add right back:
       byte[] msg = buffer.getNextEntry();
@@ -29,15 +45,27 @@ or similarly if you need to read a sequence of entries as atomic unit.
 
 # Status
 
-A set of unit tests exist, and code appears solid enough to start building test systems. But be careful to fully evaluate the library before using at as component before 1.0 release.
+Project has been used for couple of production systems for months,
+and by now has proven stable and performant for expected use cases.
+
+One publicly accessible project that uses it is [Arecibo](https://github.com/ning/Arecibo),
+a metrics collection, aggregation and visualization.
+
+The usual caveat still applies: given that project is in its pre-1.0 stage,
+you should carefully evaluate functionality before using it for
+production systems.
 
 # Usage
 
-## Start with `MemBuffers` factory
+## Start with a factory
 
-It all starts with `MemBuffers`, which can be viewed as container and factory of actual buffers (`MemBuffer`). To construct one, you need to specify amount of memory to use, as well as how memory should be sliced: so, for example:
+Exact factory to use depends on value type: here we assume you are looking
+for byte-based buffers. If so, you will use `MemBuffersForBytes`.
+This object can be viewed as container and factory of actual buffers
+(`ChunkyBytesMemBuffer` or `StreamyBytesMemBuffer`).
+To construct one, you need to specify amount of memory to use, as well as how memory should be sliced: so, for example:
 
-    MemBuffers bufs = new MemBuffers(30 * 1024, 2, 11);
+    MemBuffersForBytes factory = new MemBuffersForBytes(30 * 1024, 2, 11);
 
 would create instance that allocates at least 2 (and at most 11) segments (which wrap direct `ByteBuffer` instances) with size of 30 kB: that is, has memory usage between 60 and 330 kilobytes.
 The segments are then used by actual buffer instances (more on this in a bit)
