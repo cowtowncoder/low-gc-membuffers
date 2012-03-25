@@ -83,9 +83,10 @@ Note that you can create multiple instances of `MemBuffers`, if you want to have
 
 Actual buffers are then allocated using
 
-    MemBuffer items = bufs.createBuffer(2, 5);
+    ChunkyBytesMemBuffer items = bufs.createChunkyBuffer(2, 5);
 
-which would indicate that this buffer will hold on to at least 2 segments (i.e. about 60kB raw storage) and use at most 5 (so max usage of 150kB). Due to circular buffer style of allocation, at least 'segments - 1' amount of memory will be available for actual queue (i.e. guaranteed space of 120kB; that is, up to one segment may be temporarily unavailable depending on pattern of append/remove operations.
+which would indicate that this buffer will hold on to at least 2 segments (i.e. about 60kB raw storage) and use at most 5 (so max usage of 150kB).
+Due to circular buffer style of allocation, at least 'segments - 1' amount of memory will be available for actual queue (i.e. guaranteed space of 120kB; that is, up to one segment may be temporarily unavailable depending on pattern of append/remove operations.
 
 ## And start buffering/unbuffering
 
@@ -116,7 +117,7 @@ and to pop entries:
 Finally, you can also obtain various statistics of buffer instances:
 
     int entries = items.getEntryCount(); // how many available for getting?
-    int segmentsInUse = items.getSegmentCount();
+    int segmentsInUse = items.getSegmentCount(); // nr of internal segments
     long maxFree = items.getMaximumAvailableSpace(); // approximate free space
     long payload = items.getTotalPayloadLength(); // how much used by data?
 
@@ -132,4 +133,3 @@ To increase this setting, add setting like:
     -XX:MaxDirectMemorySize=512m
 
 otherwise you are likely to hit an OutOfMemoryError when using larger buffers.
-
