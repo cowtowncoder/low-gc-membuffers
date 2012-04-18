@@ -16,11 +16,11 @@ Since Java has no support for "generic primitives", there are separate classes f
 This means that there are currently 4 flavors of buffers:
 
 * for `byte` (using `MemBuffersForBytes`)
-** `ChunkyBytesMemBuffer` (from `Chunky
-** `StreamyBytesMemBuffer`
+ * `ChunkyBytesMemBuffer` (from `Chunky
+ * `StreamyBytesMemBuffer`
 * for `long` (using `MemBuffersForLongs`)
-** `ChunkyLongsMemBuffer`
-** `StreamyLongsMemBuffer`
+ * `ChunkyLongsMemBuffer`
+ * `StreamyLongsMemBuffer`
 
 ## Fancier stuff: multiple buffers
 
