@@ -1,0 +1,6 @@
+Project: low-gc-membuffers
+
+0.9.0 (10-Jan-2012):
+
+#13: Support "long" valued buffers in addition to byte-based buffers.
+ (suggested by Sam Pullara)
