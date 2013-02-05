@@ -22,6 +22,10 @@ This means that there are currently 4 flavors of buffers:
  * `ChunkyLongsMemBuffer`
  * `StreamyLongsMemBuffer`
 
+## Licensing
+
+Standard [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html) license.
+
 ## Fancier stuff: multiple buffers
 
 Although having individual buffers is useful as is, this is just the beginning.
