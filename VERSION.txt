@@ -1,4 +1,9 @@
 Project: low-gc-membuffers
+Version: 0.9.1 (xx-xxx-2013)
+
+Changes:
+
+- Add 'SegmentAllocator.getMaxSegmentCount()' diagnostics method
 
 0.9.0 (10-Jan-2012):
 

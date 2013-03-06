@@ -17,7 +17,10 @@ public abstract class SegmentAllocator<T extends Segment<T>>
     /* Configuration
     /**********************************************************************
      */
-    
+
+	/**
+	 * Length of segments to allocate.
+	 */
     protected final int _segmentSize;
 
     /**
@@ -94,11 +97,35 @@ public abstract class SegmentAllocator<T extends Segment<T>>
     /**********************************************************************
      */
 
+    /**
+     * Accessor for length of individual segments that allocator will
+     * allocate; length measured in units of backing primitive datatype.
+     * 
+     * @return Length of segments in units of allocation (bytes, ints, longs etc)
+     */
     public final int getSegmentSize() { return _segmentSize; }
 
     // Used by unit tests
+
+    /**
+     * Accessor for number of segments that allocator is holding on to locally,
+     * after being released by buffers.
+     */
     public final int getReusableSegmentCount() { return _reusableSegmentCount; }
+
+    /**
+     * Accessor for number of segments that have been allocated by buffers but
+     * not released to allocator.
+     */
     public final int getBufferOwnedSegmentCount() { return _bufferOwnedSegmentCount; }
+
+    /**
+     * Accessor for checking maximum number of segments that allocator is allowed
+     * to allocate for buffers.
+     *
+     * @since 0.9.1
+     */
+    public final int getMaxSegmentCount() { return _maxSegmentsToAllocate; }
     
     /**
      * Method that will try to allocate specified number of segments
