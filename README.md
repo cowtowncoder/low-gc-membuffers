@@ -16,11 +16,13 @@ Since Java has no support for "generic primitives", there are separate classes f
 This means that there are currently 4 flavors of buffers:
 
 * for `byte` (using `MemBuffersForBytes`)
- * `ChunkyBytesMemBuffer` (from `Chunky
+ * `ChunkyBytesMemBuffer`
  * `StreamyBytesMemBuffer`
 * for `long` (using `MemBuffersForLongs`)
  * `ChunkyLongsMemBuffer`
  * `StreamyLongsMemBuffer`
+
+Another thing that can vary is the way underlying segments are allocated; default is to use native ("direct") `ByteBuffer`s. But more on this later on.
 
 ## Licensing
 
@@ -82,6 +84,27 @@ The segments are then used by actual buffer instances (more on this in a bit)
 So how do you choose parameters? Smaller the segments, more granular is memory allocation, which can mean more efficient memory use (since overhead is bounded to at most 1 segment-full per active buffer). But it also increases number of segment instances, possibly increasing fragmentation and adding overhead.
 
 Note that you can create multiple instances of `MemBuffers`, if you want to have more control over how pool of segments is allocated amongst individual buffers.
+
+### Detour: allocating underlying storage segments
+
+By default segments are allocated as `ByteBuffer`s (or typed sub-types for `long`s and so on). But this behavior can be changed by passing alternate
+`SegmentAllocator` instances.
+
+For example, if you instead wanted to use in-heap segments stored as basic
+byte arrays (`byte[]`), you could do this by:
+
+    MemBuffersForBytes factory = new MemBuffersForBytes(
+      ArrayBytesSegment.allocator(30 * 1024, 2, 11));
+
+or to use non-direct `ByteBuffer`s:
+
+    MemBuffersForBytes factory = new MemBuffersForBytes(
+      ByteBufferBytesSegment.allocator(30 * 1024, 2, 11, false));
+
+Note that `SegmentAllocator` instances are implemented as inner classes of
+matching segment type, that is as `ArrayBytesSegment.Allocator` and
+`ByteBufferBytesSegment.Allocator`.
+
 
 ## Create individual buffers, `MemBuffer`
 
