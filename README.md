@@ -83,7 +83,7 @@ The segments are then used by actual buffer instances (more on this in a bit)
 
 So how do you choose parameters? Smaller the segments, more granular is memory allocation, which can mean more efficient memory use (since overhead is bounded to at most 1 segment-full per active buffer). But it also increases number of segment instances, possibly increasing fragmentation and adding overhead.
 
-Note that you can create multiple instances of `MemBuffers`, if you want to have more control over how pool of segments is allocated amongst individual buffers.
+Note that you can create multiple instances of `MemBuffers[Type]` factories, if you want to have more control over how pool of segments is allocated amongst individual buffers.
 
 ### Detour: allocating underlying storage segments
 
@@ -105,6 +105,8 @@ Note that `SegmentAllocator` instances are implemented as inner classes of
 matching segment type, that is as `ArrayBytesSegment.Allocator` and
 `ByteBufferBytesSegment.Allocator`.
 
+Also note that neither `Allocator`s nor `MemBuffers` keep track of underlying
+segments. What this means it that buffers MUST be closed (explicitly, or indirectly by using wrappers) to make sure segments are released for reuse.
 
 ## Create individual buffers, `MemBuffer`
 
@@ -138,6 +140,13 @@ and to pop entries:
     }
     // or:
     next = items.getNextEntry(1000L); // block for at most 1 second before giving up
+
+## And make sure that...
+
+You '''always close buffers''' when you are done with them -- otherwise underlying segments may be leaked. This because buffers are only objects that keep track of segments; and nothing keeps track of `MemBuffer` instances created -- this is intentional, as synchronization otherwise needed is very expensive from concurrency perspective.
+
+Note that version 0.9.1 allows use of `MemBufferDecorator` instances, which makes it possible to build wrappers that can implement simple auto-closing of buffers.
+
 
 ## Statistics, anyone?
 
