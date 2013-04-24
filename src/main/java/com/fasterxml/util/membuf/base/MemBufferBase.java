@@ -160,7 +160,6 @@ public abstract class MemBufferBase<S extends Segment<S>>
         
         _readBlockedCount = src._readBlockedCount;
     }
-
     
     /*
     /**********************************************************************
