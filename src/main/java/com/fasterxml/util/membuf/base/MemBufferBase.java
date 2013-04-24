@@ -312,6 +312,7 @@ public abstract class MemBufferBase<S extends Segment<S>>
         S next = old.finishReading();
         --_usedSegmentsCount;
         _tail = next.initForReading();
+
         // how about freed segment? reuse?
         if ((_usedSegmentsCount + _freeSegmentCount) < _maxSegmentsForReuse) {
             if (_firstFreeSegment == null) {

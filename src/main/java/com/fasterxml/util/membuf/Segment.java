@@ -136,5 +136,4 @@ public abstract class Segment<S extends Segment<S>>
      * Method for trying to skip up to specified number of bytes.
      */
     public abstract int skip(int length);
-
 }
