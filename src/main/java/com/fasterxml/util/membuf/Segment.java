@@ -24,7 +24,7 @@ public abstract class Segment<S extends Segment<S>>
     /**
      * Enumeration listing usual states a segment can be in.
      */
-    protected enum State {
+    public enum State {
         /**
          * Initial state, as well as state when stored in various free segment
          * chains.
@@ -109,6 +109,14 @@ public abstract class Segment<S extends Segment<S>>
      * remaining segment needs to be cleared.
      */
     public abstract void clear();
+
+    /**
+     * Method that will forcibly mark segment as free; should only be called
+     * when releasing segment to an allocator.
+     * 
+     * @since 0.9.1
+     */
+    public abstract void markFree();
     
     /*
     /**********************************************************************
@@ -136,4 +144,12 @@ public abstract class Segment<S extends Segment<S>>
      * Method for trying to skip up to specified number of bytes.
      */
     public abstract int skip(int length);
+
+    /*
+    /**********************************************************************
+    /* Methods for debugging
+    /**********************************************************************
+     */
+
+    public abstract State state();
 }

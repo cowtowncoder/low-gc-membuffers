@@ -44,7 +44,9 @@ public abstract class SegmentBase<S extends Segment<S>>
     {
         _state = State.FREE;        
     }
-    
+
+    public final State state() { return _state; }
+
     /*
     /**********************************************************************
     /* Partial API implementation: state changes
@@ -55,7 +57,7 @@ public abstract class SegmentBase<S extends Segment<S>>
     public S initForWriting()
     {
         if (_state != State.FREE) {
-            throw new IllegalStateException("Trying to initForWriting segment, state "+_state);
+            throw new IllegalStateException("Trying to call initForWriting on segment with state "+_state);
         }
         _state = State.WRITING;
         return _this();
@@ -65,7 +67,7 @@ public abstract class SegmentBase<S extends Segment<S>>
     public S finishWriting()
     {
         if (_state != State.WRITING && _state != State.READING_AND_WRITING) {
-            throw new IllegalStateException("Trying to finishWriting segment, state "+_state);
+            throw new IllegalStateException("Trying to call finishWriting on segment with state "+_state);
         }
         _state = State.READING;
         // Let's not yet create wrapper buffer for reading until it is actually needed
@@ -80,7 +82,7 @@ public abstract class SegmentBase<S extends Segment<S>>
         } else if (_state == State.READING) { // writing already completed
             ; // state is fine as is
         } else {
-            throw new IllegalStateException("Trying to initForReading segment, state "+_state);
+            throw new IllegalStateException("Trying to call initForReading on segment with state "+_state);
         }
         return _this();
     }
@@ -89,7 +91,7 @@ public abstract class SegmentBase<S extends Segment<S>>
     public S finishReading()
     {
         if (_state != State.READING) {
-            throw new IllegalStateException("Trying to finishReading, state "+_state);
+            throw new IllegalStateException("Trying to call finishReading on segment with state "+_state);
         }
         _state = State.FREE;
         S result = _nextSegment;
@@ -110,7 +112,15 @@ public abstract class SegmentBase<S extends Segment<S>>
         // so that we can do same call sequence as when instances are created
         initForWriting();
         initForReading();
-        // so that state should now be READING_AND_WRITING
+    }
+
+    @Override
+    public final void markFree()
+    {
+        if (_nextSegment != null) {
+            throw new IllegalStateException("Calling markFree() with _nextSegment not null, state: "+_state);
+        }
+        _state = State.FREE;
     }
     
     /*

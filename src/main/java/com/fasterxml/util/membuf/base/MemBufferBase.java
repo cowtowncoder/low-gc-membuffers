@@ -247,6 +247,8 @@ public abstract class MemBufferBase<S extends Segment<S>>
         clear();
         // then free the head/tail node as well
         _usedSegmentsCount = 0;
+        // 24-Apr-2013, tatu: As per #16, must ensure proper cleaning
+        _head.markFree();
         _segmentAllocator.releaseSegment(_head);
         _head = _tail = null;
         // and any locally recycled buffers as well
@@ -331,6 +333,10 @@ public abstract class MemBufferBase<S extends Segment<S>>
                 ++_freeSegmentCount;
             }
         } else { // if no reuse, see if allocator can share
+            // 24-Apr-2013, tatu: As per #16, must ensure proper cleaning
+            // NOTE: not sure if it is required here; is when closing. But given
+            // severity of problem if encountered, better safe than sorry.
+            old.markFree();
             _segmentAllocator.releaseSegment(old);
         }
         return prevError;
