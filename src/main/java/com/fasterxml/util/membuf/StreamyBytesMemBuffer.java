@@ -18,6 +18,10 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
+    protected StreamyBytesMemBuffer(StreamyBytesMemBuffer src) {
+        super(src);
+    }
+
     /*
     /**********************************************************************
     /* Public API, write (append)

@@ -45,6 +45,10 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
+    protected StreamyLongsMemBufferImpl(StreamyLongsMemBuffer src) {
+        super(src);
+    }
+
     /*
     /**********************************************************************
     /* Public API, simple statistics (not data) accessors

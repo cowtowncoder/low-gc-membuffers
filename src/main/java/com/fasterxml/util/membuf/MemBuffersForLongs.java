@@ -43,11 +43,29 @@ public class MemBuffersForLongs extends MemBuffersBase<
         this(ByteBufferLongsSegment.allocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
-    public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator)
+    public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator) {
+        super(allocator, null, null);
+    }
+
+    public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator,
+            MemBufferDecorator<ChunkyLongsMemBuffer> chunkyDecorator,
+            MemBufferDecorator<StreamyLongsMemBuffer> streamyDecorator)
     {
-        super(allocator);
+        super(allocator, chunkyDecorator, streamyDecorator);
     }
     
+    public MemBuffersForLongs withAllocator(SegmentAllocator<LongsSegment> allocator) {
+        return new MemBuffersForLongs(allocator, _chunkyDecorator, _streamyDecorator); 
+    }
+
+    public MemBuffersForLongs withChunkyDecorator(MemBufferDecorator<ChunkyLongsMemBuffer> chunkyDecorator) {
+        return new MemBuffersForLongs(_segmentAllocator, chunkyDecorator, _streamyDecorator); 
+    }
+
+    public MemBuffersForLongs withStreamyDecorator(MemBufferDecorator<StreamyLongsMemBuffer> streamyDecorator) {
+        return new MemBuffersForLongs(_segmentAllocator, _chunkyDecorator, streamyDecorator); 
+    }
+
     /*
     /**********************************************************************
     /* Abstract method impls

@@ -12,12 +12,6 @@ public abstract class StreamyMemBufferBase<S extends Segment<S>>
 {
     /*
     /**********************************************************************
-    /* State
-    /**********************************************************************
-     */
-
-    /*
-    /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
@@ -27,6 +21,10 @@ public abstract class StreamyMemBufferBase<S extends Segment<S>>
             S initialSegments)
     {
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
+    }
+
+    protected StreamyMemBufferBase(StreamyMemBufferBase<S> src) {
+        super(src);
     }
 
     /*

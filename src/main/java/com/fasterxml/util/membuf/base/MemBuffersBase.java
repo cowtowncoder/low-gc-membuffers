@@ -2,6 +2,7 @@ package com.fasterxml.util.membuf.base;
 
 import com.fasterxml.util.membuf.ChunkyMemBuffer;
 import com.fasterxml.util.membuf.MemBuffer;
+import com.fasterxml.util.membuf.MemBufferDecorator;
 import com.fasterxml.util.membuf.Segment;
 import com.fasterxml.util.membuf.SegmentAllocator;
 import com.fasterxml.util.membuf.StreamyMemBuffer;
@@ -22,8 +23,9 @@ import com.fasterxml.util.membuf.StreamyMemBuffer;
  * of other components.
  *<p>
  * Also note that while this object is the factory for {@link MemBuffer} instances,
- * it does not keep references to instances created. Because of this, one
- * has to explicitly close actual buffer instances.
+ * it does not keep references to instances created. Because of this, it is
+ * important that buffers are closed (either explicitly, or by using appropriate
+ * wrappers to do that).
  * 
  * @author Tatu Saloranta
  */
@@ -37,6 +39,18 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      */
     protected final SegmentAllocator<S> _segmentAllocator;
 
+    /**
+     * Optional object for decorating "chunky" {@link MemBuffer}
+     * instances that factory creates.
+     */
+    protected final MemBufferDecorator<CB> _chunkyDecorator;
+
+    /**
+     * Optional object for decorating "streamy" {@link MemBuffer}
+     * instances that factory creates.
+     */
+    protected final MemBufferDecorator<SB> _streamyDecorator;
+    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -50,9 +64,18 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      * @param allocator Allocator to use for instantiated {@link MemBuffer}s.
      */
     public MemBuffersBase(SegmentAllocator<S> allocator) {
-        _segmentAllocator = allocator;
+        this(allocator, null, null);
     }
 
+    public MemBuffersBase(SegmentAllocator<S> allocator,
+            MemBufferDecorator<CB> chunkyDecorator,
+            MemBufferDecorator<SB> streamyDecorator)
+    {
+        _segmentAllocator = allocator;
+        _chunkyDecorator = chunkyDecorator;
+        _streamyDecorator = streamyDecorator;
+    }
+    
     /*
     /**********************************************************************
     /* API: config access
@@ -61,6 +84,9 @@ public abstract class MemBuffersBase<S extends Segment<S>,
 
     public final SegmentAllocator<S> getAllocator() { return _segmentAllocator; }
 
+    public final MemBufferDecorator<CB> getChunkyDecorator() { return _chunkyDecorator; }
+    public final MemBufferDecorator<SB> getStreamyDecorator() { return _streamyDecorator; }
+    
     /*
     /**********************************************************************
     /* API: factory methods for "chunky" mem buffers
@@ -95,7 +121,12 @@ public abstract class MemBuffersBase<S extends Segment<S>,
         if (initialSegments == null) {
             return null;
         }
-        return _createChunkyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+        CB buffer = _createChunkyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+        // Need to decorate it?
+        if (_chunkyDecorator != null) {
+            buffer = _chunkyDecorator.decorateMemBuffer(buffer);
+        }
+        return buffer;
     }
 
     /*
@@ -132,7 +163,11 @@ public abstract class MemBuffersBase<S extends Segment<S>,
         if (initialSegments == null) {
             return null;
         }
-        return _createStreamyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+        SB buffer = _createStreamyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
+        if (_streamyDecorator != null) {
+            buffer = _streamyDecorator.decorateMemBuffer(buffer);
+        }
+        return buffer;
     }
     
     /*

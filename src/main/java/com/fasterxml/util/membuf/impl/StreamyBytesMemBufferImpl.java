@@ -51,6 +51,10 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
+    protected StreamyBytesMemBufferImpl(StreamyBytesMemBuffer src) {
+        super(src);
+    }
+
     /*
     /**********************************************************************
     /* Public API, simple statistics (not data) accessors

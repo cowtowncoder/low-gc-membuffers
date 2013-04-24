@@ -21,6 +21,11 @@ public abstract class ChunkyBytesMemBuffer extends ChunkyMemBufferBase<BytesSegm
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
+    protected ChunkyBytesMemBuffer(ChunkyBytesMemBuffer src) {
+        super(src);
+        _peekedEntry = src._peekedEntry;
+    }
+    
     /*
     /**********************************************************************
     /* Public API, simple statistics (not data) accessors

@@ -66,6 +66,14 @@ public class ChunkyBytesMemBufferImpl extends ChunkyBytesMemBuffer
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }    
 
+    /**
+     * Copy-constructor most useful for sub-classes used for wrapping
+     * (usually using {@link MemBufferDecorator}).
+     */
+    protected ChunkyBytesMemBufferImpl(ChunkyBytesMemBuffer src) {
+        super(src);
+    }
+    
     /*
     /**********************************************************************
     /* Public API, write (append)

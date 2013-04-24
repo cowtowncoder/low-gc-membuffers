@@ -39,7 +39,7 @@ public abstract class ChunkyMemBufferBase<S extends Segment<S>>
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     public ChunkyMemBufferBase(SegmentAllocator<S> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             S initialSegments)
@@ -48,6 +48,13 @@ public abstract class ChunkyMemBufferBase<S extends Segment<S>>
         _entryCount = 0;
         _totalPayloadLength = 0;
     }
+
+    protected ChunkyMemBufferBase(ChunkyMemBufferBase<S> src) {
+        super(src);
+        _entryCount = src._entryCount;
+        _nextEntryLength = src._nextEntryLength;
+    }
+    
     /*
     /**********************************************************************
     /* Public API, state changes

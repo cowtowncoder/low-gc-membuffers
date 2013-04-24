@@ -20,6 +20,11 @@ public abstract class ChunkyLongsMemBuffer extends ChunkyMemBufferBase<LongsSegm
                initialSegments);
     }
 
+    protected ChunkyLongsMemBuffer(ChunkyLongsMemBuffer src) {
+        super(src);
+        _peekedEntry = src._peekedEntry;
+    }
+
    /*
    /**********************************************************************
    /* Public API, simple statistics (not data) accessors

@@ -114,7 +114,7 @@ public abstract class MemBufferBase<S extends Segment<S>>
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     protected MemBufferBase(SegmentAllocator<S> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
             S initialSegments)
@@ -143,6 +143,25 @@ public abstract class MemBufferBase<S extends Segment<S>>
         _freeSegmentCount = minSegmentsToAllocate-1;
     }
 
+    protected MemBufferBase(MemBufferBase<S> src)
+    {
+        _segmentAllocator = src._segmentAllocator;
+        _segmentSize = src._segmentSize;
+        _maxSegmentsForReuse = src._maxSegmentsForReuse;
+        _maxSegmentsToAllocate = src._maxSegmentsToAllocate;
+
+        _head = src._head;
+        _tail = src._tail;
+        _usedSegmentsCount = src._usedSegmentsCount;
+        _totalPayloadLength = src._totalPayloadLength;
+
+        _firstFreeSegment = src._firstFreeSegment;
+        _freeSegmentCount = src._freeSegmentCount;
+        
+        _readBlockedCount = src._readBlockedCount;
+    }
+
+    
     /*
     /**********************************************************************
     /* Public API, waiting

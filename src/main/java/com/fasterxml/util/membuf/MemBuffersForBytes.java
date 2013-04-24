@@ -7,8 +7,8 @@ import com.fasterxml.util.membuf.impl.ChunkyBytesMemBufferImpl;
 import com.fasterxml.util.membuf.impl.StreamyBytesMemBufferImpl;
 
 /**
- * Factory for creating {@link ChunkyBytesMemBuffer}s, memory buffers that
- * contain byte sequences.
+ * Factory for creating {@link ChunkyBytesMemBuffer}s and {@link StreamyBytesMemBuffer}s,
+ * memory buffers that contain byte sequences.
  *<p>
  * Default segments use {@link java.nio.ByteBuffer} for store byte sequences;
  * this can be overridden by specifying alternate
@@ -44,9 +44,27 @@ public class MemBuffersForBytes extends MemBuffersBase<
         this(ByteBufferBytesSegment.allocator(segmentSize, segmentsToRetain, maxSegments, true));
     }
 
-    public MemBuffersForBytes(SegmentAllocator<BytesSegment> allocator)
+    public MemBuffersForBytes(SegmentAllocator<BytesSegment> allocator) {
+        this(allocator, null, null);
+    }
+
+    public MemBuffersForBytes(SegmentAllocator<BytesSegment> allocator,
+            MemBufferDecorator<ChunkyBytesMemBuffer> chunkyDecorator,
+            MemBufferDecorator<StreamyBytesMemBuffer> streamyDecorator)
     {
-        super(allocator);
+        super(allocator, chunkyDecorator, streamyDecorator);
+    }
+    
+    public MemBuffersForBytes withAllocator(SegmentAllocator<BytesSegment> allocator) {
+        return new MemBuffersForBytes(allocator, _chunkyDecorator, _streamyDecorator); 
+    }
+
+    public MemBuffersForBytes withChunkyDecorator(MemBufferDecorator<ChunkyBytesMemBuffer> chunkyDecorator) {
+        return new MemBuffersForBytes(_segmentAllocator, chunkyDecorator, _streamyDecorator); 
+    }
+
+    public MemBuffersForBytes withStreamyDecorator(MemBufferDecorator<StreamyBytesMemBuffer> streamyDecorator) {
+        return new MemBuffersForBytes(_segmentAllocator, _chunkyDecorator, streamyDecorator); 
     }
     
     /*
@@ -71,5 +89,4 @@ public class MemBuffersForBytes extends MemBuffersBase<
         return new StreamyBytesMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
                 initialSegments);
     }
-    
 }

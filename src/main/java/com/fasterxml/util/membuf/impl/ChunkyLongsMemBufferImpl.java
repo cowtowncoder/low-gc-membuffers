@@ -49,7 +49,10 @@ public class ChunkyLongsMemBufferImpl extends ChunkyLongsMemBuffer
     {
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
-    
+
+    protected ChunkyLongsMemBufferImpl(ChunkyLongsMemBuffer src) {
+        super(src);
+    }
 
     /*
     /**********************************************************************
