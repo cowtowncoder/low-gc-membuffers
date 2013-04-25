@@ -1,5 +1,5 @@
 Project: low-gc-membuffers
-Version: 0.9.1 (xx-Apr-2013)
+Version: 0.9.1 (24-Apr-2013)
 
 Changes:
 
