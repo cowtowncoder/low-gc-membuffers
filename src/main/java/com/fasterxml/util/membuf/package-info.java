@@ -6,7 +6,7 @@ For full usage, check out
 but here is an example of simple usage:
 <p>
 
-First thing you need is a factory to create {@link MemBuffer} instance you want.
+First thing you need is a factory to create {@link com.fasterxml.util.membuf.MemBuffer} instance you want.
 Buffers come in multiple flavors, divided by two main criteria:
 
 <ul>
@@ -21,9 +21,9 @@ so that each read matches append that added value sequence)
 There is one factory for each value type, so we have:
 
 <ul>
-  <li>{@link MemBuffersForBytes} for <code>byte</code> sequence buffering
+  <li>{@link com.fasterxml.util.membuf.MemBuffersForBytes} for <code>byte</code> sequence buffering
    </li>
-  <li>{@link MemBuffersForLong} for <code>long</code> sequence buffering
+  <li>{@link com.fasterxml.util.membuf.MemBuffersForLong} for <code>long</code> sequence buffering
    </li>
  </ul>
 

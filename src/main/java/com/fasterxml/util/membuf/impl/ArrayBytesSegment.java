@@ -248,14 +248,15 @@ public class ArrayBytesSegment extends BytesSegment
     
     /**
      * {@link SegmentAllocator} implementation that allocates
-     * {@link ArrayByteSegment}s.
+     * {@link ArrayBytesSegment}s.
      */
     public static class Allocator extends SegmentAllocatorBase<BytesSegment>
     {
         public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
             super(segmentSize, minSegmentsToRetain, maxSegments);
         }
-        
+
+        @Override
         protected BytesSegment _allocateSegment()
         {
             // can reuse a segment returned earlier?
@@ -266,7 +267,7 @@ public class ArrayBytesSegment extends BytesSegment
                 --_reusableSegmentCount;
                 return segment;
             }
-            BytesSegment segment = new ArrayBytesSegment(_segmentSize);
+            ArrayBytesSegment segment = new ArrayBytesSegment(_segmentSize);
             ++_bufferOwnedSegmentCount; 
             return segment;
         }

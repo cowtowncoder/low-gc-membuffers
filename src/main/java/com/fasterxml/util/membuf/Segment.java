@@ -9,7 +9,7 @@ package com.fasterxml.util.membuf;
  * storage level of the logical queue.
  * Note that at this level we don't yet know either physical primitive type
  * used under the hood (from byte to long) or underlying storage
- * method (array, {@link ByteBuffer}).  
+ * method (array, {@link java.nio.ByteBuffer}).  
  * All lengths are in units of fundamental primitive value
  * (i.e. single byte for byte-valued segments; units of 8 bytes
  * for long-valued and so on)

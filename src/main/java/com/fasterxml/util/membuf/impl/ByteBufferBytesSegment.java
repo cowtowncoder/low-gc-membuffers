@@ -265,7 +265,7 @@ public class ByteBufferBytesSegment extends BytesSegment
     
     /**
      * {@link SegmentAllocator} implementation that allocates
-     * {@link ArrayByteSegment}s.
+     * {@link ByteBufferBytesSegment}s.
      */
     public static class Allocator extends SegmentAllocatorBase<BytesSegment>
     {
@@ -278,7 +278,8 @@ public class ByteBufferBytesSegment extends BytesSegment
             super(segmentSize, minSegmentsToRetain, maxSegments);
             _cfgAllocateNative = allocateNativeBuffers;
         }
-        
+
+        @Override
         protected BytesSegment _allocateSegment()
         {
             // can reuse a segment returned earlier?

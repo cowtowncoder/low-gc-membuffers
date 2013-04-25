@@ -135,7 +135,7 @@ public abstract class ChunkyBytesMemBuffer extends ChunkyMemBufferBase<BytesSegm
      * Method for reading and removing next available entry from buffer and
      * return length of the entry in bytes, if successful; or, if buffer does
      * not have enough space, return negative number as error code.
-     * If no entry is available, will return {@link Integer.MIN_VALUE}.
+     * If no entry is available, will return {@link Integer#MIN_VALUE}.
      * 
      * @param buffer Buffer in which entry is to be read: must have enough space
      *  for read to succeed
@@ -153,7 +153,7 @@ public abstract class ChunkyBytesMemBuffer extends ChunkyMemBufferBase<BytesSegm
      * Method for reading and removing next entry from the buffer, if one
      * is available.
      * If buffer is empty, may wait up to specified amount of time for new data to arrive.
-     * If no entry is available after timeout, will return {@link Integer.MIN_VALUE}.
+     * If no entry is available after timeout, will return {@link Integer#MIN_VALUE}.
      * If length of entry exceeds available buffer space, will return negative number
      * that indicates length of the entry that would have been copied.
      * 
