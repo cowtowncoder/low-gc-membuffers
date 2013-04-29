@@ -14,8 +14,8 @@ public abstract class StreamyLongsMemBuffer extends StreamyMemBufferBase<LongsSe
 {
     protected StreamyLongsMemBuffer(SegmentAllocator<LongsSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            LongsSegment initialSegments) {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
+            LongsSegment initialSegments, MemBufferTracker tracker) {
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
     }
 
     protected StreamyLongsMemBuffer(StreamyLongsMemBuffer src) {

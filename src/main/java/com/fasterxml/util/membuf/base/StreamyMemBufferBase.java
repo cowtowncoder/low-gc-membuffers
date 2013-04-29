@@ -18,9 +18,9 @@ public abstract class StreamyMemBufferBase<S extends Segment<S>>
 
     public StreamyMemBufferBase(SegmentAllocator<S> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            S initialSegments)
+            S initialSegments, MemBufferTracker tracker)
     {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
     }
 
     protected StreamyMemBufferBase(StreamyMemBufferBase<S> src) {

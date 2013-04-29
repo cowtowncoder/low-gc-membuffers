@@ -41,8 +41,8 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
      */
     public StreamyLongsMemBufferImpl(SegmentAllocator<LongsSegment> allocator,
                 int minSegmentsToAllocate, int maxSegmentsToAllocate,
-                LongsSegment initialSegments) {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
+                LongsSegment initialSegments, MemBufferTracker tracker) {
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
     }
 
     protected StreamyLongsMemBufferImpl(StreamyLongsMemBuffer src) {

@@ -14,8 +14,8 @@ public abstract class StreamyBytesMemBuffer extends StreamyMemBufferBase<BytesSe
 {
     protected StreamyBytesMemBuffer(SegmentAllocator<BytesSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            BytesSegment initialSegments) {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
+            BytesSegment initialSegments, MemBufferTracker tracker) {
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
     }
 
     protected StreamyBytesMemBuffer(StreamyBytesMemBuffer src) {
