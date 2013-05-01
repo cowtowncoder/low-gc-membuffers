@@ -47,8 +47,8 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
      */
     public StreamyBytesMemBufferImpl(SegmentAllocator<BytesSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            BytesSegment initialSegments, MemBufferTracker tracker) {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
+            BytesSegment initialSegments) {
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
     protected StreamyBytesMemBufferImpl(StreamyBytesMemBuffer src) {

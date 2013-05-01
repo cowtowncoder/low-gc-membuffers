@@ -42,9 +42,9 @@ public abstract class ChunkyMemBufferBase<S extends Segment<S>>
 
     public ChunkyMemBufferBase(SegmentAllocator<S> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            S initialSegments, MemBufferTracker tracker)
+            S initialSegments)
     {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
         _entryCount = 0;
         _totalPayloadLength = 0;
     }

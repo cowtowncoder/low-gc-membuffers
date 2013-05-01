@@ -44,31 +44,26 @@ public class MemBuffersForLongs extends MemBuffersBase<
     }
 
     public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator) {
-        super(allocator, null, null, null);
+        super(allocator, null, null);
     }
 
     public MemBuffersForLongs(SegmentAllocator<LongsSegment> allocator,
             MemBufferDecorator<ChunkyLongsMemBuffer> chunkyDecorator,
-            MemBufferDecorator<StreamyLongsMemBuffer> streamyDecorator,
-            MemBufferTracker tracker)
+            MemBufferDecorator<StreamyLongsMemBuffer> streamyDecorator)
     {
-        super(allocator, chunkyDecorator, streamyDecorator, tracker);
+        super(allocator, chunkyDecorator, streamyDecorator);
     }
     
     public MemBuffersForLongs withAllocator(SegmentAllocator<LongsSegment> allocator) {
-        return new MemBuffersForLongs(allocator, _chunkyDecorator, _streamyDecorator, _bufferTracker);
+        return new MemBuffersForLongs(allocator, _chunkyDecorator, _streamyDecorator);
     }
 
     public MemBuffersForLongs withChunkyDecorator(MemBufferDecorator<ChunkyLongsMemBuffer> chunkyDecorator) {
-        return new MemBuffersForLongs(_segmentAllocator, chunkyDecorator, _streamyDecorator, _bufferTracker);
+        return new MemBuffersForLongs(_segmentAllocator, chunkyDecorator, _streamyDecorator);
     }
 
     public MemBuffersForLongs withStreamyDecorator(MemBufferDecorator<StreamyLongsMemBuffer> streamyDecorator) {
-        return new MemBuffersForLongs(_segmentAllocator, _chunkyDecorator, streamyDecorator, _bufferTracker);
-    }
-
-    public MemBuffersForLongs withTracker(MemBufferTracker tracker) {
-        return new MemBuffersForLongs(_segmentAllocator, _chunkyDecorator, _streamyDecorator, tracker);
+        return new MemBuffersForLongs(_segmentAllocator, _chunkyDecorator, streamyDecorator);
     }
 
     /*
@@ -79,17 +74,17 @@ public class MemBuffersForLongs extends MemBuffersBase<
 
     @Override
     protected ChunkyLongsMemBuffer _createChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
-            LongsSegment initialSegments, MemBufferTracker tracker)
+            LongsSegment initialSegments)
     {
         return new ChunkyLongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
-                initialSegments, tracker);
+                initialSegments);
     }
 
     @Override
     protected StreamyLongsMemBuffer _createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
-            LongsSegment initialSegments, MemBufferTracker tracker)
+            LongsSegment initialSegments)
     {
         return new StreamyLongsMemBufferImpl(_segmentAllocator, minSegmentsForBuffer, maxSegmentsForBuffer,
-                initialSegments, tracker);
+                initialSegments);
     }
 }

@@ -61,11 +61,10 @@ public class ChunkyBytesMemBufferImpl extends ChunkyBytesMemBuffer
      */
     public ChunkyBytesMemBufferImpl(SegmentAllocator<BytesSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            BytesSegment initialSegments,
-            MemBufferTracker tracker)
+            BytesSegment initialSegments)
     {
         super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate,
-                initialSegments, tracker);
+                initialSegments);
     }    
 
     /**

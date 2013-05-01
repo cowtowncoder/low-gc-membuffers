@@ -14,10 +14,9 @@ public abstract class ChunkyLongsMemBuffer extends ChunkyMemBufferBase<LongsSegm
     
     protected ChunkyLongsMemBuffer(SegmentAllocator<LongsSegment> allocator,
            int minSegmentsToAllocate, int maxSegmentsToAllocate,
-           LongsSegment initialSegments, MemBufferTracker tracker)
+           LongsSegment initialSegments)
     {
-       super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate,
-               initialSegments, tracker);
+       super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
     protected ChunkyLongsMemBuffer(ChunkyLongsMemBuffer src) {

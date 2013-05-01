@@ -1,12 +1,6 @@
 package com.fasterxml.util.membuf.base;
 
-import com.fasterxml.util.membuf.ChunkyMemBuffer;
-import com.fasterxml.util.membuf.MemBuffer;
-import com.fasterxml.util.membuf.MemBufferDecorator;
-import com.fasterxml.util.membuf.MemBufferTracker;
-import com.fasterxml.util.membuf.Segment;
-import com.fasterxml.util.membuf.SegmentAllocator;
-import com.fasterxml.util.membuf.StreamyMemBuffer;
+import com.fasterxml.util.membuf.*;
 
 /*
  * Copyright Tatu Saloranta, 2011-
@@ -52,14 +46,6 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      */
     protected final MemBufferDecorator<SB> _streamyDecorator;
 
-    /**
-     * Optional manager object that can be registered to add support
-     * for features like auto-closing.
-     * 
-     * @since 0.9.2
-     */
-    protected final MemBufferTracker _bufferTracker;
-
     /*
     /**********************************************************************
     /* Life-cycle
@@ -73,18 +59,16 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      * @param allocator Allocator to use for instantiated {@link MemBuffer}s.
      */
     public MemBuffersBase(SegmentAllocator<S> allocator) {
-        this(allocator, null, null, null);
+        this(allocator, null, null);
     }
 
     public MemBuffersBase(SegmentAllocator<S> allocator,
             MemBufferDecorator<CB> chunkyDecorator,
-            MemBufferDecorator<SB> streamyDecorator,
-            MemBufferTracker bufferTracker)
+            MemBufferDecorator<SB> streamyDecorator)
     {
         _segmentAllocator = allocator;
         _chunkyDecorator = chunkyDecorator;
         _streamyDecorator = streamyDecorator;
-        _bufferTracker = bufferTracker;
     }
     
     /*
@@ -97,8 +81,6 @@ public abstract class MemBuffersBase<S extends Segment<S>,
 
     public final MemBufferDecorator<CB> getChunkyDecorator() { return _chunkyDecorator; }
     public final MemBufferDecorator<SB> getStreamyDecorator() { return _streamyDecorator; }
-
-    public final MemBufferTracker getBufferTracker() { return _bufferTracker; }
 
     /*
     /**********************************************************************
@@ -134,8 +116,7 @@ public abstract class MemBuffersBase<S extends Segment<S>,
         if (initialSegments == null) {
             return null;
         }
-        CB buffer = _createChunkyBuffer(minSegmentsForBuffer,
-                maxSegmentsForBuffer, initialSegments, _bufferTracker);
+        CB buffer = _createChunkyBuffer(minSegmentsForBuffer, maxSegmentsForBuffer, initialSegments);
         // Need to decorate it?
         if (_chunkyDecorator != null) {
             buffer = _chunkyDecorator.decorateMemBuffer(buffer);
@@ -178,7 +159,7 @@ public abstract class MemBuffersBase<S extends Segment<S>,
             return null;
         }
         SB buffer = _createStreamyBuffer(minSegmentsForBuffer,
-                maxSegmentsForBuffer, initialSegments, _bufferTracker);
+                maxSegmentsForBuffer, initialSegments);
         if (_streamyDecorator != null) {
             buffer = _streamyDecorator.decorateMemBuffer(buffer);
         }
@@ -195,13 +176,11 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      * Internal factory method for creating type-specific "chunky" mem buffer instance
      */
     protected abstract CB _createChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
-            S initialSegments,
-            MemBufferTracker tracker);
+            S initialSegments);
 
     /**
      * Internal factory method for creating type-specific "streamy" mem buffer instance
      */
     protected abstract SB _createStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer,
-            S initialSegments,
-            MemBufferTracker tracker);
+            S initialSegments);
 }

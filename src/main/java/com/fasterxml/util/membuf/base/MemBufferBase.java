@@ -20,13 +20,6 @@ public abstract class MemBufferBase<S extends Segment<S>>
      * segments are released after use.
      */
     protected final SegmentAllocator<S> _segmentAllocator;
-
-    /**
-     * For buffers that are tracked (trackers can manage life-cycle to
-     * implement auto-closing, for example), token is retained to
-     * inform tracker about closing of buffer.
-     */
-    protected final MemBufferTracker.Token _trackerToken;
     
     /**
      * Size of individual segments.
@@ -124,7 +117,7 @@ public abstract class MemBufferBase<S extends Segment<S>>
 
     protected MemBufferBase(SegmentAllocator<S> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            S initialSegments, MemBufferTracker tracker)
+            S initialSegments)
     {
         _segmentAllocator = allocator;
         _segmentSize = allocator.getSegmentSize();
@@ -148,10 +141,6 @@ public abstract class MemBufferBase<S extends Segment<S>>
             }
         */
         _freeSegmentCount = minSegmentsToAllocate-1;
-        /* 28-Apr-2013, tatu: Also; when we are mostly set up, let's let the
-         *   tracker (if any) know that we are to be tracked...
-         */
-        _trackerToken = (tracker == null) ? null : tracker.trackBuffer(this);
     }
 
     protected MemBufferBase(MemBufferBase<S> src)
@@ -160,7 +149,6 @@ public abstract class MemBufferBase<S extends Segment<S>>
         _segmentSize = src._segmentSize;
         _maxSegmentsForReuse = src._maxSegmentsForReuse;
         _maxSegmentsToAllocate = src._maxSegmentsToAllocate;
-        _trackerToken = src._trackerToken;
 
         _head = src._head;
         _tail = src._tail;
@@ -274,11 +262,6 @@ public abstract class MemBufferBase<S extends Segment<S>>
             _segmentAllocator.releaseSegment(seg);
             seg = next;
         }
-
-        if (_trackerToken != null) {
-            _trackerToken.bufferClosed();
-        }
-        
         // one more thing: wake up thread(s) that are blocked (if any)
         this.notifyAll();
     }

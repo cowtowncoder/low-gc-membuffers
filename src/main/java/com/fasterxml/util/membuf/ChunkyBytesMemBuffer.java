@@ -17,8 +17,8 @@ public abstract class ChunkyBytesMemBuffer extends ChunkyMemBufferBase<BytesSegm
     
     protected ChunkyBytesMemBuffer(SegmentAllocator<BytesSegment> allocator,
             int minSegmentsToAllocate, int maxSegmentsToAllocate,
-            BytesSegment initialSegments, MemBufferTracker tracker) {
-        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments, tracker);
+            BytesSegment initialSegments) {
+        super(allocator, minSegmentsToAllocate, maxSegmentsToAllocate, initialSegments);
     }
 
     protected ChunkyBytesMemBuffer(ChunkyBytesMemBuffer src) {
