@@ -48,6 +48,13 @@ public class AppendAndReadBytesTest extends MembufTestBase
         _testStreamyAppendAndGet(SegType.BYTE_ARRAY);
     }
 
+    public void testStreamyAppendAndGet2() throws Exception
+    {
+        _testStreamyAppendAndGet2(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyAppendAndGet2(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyAppendAndGet2(SegType.BYTE_ARRAY);
+    }
+
     public void testStreamyReadFromEmpty() throws Exception
     {
         _testStreamyReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
@@ -126,7 +133,7 @@ public class AppendAndReadBytesTest extends MembufTestBase
         // and shouldn't find anything else, for now
         assertNull(buffer.getNextEntryIfAvailable());
     }
-
+    
     // Test 'read' methods (where called hands buffer to use)
     private void _testChunkyAppendAndRead(SegType aType) throws Exception
     {
@@ -284,6 +291,34 @@ public class AppendAndReadBytesTest extends MembufTestBase
         assertEquals(0, buffer.readIfAvailable(b));
     }
 
+
+    /**
+     * Separate test to use single-byte methods; reproduces #17, found in 0.9.1.
+     */
+    private void _testStreamyAppendAndGet2(SegType aType) throws Exception
+    {
+        final MemBuffersForBytes bufs = createBytesBuffers(aType, 10, 1, 4);
+        final StreamyBytesMemBuffer buffer = bufs.createStreamyBuffer(1, 4);
+
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+
+        // Let's just fill with 30 bytes
+        for (int i = 0; i < 30; ++i) {
+            buffer.append((byte) i);
+        }
+        assertEquals(3, buffer.getSegmentCount());
+        assertEquals(30, buffer.getTotalPayloadLength());
+        assertEquals(10, buffer.getMaximumAvailableSpace());
+
+        // and then let's just read it off
+        for (int i = 0; i < 30; ++i) {
+            assertEquals(i & 0xFF, buffer.read() & 0xFF);
+        }
+        assertEquals(0, buffer.getTotalPayloadLength());
+        buffer.close();
+    }
+    
     /**
      * Unit test that verifies that read from empty buffer
      * works but won't return any data
