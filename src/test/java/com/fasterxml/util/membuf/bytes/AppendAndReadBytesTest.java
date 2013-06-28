@@ -302,10 +302,10 @@ public class AppendAndReadBytesTest extends MembufTestBase
 
         assertEquals(0, buffer.getTotalPayloadLength());
         assertTrue(buffer.isEmpty());
-
+        
         // Let's just fill with 30 bytes
         for (int i = 0; i < 30; ++i) {
-            buffer.append((byte) i);
+            assertTrue(buffer.tryAppend((byte) i));
         }
         assertEquals(3, buffer.getSegmentCount());
         assertEquals(30, buffer.getTotalPayloadLength());
@@ -313,7 +313,9 @@ public class AppendAndReadBytesTest extends MembufTestBase
 
         // and then let's just read it off
         for (int i = 0; i < 30; ++i) {
-            assertEquals(i & 0xFF, buffer.read() & 0xFF);
+            assertEquals(30 - i, buffer.available());
+            int ch = buffer.read();
+            assertEquals(i & 0xFF, ch & 0xFF);
         }
         assertEquals(0, buffer.getTotalPayloadLength());
         buffer.close();

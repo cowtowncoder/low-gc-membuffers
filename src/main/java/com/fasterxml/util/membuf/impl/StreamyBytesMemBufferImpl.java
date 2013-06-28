@@ -94,14 +94,7 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
             return true;
         }
         // need to allocate a new segment, possible?
-        if (_freeSegmentCount > 0) { // got a local segment to reuse:
-            final BytesSegment seg = _head;
-            seg.finishWriting();
-            // and allocate, init-for-writing new one:
-            BytesSegment newSeg = _reuseFree().initForWriting();
-            seg.relink(newSeg);
-            _head = newSeg;
-        } else { // no locally reusable segments, need to ask allocator
+        if (_freeSegmentCount <= 0) { // no local buffers available yet
             if (_usedSegmentsCount >= _maxSegmentsToAllocate) { // except we are maxed out
                 return false;
             }
@@ -113,6 +106,13 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
             _freeSegmentCount += 1;
             _firstFreeSegment = newFree;
         }
+        // should be set now so:
+        final BytesSegment seg = _head;
+        seg.finishWriting();
+        // and allocate, init-for-writing new one:
+        BytesSegment newSeg = _reuseFree().initForWriting();
+        seg.relink(newSeg);
+        _head = newSeg;
         if (!_head.tryAppend(value)) {
             throw new IllegalStateException();
         }
@@ -199,13 +199,14 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         while (_totalPayloadLength == 0L) {
             _waitForData();
         }
-        if (_head.availableForReading() == 0) {
+        if (_tail.availableForReading() == 0) {
             String error = _freeReadSegment(null);
             if (error != null) {
                 throw new IllegalStateException(error);
             }
         }
-        return _head.read();
+        --_totalPayloadLength;
+        return _tail.read();
     }
 
     @Override
