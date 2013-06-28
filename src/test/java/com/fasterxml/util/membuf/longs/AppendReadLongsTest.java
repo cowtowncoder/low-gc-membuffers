@@ -48,6 +48,13 @@ public class AppendReadLongsTest extends MembufTestBase
         _testStreamyAppendAndGet(SegType.BYTE_ARRAY);
     }
 
+    public void testStreamyAppendAndGet2() throws Exception
+    {
+        _testStreamyAppendAndGet2(SegType.BYTE_BUFFER_DIRECT);
+        _testStreamyAppendAndGet2(SegType.BYTE_BUFFER_FAKE);
+        _testStreamyAppendAndGet2(SegType.BYTE_ARRAY);
+    }
+    
     public void testStreamyReadFromEmpty() throws Exception
     {
         _testStreamyReadFromEmpty(SegType.BYTE_BUFFER_DIRECT);
@@ -284,6 +291,36 @@ public class AppendReadLongsTest extends MembufTestBase
         assertEquals(0, buffer.readIfAvailable(b));
     }
 
+    /**
+     * Separate test to use single-byte methods; reproduces #18
+     * (from 0.9.2).
+     */
+    private void _testStreamyAppendAndGet2(SegType aType) throws Exception
+    {
+        final MemBuffersForLongs bufs = createLongsBuffers(aType, 10, 1, 4);
+        final StreamyLongsMemBuffer buffer = bufs.createStreamyBuffer(1, 4);
+
+        assertEquals(0, buffer.getTotalPayloadLength());
+        assertTrue(buffer.isEmpty());
+        
+        // Let's just fill with 30 bytes
+        for (int i = 0; i < 30; ++i) {
+            assertTrue(buffer.tryAppend(i));
+        }
+        assertEquals(3, buffer.getSegmentCount());
+        assertEquals(30, buffer.getTotalPayloadLength());
+        assertEquals(10, buffer.getMaximumAvailableSpace());
+
+        // and then let's just read it off
+        for (int i = 0; i < 30; ++i) {
+            assertEquals(30 - i, buffer.available());
+            long l = buffer.read();
+            assertEquals(i, l);
+        }
+        assertEquals(0, buffer.getTotalPayloadLength());
+        buffer.close();
+    }
+    
     /**
      * Unit test that verifies that read from empty buffer
      * works but won't return any data

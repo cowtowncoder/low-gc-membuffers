@@ -82,17 +82,11 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
             _reportClosed();
         }
         if (_head.tryAppend(value)) {
+            ++_totalPayloadLength;
             return true;
         }
         // need to allocate a new segment, possible?
-        if (_freeSegmentCount > 0) { // got a local segment to reuse:
-            final LongsSegment seg = _head;
-            seg.finishWriting();
-            // and allocate, init-for-writing new one:
-            LongsSegment newSeg = _reuseFree().initForWriting();
-            seg.relink(newSeg);
-            _head = newSeg;
-        } else { // no locally reusable segments, need to ask allocator
+        if (_freeSegmentCount <= 0) { // no local buffers available yet
             if (_usedSegmentsCount >= _maxSegmentsToAllocate) { // except we are maxed out
                 return false;
             }
@@ -104,9 +98,17 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
             _freeSegmentCount += 1;
             _firstFreeSegment = newFree;
         }
+        // should be set now so:
+        final LongsSegment seg = _head;
+        seg.finishWriting();
+        // and allocate, init-for-writing new one:
+        LongsSegment newSeg = _reuseFree().initForWriting();
+        seg.relink(newSeg);
+        _head = newSeg;
         if (!_head.tryAppend(value)) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Should have room for a byte after allocation");
         }
+        ++_totalPayloadLength;
         return true;
     }
     
@@ -188,13 +190,15 @@ public class StreamyLongsMemBufferImpl extends StreamyLongsMemBuffer
         while (_totalPayloadLength == 0L) {
             _waitForData();
         }
-        if (_head.availableForReading() == 0) {
+        if (_tail.availableForReading() == 0) {
             String error = _freeReadSegment(null);
             if (error != null) {
                 throw new IllegalStateException(error);
             }
         }
-        return _head.read();
+        long l = _tail.read();
+        --_totalPayloadLength;
+        return l;
     }
 
     @Override

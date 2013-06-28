@@ -114,7 +114,7 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
         seg.relink(newSeg);
         _head = newSeg;
         if (!_head.tryAppend(value)) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Should have room for a byte after allocation");
         }
         ++_totalPayloadLength;
         return true;
@@ -205,8 +205,9 @@ public class StreamyBytesMemBufferImpl extends StreamyBytesMemBuffer
                 throw new IllegalStateException(error);
             }
         }
+        int i = _tail.read();
         --_totalPayloadLength;
-        return _tail.read();
+        return i;
     }
 
     @Override
