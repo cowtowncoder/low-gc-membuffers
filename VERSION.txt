@@ -1,12 +1,15 @@
 Project: low-gc-membuffers
 Licence: Apache 2.0
-Version: 0.9.2 (27-Jun-2013))
+Version: 0.9.3 (29-Jun-2013))
 
-Changes:
-
-#17: Problem using single-byte accessors with streamy buffer
+#18: Problem with single-long append/read with streamy buffer (similar to #17)
+#20: buffer.close() not idempotent (NullPointerException on sceond close())
 
 ======================================================================
+
+0.9.2 (27-Jun-2013)
+
+#17: Problem using single-byte accessors with streamy buffer
 
 0.9.1 (24-Apr-2013)
 

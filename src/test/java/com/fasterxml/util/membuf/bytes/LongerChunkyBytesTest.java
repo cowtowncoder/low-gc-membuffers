@@ -66,6 +66,10 @@ public class LongerChunkyBytesTest extends MembufTestBase
         // and repeat once for bot
         appendAndRemove(rows, buffer);
         appendAndClear(rows, buffer);
+
+        buffer.close();
+        // and once more, to ensure it's idempotent
+        buffer.close();
     }
 
     // And then a more mechanical test:

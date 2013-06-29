@@ -78,6 +78,10 @@ public class LongerChunkyLongsTest extends MembufTestBase
         assertEquals(12, buffer.getSegmentCount());
         assertEquals(12, all.getBufferOwnedSegmentCount());
         assertEquals(0, all.getReusableSegmentCount());
+
+        buffer.close();
+        // and idempotency:
+        buffer.close();
     }
     
     /*

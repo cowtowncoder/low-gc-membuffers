@@ -63,6 +63,12 @@ public class LongerStreamyBytesTest  extends MembufTestBase
         // and repeat once for bot
         appendAndRemove(rows, buffer, 9);
         appendAndClear(rows, buffer, 10);
+
+        // And then verify the close works...
+        buffer.close();
+        
+        // and is idempotent, for convenience
+        buffer.close();
     }
 
     // And then a more mechanical test:

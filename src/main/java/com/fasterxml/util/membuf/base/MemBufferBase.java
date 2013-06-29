@@ -245,12 +245,16 @@ public abstract class MemBufferBase<S extends Segment<S>>
     {
         // first do regular cleanup
         clear();
+
         // then free the head/tail node as well
         _usedSegmentsCount = 0;
+
         // 24-Apr-2013, tatu: As per #16, must ensure proper cleaning
-        _head.markFree();
-        _segmentAllocator.releaseSegment(_head);
-        _head = _tail = null;
+        if (_head != null) {
+            _head.markFree();
+            _segmentAllocator.releaseSegment(_head);
+            _head = _tail = null;
+        }
         // and any locally recycled buffers as well
         
         S seg = _firstFreeSegment;
