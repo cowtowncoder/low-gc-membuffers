@@ -58,15 +58,27 @@ or similarly if you need to read a sequence of entries as atomic unit.
 
 Project has been used for couple of production systems for months,
 and by now has proven stable and performant for expected use cases.
+As such it is considered production ready, and version was recently (Oct 2013)
+bumped to 1.0.
 
 One publicly accessible project that uses it is [Arecibo](https://github.com/ning/Arecibo),
 a metrics collection, aggregation and visualization.
 
-The usual caveat still applies: given that project is in its pre-1.0 stage,
-you should carefully evaluate functionality before using it for
-production systems.
-
 # Usage
+
+## Getting it
+
+To use with Maven, add:
+
+```
+<dependency>
+  <groupId>com.fasterxml.util</groupId>
+  <artifactId>low-gc-membuffers</artifactId>
+  <version>1.0.0</version>
+</dependency>
+```
+
+For downloadables, javadocs check out [Wiki](https://github.com/cowtowncoder/low-gc-membuffers/wiki).
 
 ## Start with a factory
 
