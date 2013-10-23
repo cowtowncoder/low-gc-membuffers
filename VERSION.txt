@@ -1,11 +1,16 @@
 Project: low-gc-membuffers
 Licence: Apache 2.0
-Version: 0.9.3 (29-Jun-2013))
+Version: 1.0.0 (22-Oct-2013)
+
+The first official release -- library has been used in high-traffic
+production environment for months now, API is stable.
+
+======================================================================
+
+0.9.3 (29-Jun-2013)
 
 #18: Problem with single-long append/read with streamy buffer (similar to #17)
 #20: buffer.close() not idempotent (NullPointerException on sceond close())
-
-======================================================================
 
 0.9.2 (27-Jun-2013)
 
