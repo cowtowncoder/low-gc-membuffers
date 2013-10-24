@@ -181,3 +181,14 @@ To increase this setting, add setting like:
     -XX:MaxDirectMemorySize=512m
 
 otherwise you are likely to hit an OutOfMemoryError when using larger buffers.
+
+# Future ideas
+
+Here are some improvement ideas:
+
+* "Slab" allocation (issue #14): allow initial allocation of a longer off-heap memory segment, with size of `N` segments: this "slab" will be fixed and NOT dynamically allocated or freed; segments will be sub-allocated as needed.
+    * Main benefit is reduced need for actually memory management (no per-operation `malloc` or `free`)
+    * Adds fixed overhead: slab size needs to be balanced with costs
+    * Segments from slabs allocated before dynamic segments, as they do not incur additional allocation or memory usage cost (due to fixed default overhead)
+* Expose streamy byte buffers as `InputStream` (issue #19).
+    * Would need to choose what happens with end-of-input: snapshot (expose current and as EOF) vs blocking (works like pipe)
