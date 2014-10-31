@@ -56,13 +56,17 @@ or similarly if you need to read a sequence of entries as atomic unit.
 
 # Status
 
-Project has been used for couple of production systems for months,
+Project has been used by multiple production systems (by multuple companies) since 2012,
 and by now has proven stable and performant for expected use cases.
-As such it is considered production ready, and version was recently (Oct 2013)
-bumped to 1.0.
+As such it is considered production ready: the official 1.0 version was released in October 2013.
 
-One publicly accessible project that uses it is [Arecibo](https://github.com/ning/Arecibo),
+The first accessible project that uses it is [Arecibo](https://github.com/ning/Arecibo),
 a metrics collection, aggregation and visualization.
+
+Companies that use this library for production systems include:
+
+* [Mode Media](http://www.modemediacorp.com/) (nee Glam Media)
+* [Salesforce](http://www.salesforce.com/)
 
 # Usage
 
@@ -70,7 +74,7 @@ a metrics collection, aggregation and visualization.
 
 To use with Maven, add:
 
-```
+```xml
 <dependency>
   <groupId>com.fasterxml.util</groupId>
   <artifactId>low-gc-membuffers</artifactId>
@@ -88,7 +92,9 @@ This object can be viewed as container and factory of actual buffers
 (`ChunkyBytesMemBuffer` or `StreamyBytesMemBuffer`).
 To construct one, you need to specify amount of memory to use, as well as how memory should be sliced: so, for example:
 
-    MemBuffersForBytes factory = new MemBuffersForBytes(30 * 1024, 2, 11);
+```json
+MemBuffersForBytes factory = new MemBuffersForBytes(30 * 1024, 2, 11);
+```
 
 would create instance that allocates at least 2 (and at most 11) segments (which wrap direct `ByteBuffer` instances) with size of 30 kB: that is, has memory usage between 60 and 330 kilobytes.
 The segments are then used by actual buffer instances (more on this in a bit)
@@ -105,13 +111,17 @@ By default segments are allocated as `ByteBuffer`s (or typed sub-types for `long
 For example, if you instead wanted to use in-heap segments stored as basic
 byte arrays (`byte[]`), you could do this by:
 
-    MemBuffersForBytes factory = new MemBuffersForBytes(
-      ArrayBytesSegment.allocator(30 * 1024, 2, 11));
+```json
+MemBuffersForBytes factory = new MemBuffersForBytes(
+  ArrayBytesSegment.allocator(30 * 1024, 2, 11));
+```
 
 or to use non-direct `ByteBuffer`s:
 
-    MemBuffersForBytes factory = new MemBuffersForBytes(
-      ByteBufferBytesSegment.allocator(30 * 1024, 2, 11, false));
+```json
+MemBuffersForBytes factory = new MemBuffersForBytes(
+  ByteBufferBytesSegment.allocator(30 * 1024, 2, 11, false));
+```
 
 Note that `SegmentAllocator` instances are implemented as inner classes of
 matching segment type, that is as `ArrayBytesSegment.Allocator` and
@@ -124,7 +134,9 @@ segments. What this means it that buffers MUST be closed (explicitly, or indirec
 
 Actual buffers are then allocated using
 
-    ChunkyBytesMemBuffer items = bufs.createChunkyBuffer(2, 5);
+```json
+ChunkyBytesMemBuffer items = bufs.createChunkyBuffer(2, 5);
+```
 
 which would indicate that this buffer will hold on to at least 2 segments (i.e. about 60kB raw storage) and use at most 5 (so max usage of 150kB).
 Due to circular buffer style of allocation, at least 'segments - 1' amount of memory will be available for actual queue (i.e. guaranteed space of 120kB; that is, up to one segment may be temporarily unavailable depending on pattern of append/remove operations.
@@ -133,25 +145,31 @@ Due to circular buffer style of allocation, at least 'segments - 1' amount of me
 
 To append entries, you use:
 
-    byte[] dataEntry = ...; // serialize from, say, JSON
-    items.appendEntry(dataEntry);
+```json
+byte[] dataEntry = ...; // serialize from, say, JSON
+items.appendEntry(dataEntry);
+```
 
 or, if you don't want an exception if there is no more room:
 
-    if (!items.tryAppendEntry(dataEntry)) {
-       // recover? Drop entry? Log?
-    }
+```json
+if (!items.tryAppendEntry(dataEntry)) {
+   // recover? Drop entry? Log?
+}
+```
 
 and to pop entries:
 
-    byte[] next = items.getNextEntry(); // blocks if nothing available
-    // or:
-    next = items.getNextEntryIfAvailable();
-    if (next == null) { // nothing yet available
-        //...
-    }
-    // or:
-    next = items.getNextEntry(1000L); // block for at most 1 second before giving up
+```json
+byte[] next = items.getNextEntry(); // blocks if nothing available
+// or:
+next = items.getNextEntryIfAvailable();
+if (next == null) { // nothing yet available
+    //...
+}
+// or:
+next = items.getNextEntry(1000L); // block for at most 1 second before giving up
+```
 
 ## And make sure that...
 
