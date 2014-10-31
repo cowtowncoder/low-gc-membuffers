@@ -92,7 +92,7 @@ This object can be viewed as container and factory of actual buffers
 (`ChunkyBytesMemBuffer` or `StreamyBytesMemBuffer`).
 To construct one, you need to specify amount of memory to use, as well as how memory should be sliced: so, for example:
 
-```json
+```java
 MemBuffersForBytes factory = new MemBuffersForBytes(30 * 1024, 2, 11);
 ```
 
@@ -111,14 +111,14 @@ By default segments are allocated as `ByteBuffer`s (or typed sub-types for `long
 For example, if you instead wanted to use in-heap segments stored as basic
 byte arrays (`byte[]`), you could do this by:
 
-```json
+```java
 MemBuffersForBytes factory = new MemBuffersForBytes(
   ArrayBytesSegment.allocator(30 * 1024, 2, 11));
 ```
 
 or to use non-direct `ByteBuffer`s:
 
-```json
+```java
 MemBuffersForBytes factory = new MemBuffersForBytes(
   ByteBufferBytesSegment.allocator(30 * 1024, 2, 11, false));
 ```
@@ -134,7 +134,7 @@ segments. What this means it that buffers MUST be closed (explicitly, or indirec
 
 Actual buffers are then allocated using
 
-```json
+```java
 ChunkyBytesMemBuffer items = bufs.createChunkyBuffer(2, 5);
 ```
 
@@ -145,14 +145,14 @@ Due to circular buffer style of allocation, at least 'segments - 1' amount of me
 
 To append entries, you use:
 
-```json
+```java
 byte[] dataEntry = ...; // serialize from, say, JSON
 items.appendEntry(dataEntry);
 ```
 
 or, if you don't want an exception if there is no more room:
 
-```json
+```java
 if (!items.tryAppendEntry(dataEntry)) {
    // recover? Drop entry? Log?
 }
@@ -160,7 +160,7 @@ if (!items.tryAppendEntry(dataEntry)) {
 
 and to pop entries:
 
-```json
+```java
 byte[] next = items.getNextEntry(); // blocks if nothing available
 // or:
 next = items.getNextEntryIfAvailable();
@@ -182,10 +182,12 @@ Note that version 0.9.1 allows use of `MemBufferDecorator` instances, which make
 
 Finally, you can also obtain various statistics of buffer instances:
 
-    int entries = items.getEntryCount(); // how many available for getting?
-    int segmentsInUse = items.getSegmentCount(); // nr of internal segments
-    long maxFree = items.getMaximumAvailableSpace(); // approximate free space
-    long payload = items.getTotalPayloadLength(); // how much used by data?
+```java
+int entries = items.getEntryCount(); // how many available for getting?
+int segmentsInUse = items.getSegmentCount(); // nr of internal segments
+long maxFree = items.getMaximumAvailableSpace(); // approximate free space
+long payload = items.getTotalPayloadLength(); // how much used by data?
+```
 
 # Download
 
