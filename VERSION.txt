@@ -7,8 +7,8 @@ Releases
 
 1.1.0 (04-Nov-2014)
 
-#21: Add `com.fasterxml.util.membuf.util.BufferRecycler`, a commonly needed
- convenience class.
+#21: Add `com.fasterxml.util.membuf.util.BufferRecycler` to help with buffer reuse
+#22: Add convenience class for UTF-8 encoding/decoding, `com.fasterxml.util.membuf.util.UTF8Mate`
 
 1.0.0 (22-Oct-2013)
 
