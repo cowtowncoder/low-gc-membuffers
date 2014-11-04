@@ -26,6 +26,7 @@ import java.io.*;
  */
 public interface MemBuffer
     extends Closeable // just for convenience
+    // and, in future, AutoCloseable?
 {
     /*
     /**********************************************************************
@@ -55,8 +56,8 @@ public interface MemBuffer
      * Method for checking what would be the maximum available space
      * available for appending more entries. Since there may be per-entry
      * overhead (length prefix of at least one and at most five bytes),
-     * this is not necesssarily all available for payload, but gives
-     * maximum estimate.
+     * this is not necessarily all available for payload, but gives
+     * an upper-bound estimate.
      */
     public abstract long getMaximumAvailableSpace();
 

@@ -1,11 +1,19 @@
 Project: low-gc-membuffers
 Licence: Apache 2.0
-Version: 1.0.0 (22-Oct-2013)
+
+======================================================================
+Releases
+======================================================================
+
+1.1.0 (04-Nov-2014)
+
+#21: Add `com.fasterxml.util.membuf.util.BufferRecycler`, a commonly needed
+ convenience class.
+
+1.0.0 (22-Oct-2013)
 
 The first official release -- library has been used in high-traffic
 production environment for months now, API is stable.
-
-======================================================================
 
 0.9.3 (29-Jun-2013)
 
