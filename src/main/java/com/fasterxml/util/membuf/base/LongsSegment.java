@@ -1,7 +1,7 @@
 package com.fasterxml.util.membuf.base;
 
 /**
- * Intermediate base class for {@link Segment}s used to store
+ * Intermediate base class for {@link com.fasterxml.util.membuf.Segment}s used to store
  * long-valued sequences.
  */
 public abstract class LongsSegment extends SegmentBase<LongsSegment>
@@ -26,6 +26,7 @@ public abstract class LongsSegment extends SegmentBase<LongsSegment>
     /**
      * Method for trying to skip up to specified number of bytes.
      */
+    @Override
     public abstract int skip(int length);
 
     /*

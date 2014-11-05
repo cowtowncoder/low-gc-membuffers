@@ -23,7 +23,7 @@ There is one factory for each value type, so we have:
 <ul>
   <li>{@link com.fasterxml.util.membuf.MemBuffersForBytes} for <code>byte</code> sequence buffering
    </li>
-  <li>{@link com.fasterxml.util.membuf.MemBuffersForLong} for <code>long</code> sequence buffering
+  <li>{@link com.fasterxml.util.membuf.MemBuffersForLongs} for <code>long</code> sequence buffering
    </li>
  </ul>
 

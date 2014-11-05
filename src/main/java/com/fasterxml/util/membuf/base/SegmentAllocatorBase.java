@@ -36,7 +36,7 @@ public abstract class SegmentAllocatorBase<S extends Segment<S>>
     /**
      * Constructor for creating simple allocator instances.
      * Basic configuration is used to limit amount of memory that will
-     * be used (by {@link maxSegments}), as well as degree to which
+     * be used (by <code>maxSegments</code>), as well as degree to which
      * allocator can reuse released segments (to reduce churn by freeing
      * and reallocating segments, as segments typically use native
      * {@link java.nio.ByteBuffer}s that may be costly to allocate.
@@ -77,6 +77,7 @@ public abstract class SegmentAllocatorBase<S extends Segment<S>>
      * @return Head of segment list (with newly allocated entries as first
      *    entries) if allocation succeeded; null if not
      */
+    @Override
     public synchronized S allocateSegments(int count, S segmentList)
     {
         if (count < 1) {
@@ -96,6 +97,7 @@ public abstract class SegmentAllocatorBase<S extends Segment<S>>
      * contents of a segment and do not want to hold on to it for local
      * reuse.
      */
+    @Override
     public synchronized void releaseSegment(S segToRelease)
     {
         if (--_bufferOwnedSegmentCount < 0) { // sanity check; not needed in perfect world

@@ -61,7 +61,7 @@ public abstract class SegmentAllocator<T extends Segment<T>>
     /**
      * Constructor for creating simple allocator instances.
      * Basic configuration is used to limit amount of memory that will
-     * be used (by {@link maxSegments}), as well as degree to which
+     * be used (by <code>maxSegments</code>), as well as degree to which
      * allocator can reuse released segments (to reduce churn by freeing
      * and reallocating segments, as segments typically use native
      * {@link java.nio.ByteBuffer}s that may be costly to allocate.

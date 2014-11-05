@@ -109,6 +109,7 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      * If construction fails (due to allocation limits),
      * null will be returned.
      */
+    @SuppressWarnings("resource")
     public final CB tryCreateChunkyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
         S initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);
@@ -151,6 +152,7 @@ public abstract class MemBuffersBase<S extends Segment<S>,
      * If construction fails (due to allocation limits),
      * null will be returned.
      */
+    @SuppressWarnings("resource")
     public final SB tryCreateStreamyBuffer(int minSegmentsForBuffer, int maxSegmentsForBuffer)
     {
         S initialSegments = _segmentAllocator.allocateSegments(minSegmentsForBuffer, null);

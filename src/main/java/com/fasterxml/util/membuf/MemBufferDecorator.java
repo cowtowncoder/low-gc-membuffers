@@ -2,7 +2,7 @@ package com.fasterxml.util.membuf;
 
 /**
  * Interface that defines decorators that may be registered to
- * decorate {@like MemBuffer} instances created.
+ * decorate {@link MemBuffer} instances created.
  * Decoration is typically used to add features such as auto-closing,
  * or logging.
  * 

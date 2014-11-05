@@ -1,8 +1,8 @@
 package com.fasterxml.util.membuf.base;
 
 /**
- * Intermediate base class for {@link Segment}s used to store
- * byte sequence values.
+ * Intermediate base class for {@link com.fasterxml.util.membuf.Segment}s
+ * used to store byte sequence values.
  */
 public abstract class BytesSegment extends SegmentBase<BytesSegment>
 {

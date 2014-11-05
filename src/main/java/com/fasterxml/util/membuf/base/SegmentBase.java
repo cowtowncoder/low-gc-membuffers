@@ -40,11 +40,11 @@ public abstract class SegmentBase<S extends Segment<S>>
     /**********************************************************************
      */
     
-    public SegmentBase()
-    {
+    public SegmentBase() {
         _state = State.FREE;        
     }
 
+    @Override
     public final State state() { return _state; }
 
     /*

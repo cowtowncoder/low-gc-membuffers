@@ -27,7 +27,7 @@ public class ArrayLongsSegment extends LongsSegment
     }
 
     /**
-     * Factory method for construction {@link LongsSegmentAllocator} that
+     * Factory method for constructing an {@link Allocator} that
      * constructs instances of this segment type
      */
     public static Allocator allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
@@ -196,7 +196,8 @@ public class ArrayLongsSegment extends LongsSegment
         public Allocator(int segmentSize, int minSegmentsToRetain, int maxSegments) {
             super(segmentSize, minSegmentsToRetain, maxSegments);
         }
-        
+
+        @Override
         protected LongsSegment _allocateSegment()
         {
             // can reuse a segment returned earlier?
