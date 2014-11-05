@@ -5,6 +5,10 @@ Licence: Apache 2.0
 Releases
 ======================================================================
 
+1.1.1 (not yet released)
+
+- Add missing OSGi export for "com.fasterxml.util.membuf.util"
+
 1.1.0 (05-Nov-2014)
 
 #21: Add `com.fasterxml.util.membuf.util.BufferRecycler` to help with buffer reuse

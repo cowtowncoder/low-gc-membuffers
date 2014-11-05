@@ -133,6 +133,7 @@ garbage collection overhead (especially latency)
 com.fasterxml.util.membuf
 ,com.fasterxml.util.membuf.base
 ,com.fasterxml.util.membuf.impl
+,com.fasterxml.util.membuf.util
 </Export-Package>
             </instructions>
           </configuration>
