@@ -5,7 +5,7 @@ Licence: Apache 2.0
 Releases
 ======================================================================
 
-1.1.0 (04-Nov-2014)
+1.1.0 (05-Nov-2014)
 
 #21: Add `com.fasterxml.util.membuf.util.BufferRecycler` to help with buffer reuse
 #22: Add convenience class for UTF-8 encoding/decoding, `com.fasterxml.util.membuf.util.UTF8Mate`
