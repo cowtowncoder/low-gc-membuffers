@@ -56,7 +56,7 @@ or similarly if you need to read a sequence of entries as atomic unit.
 
 # Status
 
-Project has been used by multiple production systems (by multuple companies) since 2012,
+Project has been used by multiple production systems (by multiple companies) since 2012,
 and by now has proven stable and performant for expected use cases.
 As such it is considered production ready: the official 1.0 version was released in October 2013.
 
