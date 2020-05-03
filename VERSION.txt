@@ -5,6 +5,11 @@ Licence: Apache 2.0
 Releases
 ======================================================================
 
+1.2.0 (03-May-2020)
+
+- Add `Automatic-Module-Name` of `com.fasterxml.util.membuf` for JDK 9
+  (next step: Moditect)
+
 1.1.1 (05-Nov-2014)
 
 #21: Add `com.fasterxml.util.membuf.util.BufferRecycler` to help with buffer reuse

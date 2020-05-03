@@ -1,0 +1,11 @@
+language: java
+
+# While we don't require Java 8 (Java 6 is fine), build with newer
+jdk:
+  - openjdk8
+  - openjdk11
+
+# whitelist
+branches:
+  only:
+    - master
