@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.util</groupId>
   <artifactId>low-gc-membuffers</artifactId>
   <name>Low GC memory buffers</name>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.2.0</version>
   <packaging>bundle</packaging>
   <description>In-memory, bounded-size queue data structure that aims at minimizing
 garbage collection overhead (especially latency)
@@ -18,7 +18,7 @@ garbage collection overhead (especially latency)
     <connection>scm:git:git@github.com:cowtowncoder/low-gc-membuffers.git</connection>
     <developerConnection>scm:git:git@github.com:cowtowncoder/low-gc-membuffers.git</developerConnection>
     <url>http://github.com/cowtowncoder/low-gc-membuffers</url>    
-    <tag>HEAD</tag>
+    <tag>low-gc-membuffers-1.2.0</tag>
   </scm>
   <developers>
         <developer>
